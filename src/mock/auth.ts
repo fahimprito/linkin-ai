@@ -1,0 +1,113 @@
+import type { Session, User } from "@/types/auth"
+
+const rolePermissions: Record<User["role"], User["permissions"]> = {
+  super_admin: [
+    "dashboard",
+    "merchandise",
+    "yarn",
+    "store",
+    "knitting",
+    "linking",
+    "finishing",
+    "reports",
+  ],
+  merchandise_user: ["merchandise"],
+  yarn_control_user: ["yarn"],
+  store_control_user: ["store"],
+  knitting_user: ["knitting"],
+  linking_user: ["linking"],
+  finishing_user: ["finishing"],
+  management_user: ["dashboard", "reports"],
+}
+
+export const mockUsers: Array<User & { password: string }> = [
+  {
+    id: "usr-001",
+    name: "Rafid Hasan",
+    email: "admin@linkin.ai",
+    password: "password123",
+    role: "super_admin",
+    department: "Platform Administration",
+    avatar: "RA",
+    permissions: rolePermissions.super_admin,
+  },
+  {
+    id: "usr-002",
+    name: "Sharmeen Akter",
+    email: "merch@linkin.ai",
+    password: "password123",
+    role: "merchandise_user",
+    department: "Merchandising",
+    avatar: "SA",
+    permissions: rolePermissions.merchandise_user,
+  },
+  {
+    id: "usr-003",
+    name: "Nusrat Jahan",
+    email: "yarn@linkin.ai",
+    password: "password123",
+    role: "yarn_control_user",
+    department: "Yarn Control",
+    avatar: "NJ",
+    permissions: rolePermissions.yarn_control_user,
+  },
+  {
+    id: "usr-004",
+    name: "Tanzim Karim",
+    email: "store@linkin.ai",
+    password: "password123",
+    role: "store_control_user",
+    department: "Store Control",
+    avatar: "TK",
+    permissions: rolePermissions.store_control_user,
+  },
+  {
+    id: "usr-005",
+    name: "Farhan Reza",
+    email: "knit@linkin.ai",
+    password: "password123",
+    role: "knitting_user",
+    department: "Knitting",
+    avatar: "FR",
+    permissions: rolePermissions.knitting_user,
+  },
+  {
+    id: "usr-006",
+    name: "Lamia Noor",
+    email: "linking@linkin.ai",
+    password: "password123",
+    role: "linking_user",
+    department: "Linking",
+    avatar: "LN",
+    permissions: rolePermissions.linking_user,
+  },
+  {
+    id: "usr-007",
+    name: "Aminul Kabir",
+    email: "finishing@linkin.ai",
+    password: "password123",
+    role: "finishing_user",
+    department: "Finishing",
+    avatar: "AK",
+    permissions: rolePermissions.finishing_user,
+  },
+  {
+    id: "usr-008",
+    name: "Mahin Chowdhury",
+    email: "management@linkin.ai",
+    password: "password123",
+    role: "management_user",
+    department: "Management",
+    avatar: "MC",
+    permissions: rolePermissions.management_user,
+  },
+]
+
+export function buildMockSession(user: User): Session {
+  return {
+    accessToken: `token-${user.id}`,
+    refreshToken: `refresh-${user.id}`,
+    expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+    user,
+  }
+}
