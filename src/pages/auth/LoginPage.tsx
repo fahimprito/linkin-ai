@@ -1,4 +1,5 @@
-import { LogIn } from "lucide-react"
+import { Eye, EyeOff, LogIn } from "lucide-react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router"
 import { toast } from "sonner"
@@ -14,6 +15,7 @@ import type { LoginPayload } from "@/types/auth"
 export function LoginPage() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [login, { isLoading }] = useLoginMutation()
   const { register, handleSubmit } = useForm<LoginPayload>({
     defaultValues: {
@@ -31,11 +33,11 @@ export function LoginPage() {
     } catch (error) {
       const message =
         typeof error === "object" &&
-        error !== null &&
-        "data" in error &&
-        typeof error.data === "object" &&
-        error.data !== null &&
-        "message" in error.data
+          error !== null &&
+          "data" in error &&
+          typeof error.data === "object" &&
+          error.data !== null &&
+          "message" in error.data
           ? String(error.data.message)
           : "Unable to log in."
       toast.error(message)
@@ -68,14 +70,28 @@ export function LoginPage() {
           <label htmlFor="password" className="text-sm font-medium">
             Password
           </label>
-          <input
-            id="password"
-            type="password"
-            {...register("password", { required: true })}
-            className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              type={isPasswordVisible ? "text" : "password"}
+              {...register("password", { required: true })}
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 pr-12 text-sm outline-none transition focus:border-ring"
+            />
+            <button
+              type="button"
+              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-muted-foreground transition hover:text-foreground"
+              onClick={() => setIsPasswordVisible((current) => !current)}
+              aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+            >
+              {isPasswordVisible ? (
+                <EyeOff className="size-4" />
+              ) : (
+                <Eye className="size-4" />
+              )}
+            </button>
+          </div>
         </div>
-        <Button type="submit" className="w-full rounded-2xl" disabled={isLoading}>
+        <Button type="submit" className="w-full rounded-2xl" disabled={isLoading} size="lg">
           {isLoading ? "Signing in..." : "Sign in"}
         </Button>
       </form>
