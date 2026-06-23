@@ -4,9 +4,12 @@ import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { useGetReportsModuleQuery } from "@/services/linkin-api"
+import { useAppSelector } from "@/store/hooks"
+import { selectReportsDashboardMetrics } from "@/store/selectors/dashboard-metrics"
 
 export function ReportsPage() {
   const { data, isLoading } = useGetReportsModuleQuery(undefined)
+  const metrics = useAppSelector(selectReportsDashboardMetrics)
 
   if (isLoading || !data) {
     return <LoadingState />
@@ -30,7 +33,7 @@ export function ReportsPage() {
         ]}
       />
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {data.metrics.map((metric) => (
+        {metrics.map((metric) => (
           <MetricCard key={metric.id} {...metric} />
         ))}
       </section>

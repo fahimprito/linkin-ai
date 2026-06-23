@@ -1,8 +1,11 @@
 import { ModuleOverviewPage } from "@/pages/shared/ModuleOverviewPage"
 import { useGetKnittingModuleQuery } from "@/services/linkin-api"
+import { useAppSelector } from "@/store/hooks"
+import { selectKnittingDashboardMetrics } from "@/store/selectors/dashboard-metrics"
 
 export function KnittingPage() {
   const { data, isLoading } = useGetKnittingModuleQuery(undefined)
+  const metrics = useAppSelector(selectKnittingDashboardMetrics)
 
   return (
     <ModuleOverviewPage
@@ -18,6 +21,7 @@ export function KnittingPage() {
       ]}
       data={data}
       isLoading={isLoading}
+      metrics={metrics}
     />
   )
 }

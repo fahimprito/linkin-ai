@@ -4,34 +4,46 @@ import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/shared/page-header"
 import { MetricCard } from "@/components/shared/metric-card"
 import { useAuth } from "@/hooks/use-auth"
-
-const profileMetrics = [
-  {
-    label: "Active Sessions",
-    value: "03",
-    delta: "Secured",
-    tone: "default" as const,
-  },
-  {
-    label: "Accessible Modules",
-    value: "08",
-    delta: "Role-based",
-    tone: "success" as const,
-  },
-  {
-    label: "Permissions Health",
-    value: "100%",
-    delta: "Verified",
-    tone: "success" as const,
-  },
-]
+import { useAppSelector } from "@/store/hooks"
+import {
+  selectSubmissionCountForRole,
+  selectTodaySubmissionCountForRole,
+} from "@/store/selectors/dashboard-metrics"
 
 export function UserProfilePage() {
   const { navigation, roleLabel, user } = useAuth()
+  const userRole = user?.role ?? "super_admin"
+  const totalEntries = useAppSelector((state) =>
+    selectSubmissionCountForRole(state, userRole)
+  )
+  const todayEntries = useAppSelector((state) =>
+    selectTodaySubmissionCountForRole(state, userRole)
+  )
 
   if (!user) {
     return null
   }
+
+  const profileMetrics = [
+    {
+      label: "Saved Entries",
+      value: String(totalEntries).padStart(2, "0"),
+      delta: "Department activity",
+      tone: "default" as const,
+    },
+    {
+      label: "Accessible Modules",
+      value: String(navigation.length).padStart(2, "0"),
+      delta: "Role-based",
+      tone: "success" as const,
+    },
+    {
+      label: "Updated Today",
+      value: String(todayEntries).padStart(2, "0"),
+      delta: "Live submissions",
+      tone: "success" as const,
+    },
+  ]
 
   return (
     <div className="space-y-6">

@@ -1,7 +1,6 @@
 import { ArrowRight, ClipboardList, FileText, Layers3, PackageSearch } from "lucide-react"
 
 import { useAuth } from "@/hooks/use-auth"
-import { moduleSummaries } from "@/mock/modules"
 import { useGetExecutiveDashboardQuery } from "@/services/linkin-api"
 import { DataTable } from "@/components/shared/data-table"
 import { LoadingState } from "@/components/shared/loading-state"
@@ -10,18 +9,17 @@ import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { Button } from "@/components/ui/button"
+import { useAppSelector } from "@/store/hooks"
+import {
+  selectExecutiveDashboardMetrics,
+  selectMetricsForRole,
+} from "@/store/selectors/dashboard-metrics"
 
 const roleDashboardContent = {
   merchandise_user: {
     title: "Merchandise operations dashboard",
     description:
       "Follow buyer PO intake, yarn requests, supplier coordination, and cross-production updates from one merchandising workspace.",
-    metrics: [
-      { id: "m1", label: "Buyer POs", value: "24", delta: "+4 today", tone: "success" as const },
-      { id: "m2", label: "Yarn Requests", value: "09", delta: "2 pending", tone: "warning" as const },
-      { id: "m3", label: "Supplier Follow-ups", value: "07", delta: "Active", tone: "default" as const },
-      { id: "m4", label: "Production Alerts", value: "03", delta: "Watch", tone: "warning" as const },
-    ],
     quickActions: [
       { label: "Fetch Buyer PO", note: "Capture and standardize new buyer portal PO data." },
       { label: "Yarn Request", note: "Raise consumption requests to design and sourcing." },
@@ -32,7 +30,6 @@ const roleDashboardContent = {
     title: "Yarn control dashboard",
     description:
       "Manage yarn PO intake, receiving, inspection, stock position, and floor delivery against production requisitions.",
-    metrics: moduleSummaries.yarn.metrics,
     quickActions: [
       { label: "Accept PO", note: "Register incoming yarn control orders." },
       { label: "Supplier Receipt", note: "Update received quantities and stock count." },
@@ -43,7 +40,6 @@ const roleDashboardContent = {
     title: "Store control dashboard",
     description:
       "Track accessories receiving, inspection, stock balance, and issue materials to the floor through one store control flow.",
-    metrics: moduleSummaries.store.metrics,
     quickActions: [
       { label: "Accessories PO", note: "Accept purchase orders for accessories." },
       { label: "Receive & Stock", note: "Update current supplier receipt and stock." },
@@ -54,7 +50,6 @@ const roleDashboardContent = {
     title: "Knitting production dashboard",
     description:
       "Coordinate knitting PO intake, requisitions, production planning, line updates, and management reporting.",
-    metrics: moduleSummaries.knitting.metrics,
     quickActions: [
       { label: "Accept PO", note: "Register production orders for knitting." },
       { label: "Requisition", note: "Request yarn and store materials." },
@@ -65,7 +60,6 @@ const roleDashboardContent = {
     title: "Linking production dashboard",
     description:
       "Plan linking orders, monitor current production, and maintain status updates for downstream finishing readiness.",
-    metrics: moduleSummaries.linking.metrics,
     quickActions: [
       { label: "Accept PO", note: "Register linking orders into the workflow." },
       { label: "Planning", note: "Plan current production assignments." },
@@ -76,7 +70,6 @@ const roleDashboardContent = {
     title: "Finishing dashboard",
     description:
       "Run wash, ironing, packing, requisition, and current finishing output updates from a single operational view.",
-    metrics: moduleSummaries.finishing.metrics,
     quickActions: [
       { label: "Accept PO", note: "Receive finishing work orders for wash and packing." },
       { label: "Planning", note: "Plan ironing and packing throughput." },
@@ -88,6 +81,11 @@ const roleDashboardContent = {
 export function ExecutiveDashboardPage() {
   const { data, isLoading } = useGetExecutiveDashboardQuery(undefined)
   const { user } = useAuth()
+  const userRole = user?.role ?? "super_admin"
+  const executiveMetrics = useAppSelector(selectExecutiveDashboardMetrics)
+  const roleMetrics = useAppSelector((state) =>
+    selectMetricsForRole(state, userRole)
+  )
 
   if (isLoading || !data) {
     return <LoadingState />
@@ -110,7 +108,7 @@ export function ExecutiveDashboardPage() {
           description={dashboard.description}
         />
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {dashboard.metrics.map((metric) => (
+          {roleMetrics.map((metric) => (
             <MetricCard key={metric.id} {...metric} />
           ))}
         </section>
@@ -268,7 +266,7 @@ export function ExecutiveDashboardPage() {
         </div>
       </section>
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {data.metrics.map((metric) => (
+        {executiveMetrics.map((metric) => (
           <MetricCard key={metric.id} {...metric} />
         ))}
       </section>

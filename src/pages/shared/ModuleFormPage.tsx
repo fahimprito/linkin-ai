@@ -7,11 +7,9 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { Button } from "@/components/ui/button"
-import {
-  getStoredFormRecords,
-  saveStoredFormRecords,
-  type StoredFormRecord,
-} from "@/lib/form-submissions"
+import type { StoredFormRecord } from "@/lib/form-submissions"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { addFormSubmission } from "@/store/slices/form-submissions-slice"
 
 type FormFieldConfig = {
   name: string
@@ -26,12 +24,19 @@ type ModuleFormPageProps = {
   description: string
   storageKey: string
   fields: FormFieldConfig[]
-  summaryCards?: Array<{
-    label: string
-    value: string
-    delta: string
-    tone?: "default" | "success" | "warning" | "danger"
-  }>
+  summaryCards?:
+    | Array<{
+        label: string
+        value: string
+        delta: string
+        tone?: "default" | "success" | "warning" | "danger"
+      }>
+    | ((records: StoredFormRecord[]) => Array<{
+        label: string
+        value: string
+        delta: string
+        tone?: "default" | "success" | "warning" | "danger"
+      }>)
 }
 
 type FormValues = Record<string, string>
@@ -43,10 +48,17 @@ export function ModuleFormPage({
   fields,
   summaryCards = [],
 }: ModuleFormPageProps) {
-  const [records, setRecords] = useState<StoredFormRecord[]>(
-    getStoredFormRecords(storageKey)
+  const [resetCount, setResetCount] = useState(0)
+  const dispatch = useAppDispatch()
+  const records = useAppSelector(
+    (state) => state.formSubmissions.recordsByKey[storageKey] ?? []
   )
   const { register, handleSubmit, reset } = useForm<FormValues>()
+  const resolvedSummaryCards = useMemo(
+    () =>
+      typeof summaryCards === "function" ? summaryCards(records) : summaryCards,
+    [records, summaryCards]
+  )
 
   const tableColumns = useMemo(() => {
     const visibleFields = fields.slice(0, 5)
@@ -64,19 +76,25 @@ export function ModuleFormPage({
   }, [fields])
 
   const onSubmit = (values: FormValues) => {
+    const submittedAtIso = new Date().toISOString()
     const nextRecord: StoredFormRecord = {
       id: `frm-${Date.now()}`,
-      submittedAt: new Date().toLocaleString(),
+      submittedAt: new Date(submittedAtIso).toLocaleString(),
+      submittedAtIso,
       ...Object.fromEntries(
         Object.entries(values).map(([key, value]) => [key, String(value)])
       ),
     }
 
-    const nextRecords = [nextRecord, ...records]
-    setRecords(nextRecords)
-    saveStoredFormRecords(storageKey, nextRecords)
+    dispatch(
+      addFormSubmission({
+        storageKey,
+        record: nextRecord,
+      })
+    )
     toast.success(`${title} submitted successfully.`)
     reset()
+    setResetCount((value) => value + 1)
   }
 
   return (
@@ -89,15 +107,18 @@ export function ModuleFormPage({
             type="button"
             variant="outline"
             className="rounded-2xl"
-            onClick={() => reset()}
+            onClick={() => {
+              reset()
+              setResetCount((value) => value + 1)
+            }}
           >
             Reset Form
           </Button>
         }
       />
-      {summaryCards.length ? (
+      {resolvedSummaryCards?.length ? (
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {summaryCards.map((card) => (
+          {resolvedSummaryCards.map((card) => (
             <MetricCard
               key={card.label}
               label={card.label}
@@ -132,6 +153,7 @@ export function ModuleFormPage({
                 {field.type === "textarea" ? (
                   <textarea
                     id={field.name}
+                    key={`${field.name}-${resetCount}`}
                     {...register(field.name, { required: true })}
                     placeholder={field.placeholder}
                     className={commonClassName}
@@ -140,6 +162,7 @@ export function ModuleFormPage({
                 ) : field.type === "select" ? (
                   <select
                     id={field.name}
+                    key={`${field.name}-${resetCount}`}
                     {...register(field.name, { required: true })}
                     className={commonClassName}
                     defaultValue=""
@@ -156,6 +179,7 @@ export function ModuleFormPage({
                 ) : (
                   <input
                     id={field.name}
+                    key={`${field.name}-${resetCount}`}
                     type={field.type ?? "text"}
                     {...register(field.name, { required: true })}
                     placeholder={field.placeholder}

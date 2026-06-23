@@ -1,8 +1,11 @@
 import { ModuleOverviewPage } from "@/pages/shared/ModuleOverviewPage"
 import { useGetYarnModuleQuery } from "@/services/linkin-api"
+import { useAppSelector } from "@/store/hooks"
+import { selectYarnDashboardMetrics } from "@/store/selectors/dashboard-metrics"
 
 export function YarnControlPage() {
   const { data, isLoading } = useGetYarnModuleQuery(undefined)
+  const metrics = useAppSelector(selectYarnDashboardMetrics)
 
   return (
     <ModuleOverviewPage
@@ -20,6 +23,7 @@ export function YarnControlPage() {
       data={data}
       isLoading={isLoading}
       extraTableTitle="Inspection fields"
+      metrics={metrics}
     />
   )
 }

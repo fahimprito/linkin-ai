@@ -1,8 +1,11 @@
 import { ModuleOverviewPage } from "@/pages/shared/ModuleOverviewPage"
 import { useGetStoreModuleQuery } from "@/services/linkin-api"
+import { useAppSelector } from "@/store/hooks"
+import { selectStoreDashboardMetrics } from "@/store/selectors/dashboard-metrics"
 
 export function StoreControlPage() {
   const { data, isLoading } = useGetStoreModuleQuery(undefined)
+  const metrics = useAppSelector(selectStoreDashboardMetrics)
 
   return (
     <ModuleOverviewPage
@@ -18,6 +21,7 @@ export function StoreControlPage() {
       ]}
       data={data}
       isLoading={isLoading}
+      metrics={metrics}
     />
   )
 }

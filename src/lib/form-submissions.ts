@@ -1,6 +1,7 @@
 export type StoredFormRecord = Record<string, string> & {
   id: string
   submittedAt: string
+  submittedAtIso?: string
 }
 
 export function getStoredFormRecords(storageKey: string) {

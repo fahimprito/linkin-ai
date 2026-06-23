@@ -4,6 +4,7 @@ import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
+import type { DashboardMetric } from "@/types/modules"
 import type { GenericModuleSummary } from "@/types/modules"
 
 type ModuleOverviewPageProps = {
@@ -13,6 +14,7 @@ type ModuleOverviewPageProps = {
   data?: GenericModuleSummary & { inspections?: Array<Record<string, string>> }
   isLoading: boolean
   extraTableTitle?: string
+  metrics?: DashboardMetric[]
 }
 
 export function ModuleOverviewPage({
@@ -22,6 +24,7 @@ export function ModuleOverviewPage({
   data,
   isLoading,
   extraTableTitle,
+  metrics,
 }: ModuleOverviewPageProps) {
   if (isLoading || !data) {
     return <LoadingState />
@@ -44,7 +47,7 @@ export function ModuleOverviewPage({
       <PageHeader title={title} description={description} />
       <SearchFilterBar filters={filters} />
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {data.metrics.map((metric) => (
+        {(metrics ?? data.metrics).map((metric) => (
           <MetricCard key={metric.id} {...metric} />
         ))}
       </section>

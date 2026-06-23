@@ -1,8 +1,11 @@
 import { ModuleOverviewPage } from "@/pages/shared/ModuleOverviewPage"
 import { useGetFinishingModuleQuery } from "@/services/linkin-api"
+import { useAppSelector } from "@/store/hooks"
+import { selectFinishingDashboardMetrics } from "@/store/selectors/dashboard-metrics"
 
 export function FinishingPage() {
   const { data, isLoading } = useGetFinishingModuleQuery(undefined)
+  const metrics = useAppSelector(selectFinishingDashboardMetrics)
 
   return (
     <ModuleOverviewPage
@@ -19,6 +22,7 @@ export function FinishingPage() {
       ]}
       data={data}
       isLoading={isLoading}
+      metrics={metrics}
     />
   )
 }

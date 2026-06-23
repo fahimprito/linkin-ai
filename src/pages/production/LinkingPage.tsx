@@ -1,8 +1,11 @@
 import { ModuleOverviewPage } from "@/pages/shared/ModuleOverviewPage"
 import { useGetLinkingModuleQuery } from "@/services/linkin-api"
+import { useAppSelector } from "@/store/hooks"
+import { selectLinkingDashboardMetrics } from "@/store/selectors/dashboard-metrics"
 
 export function LinkingPage() {
   const { data, isLoading } = useGetLinkingModuleQuery(undefined)
+  const metrics = useAppSelector(selectLinkingDashboardMetrics)
 
   return (
     <ModuleOverviewPage
@@ -17,6 +20,7 @@ export function LinkingPage() {
       ]}
       data={data}
       isLoading={isLoading}
+      metrics={metrics}
     />
   )
 }

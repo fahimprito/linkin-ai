@@ -9,10 +9,31 @@ export function MerchandiseFetchPoPage() {
       title="Fetch PO From Buyer Portal"
       description="Capture purchase order intake from the buyer portal, standardize incoming fields, and prepare the merchandising workflow."
       storageKey="form-merchandise-fetch-po"
-      summaryCards={[
-        { label: "Buyer POs Today", value: "12", delta: "+3", tone: "success" },
-        { label: "Formatting Queue", value: "05", delta: "Automated", tone: "default" },
-      ]}
+      summaryCards={(records) => {
+        const todayCount = records.filter((record) => {
+          const recordDate = new Date(record.submittedAtIso ?? record.submittedAt)
+
+          return (
+            !Number.isNaN(recordDate.getTime()) &&
+            recordDate.toDateString() === new Date().toDateString()
+          )
+        }).length
+
+        return [
+          {
+            label: "Portal Captures",
+            value: String(records.length).padStart(2, "0"),
+            delta: `${String(todayCount).padStart(2, "0")} today`,
+            tone: "success",
+          },
+          {
+            label: "Standardized Entries",
+            value: String(records.length).padStart(2, "0"),
+            delta: "Live form submissions",
+            tone: "default",
+          },
+        ]
+      }}
       fields={[
         { name: "buyerName", label: "Buyer Name", placeholder: "H&M" },
         { name: "poNumber", label: "PO Number", placeholder: "LK-3001" },
