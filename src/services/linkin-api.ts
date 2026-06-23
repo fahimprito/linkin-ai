@@ -1,10 +1,13 @@
 import { baseApi } from "@/services/base-api"
+import {
+  createPurchaseOrder,
+  getPurchaseOrders,
+} from "@/lib/purchase-orders"
 import { buildMockSession, mockUsers } from "@/mock/auth"
 import {
   dashboardMetrics,
   inventoryAlerts,
   moduleSummaries,
-  purchaseOrders,
   recentActivities,
   yarnInspectionRecords,
 } from "@/mock/modules"
@@ -14,6 +17,7 @@ import type {
   ResetPasswordPayload,
   Session,
 } from "@/types/auth"
+import type { CreatePurchaseOrderPayload } from "@/types/modules"
 
 const wait = (duration = 350) =>
   new Promise<void>((resolve) => {
@@ -84,7 +88,7 @@ export const linkinApi = baseApi.injectEndpoints({
             metrics: dashboardMetrics,
             activities: recentActivities,
             inventory: inventoryAlerts,
-            orders: purchaseOrders,
+            orders: getPurchaseOrders(),
           },
         }
       },
@@ -93,14 +97,23 @@ export const linkinApi = baseApi.injectEndpoints({
     getMerchandiseOrders: builder.query({
       queryFn: async () => {
         await wait()
-        return { data: purchaseOrders }
+        return { data: getPurchaseOrders() }
       },
       providesTags: ["Merchandise"],
+    }),
+    createMerchandiseOrder: builder.mutation({
+      async queryFn(payload: CreatePurchaseOrderPayload) {
+        await wait()
+        return {
+          data: createPurchaseOrder(payload),
+        }
+      },
+      invalidatesTags: ["Dashboard", "Merchandise"],
     }),
     getPurchaseOrderById: builder.query({
       queryFn: async (poId: string) => {
         await wait()
-        const matchedOrder = purchaseOrders.find((order) => order.id === poId)
+        const matchedOrder = getPurchaseOrders().find((order) => order.id === poId)
 
         if (!matchedOrder) {
           return {
@@ -186,6 +199,7 @@ export const linkinApi = baseApi.injectEndpoints({
 })
 
 export const {
+  useCreateMerchandiseOrderMutation,
   useForgotPasswordMutation,
   useGetExecutiveDashboardQuery,
   useGetFinishingModuleQuery,

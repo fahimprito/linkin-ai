@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit"
 
 import authReducer from "@/features/auth/auth-slice"
 import { baseApi } from "@/services/base-api"
+import merchandiseReducer from "@/store/slices/merchandise-slice"
 import notificationReducer from "@/store/slices/notification-slice"
 import uiReducer from "@/store/slices/ui-slice"
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    merchandise: merchandiseReducer,
     notifications: notificationReducer,
     ui: uiReducer,
     [baseApi.reducerPath]: baseApi.reducer,

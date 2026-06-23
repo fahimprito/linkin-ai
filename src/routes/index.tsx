@@ -10,6 +10,7 @@ import { UnauthorizedPage } from "@/pages/common/UnauthorizedPage"
 import { ExecutiveDashboardPage } from "@/pages/dashboard/ExecutiveDashboardPage"
 import { MerchandiseDetailPage } from "@/pages/merchandise/MerchandiseDetailPage"
 import { MerchandiseListPage } from "@/pages/merchandise/MerchandiseListPage"
+import { UserProfilePage } from "@/pages/profile/UserProfilePage"
 import { FinishingPage } from "@/pages/production/FinishingPage"
 import { KnittingPage } from "@/pages/production/KnittingPage"
 import { LinkingPage } from "@/pages/production/LinkingPage"
@@ -56,6 +57,11 @@ export const router = createBrowserRouter([
           },
         },
         children: [
+          {
+            path: "/profile",
+            element: <UserProfilePage />,
+            handle: { breadcrumb: "User Profile" },
+          },
           {
             element: <ProtectedRoute allowedRoles={["super_admin", "management_user"]} />,
             handle: {

@@ -77,7 +77,7 @@ export function UserMenu({
           className="w-full justify-start rounded-2xl"
           onClick={() => {
             setIsOpen(false)
-            toast.info("My Profile page can be added next.")
+            navigate("/profile")
           }}
         >
           <CircleUserRound className="size-4" />

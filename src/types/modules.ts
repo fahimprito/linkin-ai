@@ -10,6 +10,8 @@ export type PurchaseOrder = {
   deliveryDate: string
 }
 
+export type CreatePurchaseOrderPayload = Omit<PurchaseOrder, "id">
+
 export type DashboardMetric = {
   id: string
   label: string
