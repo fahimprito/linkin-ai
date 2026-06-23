@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 
-import { dashboardNavigation, roleLabels } from "@/lib/permissions"
+import { getNavigationForUser, roleLabels } from "@/lib/permissions"
 import { useAppSelector } from "@/store/hooks"
 
 export function useAuth() {
@@ -11,9 +11,7 @@ export function useAuth() {
       return []
     }
 
-    return dashboardNavigation.filter((item) =>
-      auth.user?.permissions.includes(item.module)
-    )
+    return getNavigationForUser(auth.user.role, auth.user.permissions)
   }, [auth.user])
 
   return {

@@ -19,4 +19,9 @@ export type NavigationItem = {
   icon: LucideIcon
   module: AppModuleKey
   allowedRoles: UserRole[]
+  children?: Array<{
+    label: string
+    to: string
+    icon?: LucideIcon
+  }>
 }

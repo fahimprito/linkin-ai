@@ -11,12 +11,12 @@ const rolePermissions: Record<User["role"], User["permissions"]> = {
     "finishing",
     "reports",
   ],
-  merchandise_user: ["merchandise"],
-  yarn_control_user: ["yarn"],
-  store_control_user: ["store"],
-  knitting_user: ["knitting"],
-  linking_user: ["linking"],
-  finishing_user: ["finishing"],
+  merchandise_user: ["dashboard", "merchandise"],
+  yarn_control_user: ["dashboard", "yarn"],
+  store_control_user: ["dashboard", "store"],
+  knitting_user: ["dashboard", "knitting"],
+  linking_user: ["dashboard", "linking"],
+  finishing_user: ["dashboard", "finishing"],
   management_user: ["dashboard", "reports"],
 }
 

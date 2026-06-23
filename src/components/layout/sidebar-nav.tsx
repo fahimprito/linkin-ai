@@ -16,7 +16,7 @@ export function SidebarNav({ items }: SidebarNavProps) {
   return (
     <aside className="flex h-full flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="sticky top-0 z-10 flex h-20 items-center border-b border-sidebar-border bg-sidebar px-5">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 h-20">
           <div className="flex size-11 items-center justify-center rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-black/10">
             <Bot className="size-5" />
           </div>
@@ -28,26 +28,50 @@ export function SidebarNav({ items }: SidebarNavProps) {
           </div>
         </div>
       </div>
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-2 px-3 py-4">
         {items.map((item) => {
           const Icon = item.icon
 
           return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                )
-              }
-            >
-              <Icon className="size-4" />
-              <span>{item.label}</span>
-            </NavLink>
+            <div key={item.to} className="space-y-1">
+              <NavLink
+                to={item.to}
+                end={!item.children?.length}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  )
+                }
+              >
+                <Icon className="size-4" />
+                <span>{item.label}</span>
+              </NavLink>
+              {item.children?.length ? (
+                <div className="ml-4 border-l border-sidebar-border pl-3">
+                  {item.children.map((child) => (
+                    <NavLink
+                      key={child.to}
+                      to={child.to}
+                      end
+                      className={({ isActive }) =>
+                        cn(
+                          "flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-colors",
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground"
+                        )
+                      }
+                    >
+                      {child.icon ? <child.icon className="size-3.5" /> : null}
+                      <span>{child.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           )
         })}
       </nav>
