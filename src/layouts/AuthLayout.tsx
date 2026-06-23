@@ -9,8 +9,14 @@ export function AuthLayout() {
             Linkin AI
           </p>
           <h1 className="mt-6 text-4xl font-semibold tracking-tight">
-            Manufacturing orchestration across merchandising, production, and inventory.
+            BEST WOOL SWEATER&apos;S LIMITED
           </h1>
+          <p className="mt-3 text-sm font-medium tracking-[0.18em] text-white/65 uppercase">
+            Jarun, Konabari, Gazipur
+          </p>
+          <h2 className="mt-8 text-3xl font-semibold tracking-tight">
+            Manufacturing orchestration across merchandising, production, and inventory.
+          </h2>
           <p className="mt-5 text-sm leading-7 text-white/72">
             A unified operations layer for cross-functional teams managing garment planning,
             production execution, quality control, and executive reporting.
