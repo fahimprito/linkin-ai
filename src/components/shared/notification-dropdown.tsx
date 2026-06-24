@@ -52,7 +52,7 @@ export function NotificationDropdown() {
         </span>
       ) : null}
       {isOpen ? (
-        <div className="absolute right-0 top-12 z-50 w-[22rem] rounded-[1.5rem] border border-border/70 bg-card p-3 shadow-xl">
+        <div className="fixed inset-x-4 top-[5.75rem] z-50 max-h-[calc(100vh-7rem)] overflow-hidden rounded-[1.5rem] border border-border/70 bg-card p-3 shadow-xl sm:absolute sm:inset-x-auto sm:top-12 sm:right-0 sm:w-[22rem] sm:max-h-none">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <BellRing className="size-4 text-muted-foreground" />
@@ -67,7 +67,7 @@ export function NotificationDropdown() {
               Mark all read
             </Button>
           </div>
-          <div className="max-h-96 space-y-3 overflow-y-auto">
+          <div className="max-h-[calc(100vh-11rem)] space-y-3 overflow-y-auto pr-1 sm:max-h-96">
             {notifications.map((item) => (
               <div
                 key={item.id}

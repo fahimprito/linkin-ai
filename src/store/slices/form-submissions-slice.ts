@@ -39,9 +39,50 @@ const formSubmissionsSlice = createSlice({
       state.recordsByKey[action.payload.storageKey] = nextRecords
       saveStoredFormRecords(action.payload.storageKey, nextRecords)
     },
+    updateFormSubmission: (
+      state,
+      action: PayloadAction<{
+        storageKey: string
+        recordId: string
+        updates: Omit<StoredFormRecord, "id">
+      }>
+    ) => {
+      const currentRecords = state.recordsByKey[action.payload.storageKey] ?? []
+      const nextRecords = currentRecords.map((record) =>
+        record.id === action.payload.recordId
+          ? {
+              ...record,
+              ...action.payload.updates,
+              id: record.id,
+            }
+          : record
+      )
+
+      state.recordsByKey[action.payload.storageKey] = nextRecords
+      saveStoredFormRecords(action.payload.storageKey, nextRecords)
+    },
+    deleteFormSubmission: (
+      state,
+      action: PayloadAction<{
+        storageKey: string
+        recordId: string
+      }>
+    ) => {
+      const currentRecords = state.recordsByKey[action.payload.storageKey] ?? []
+      const nextRecords = currentRecords.filter(
+        (record) => record.id !== action.payload.recordId
+      )
+
+      state.recordsByKey[action.payload.storageKey] = nextRecords
+      saveStoredFormRecords(action.payload.storageKey, nextRecords)
+    },
   },
 })
 
-export const { addFormSubmission } = formSubmissionsSlice.actions
+export const {
+  addFormSubmission,
+  updateFormSubmission,
+  deleteFormSubmission,
+} = formSubmissionsSlice.actions
 
 export default formSubmissionsSlice.reducer

@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react"
+import { Pencil, Trash2 } from "lucide-react"
+import { useCallback, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -6,37 +7,37 @@ import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
+import {
+  RecordFormModal,
+  type ModalFormField,
+} from "@/components/shared/record-form-modal"
 import { Button } from "@/components/ui/button"
 import type { StoredFormRecord } from "@/lib/form-submissions"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { addFormSubmission } from "@/store/slices/form-submissions-slice"
-
-type FormFieldConfig = {
-  name: string
-  label: string
-  type?: "text" | "number" | "date" | "textarea" | "select"
-  placeholder?: string
-  options?: string[]
-}
+import {
+  addFormSubmission,
+  deleteFormSubmission,
+  updateFormSubmission,
+} from "@/store/slices/form-submissions-slice"
 
 type ModuleFormPageProps = {
   title: string
   description: string
   storageKey: string
-  fields: FormFieldConfig[]
+  fields: ModalFormField[]
   summaryCards?:
-    | Array<{
-        label: string
-        value: string
-        delta: string
-        tone?: "default" | "success" | "warning" | "danger"
-      }>
-    | ((records: StoredFormRecord[]) => Array<{
-        label: string
-        value: string
-        delta: string
-        tone?: "default" | "success" | "warning" | "danger"
-      }>)
+  | Array<{
+    label: string
+    value: string
+    delta: string
+    tone?: "default" | "success" | "warning" | "danger"
+  }>
+  | ((records: StoredFormRecord[]) => Array<{
+    label: string
+    value: string
+    delta: string
+    tone?: "default" | "success" | "warning" | "danger"
+  }>)
 }
 
 type FormValues = Record<string, string>
@@ -48,16 +49,48 @@ export function ModuleFormPage({
   fields,
   summaryCards = [],
 }: ModuleFormPageProps) {
-  const [resetCount, setResetCount] = useState(0)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [editingRecord, setEditingRecord] = useState<StoredFormRecord | null>(null)
+  const [recordPendingDelete, setRecordPendingDelete] = useState<StoredFormRecord | null>(null)
   const dispatch = useAppDispatch()
   const records = useAppSelector(
     (state) => state.formSubmissions.recordsByKey[storageKey] ?? []
   )
-  const { register, handleSubmit, reset } = useForm<FormValues>()
+  const defaultFormValues = useMemo(
+    () =>
+      Object.fromEntries(fields.map((field) => [field.name, ""])) as FormValues,
+    [fields]
+  )
+  const { register, handleSubmit, reset } = useForm<FormValues>({
+    defaultValues: defaultFormValues,
+  })
   const resolvedSummaryCards = useMemo(
     () =>
       typeof summaryCards === "function" ? summaryCards(records) : summaryCards,
     [records, summaryCards]
+  )
+
+  const getRecordFormValues = useCallback(
+    (record: StoredFormRecord) =>
+      Object.fromEntries(
+        fields.map((field) => [field.name, record[field.name] ?? ""])
+      ) as FormValues,
+    [fields]
+  )
+
+  const openCreateModal = useCallback(() => {
+    setEditingRecord(null)
+    reset(defaultFormValues)
+    setIsCreateModalOpen(true)
+  }, [defaultFormValues, reset])
+
+  const openEditModal = useCallback(
+    (record: StoredFormRecord) => {
+      reset(getRecordFormValues(record))
+      setEditingRecord(record)
+      setIsCreateModalOpen(true)
+    },
+    [getRecordFormValues, reset]
   )
 
   const tableColumns = useMemo(() => {
@@ -72,13 +105,48 @@ export function ModuleFormPage({
         key: "submittedAt",
         header: "Submitted",
       },
+      {
+        key: "actions",
+        header: "Actions",
+        className: "w-[150px]",
+        render: (row: StoredFormRecord) => (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="cursor-pointer rounded-xl"
+              onClick={() => openEditModal(row)}
+            >
+              <Pencil className="size-3.5" />
+              Edit
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="cursor-pointer rounded-xl text-destructive hover:text-destructive"
+              onClick={() => setRecordPendingDelete(row)}
+            >
+              <Trash2 className="size-3.5" />
+              Delete
+            </Button>
+          </div>
+        ),
+      },
     ]
-  }, [fields])
+  }, [fields, openEditModal])
+
+  const closeModal = useCallback(() => {
+    setIsCreateModalOpen(false)
+    setEditingRecord(null)
+    reset(defaultFormValues)
+  }, [defaultFormValues, reset])
 
   const onSubmit = (values: FormValues) => {
     const submittedAtIso = new Date().toISOString()
     const nextRecord: StoredFormRecord = {
-      id: `frm-${Date.now()}`,
+      id: editingRecord?.id ?? `frm-${Date.now()}`,
       submittedAt: new Date(submittedAtIso).toLocaleString(),
       submittedAtIso,
       ...Object.fromEntries(
@@ -86,15 +154,34 @@ export function ModuleFormPage({
       ),
     }
 
-    dispatch(
-      addFormSubmission({
-        storageKey,
-        record: nextRecord,
-      })
-    )
-    toast.success(`${title} submitted successfully.`)
-    reset()
-    setResetCount((value) => value + 1)
+    if (editingRecord) {
+      dispatch(
+        updateFormSubmission({
+          storageKey,
+          recordId: editingRecord.id,
+          updates: {
+            submittedAt: nextRecord.submittedAt,
+            submittedAtIso: nextRecord.submittedAtIso,
+            ...Object.fromEntries(
+              Object.entries(values).map(([key, value]) => [key, String(value)])
+            ),
+          },
+        })
+      )
+      toast.success(`${title} updated successfully.`)
+    } else {
+      dispatch(
+        addFormSubmission({
+          storageKey,
+          record: nextRecord,
+        })
+      )
+      toast.success(`${title} submitted successfully.`)
+    }
+
+    reset(defaultFormValues)
+    setEditingRecord(null)
+    setIsCreateModalOpen(false)
   }
 
   return (
@@ -105,14 +192,10 @@ export function ModuleFormPage({
         actions={
           <Button
             type="button"
-            variant="outline"
             className="rounded-2xl"
-            onClick={() => {
-              reset()
-              setResetCount((value) => value + 1)
-            }}
+            onClick={openCreateModal}
           >
-            Reset Form
+            {title}
           </Button>
         }
       />
@@ -129,73 +212,6 @@ export function ModuleFormPage({
           ))}
         </section>
       ) : null}
-      <section className="rounded-[2rem] border border-border/70 bg-card p-6 shadow-sm">
-        <h2 className="text-lg font-semibold">Standardized Data Entry</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Use this form to capture structured module data. Submissions are stored locally for now and can later be connected to REST APIs.
-        </p>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="mt-6 grid gap-4 md:grid-cols-2"
-        >
-          {fields.map((field) => {
-            const commonClassName =
-              "w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-
-            return (
-              <div
-                key={field.name}
-                className={field.type === "textarea" ? "space-y-2 md:col-span-2" : "space-y-2"}
-              >
-                <label htmlFor={field.name} className="text-sm font-medium">
-                  {field.label}
-                </label>
-                {field.type === "textarea" ? (
-                  <textarea
-                    id={field.name}
-                    key={`${field.name}-${resetCount}`}
-                    {...register(field.name, { required: true })}
-                    placeholder={field.placeholder}
-                    className={commonClassName}
-                    rows={4}
-                  />
-                ) : field.type === "select" ? (
-                  <select
-                    id={field.name}
-                    key={`${field.name}-${resetCount}`}
-                    {...register(field.name, { required: true })}
-                    className={commonClassName}
-                    defaultValue=""
-                  >
-                    <option value="" disabled>
-                      Select an option
-                    </option>
-                    {field.options?.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    id={field.name}
-                    key={`${field.name}-${resetCount}`}
-                    type={field.type ?? "text"}
-                    {...register(field.name, { required: true })}
-                    placeholder={field.placeholder}
-                    className={commonClassName}
-                  />
-                )}
-              </div>
-            )
-          })}
-          <div className="flex justify-end md:col-span-2">
-            <Button type="submit" className="rounded-2xl">
-              Submit Record
-            </Button>
-          </div>
-        </form>
-      </section>
       {records.length ? (
         <DataTable columns={tableColumns} data={records} />
       ) : (
@@ -204,6 +220,60 @@ export function ModuleFormPage({
           description="Start using the form above to create the first record for this workflow."
         />
       )}
+      <RecordFormModal
+        open={isCreateModalOpen}
+        title={title}
+        description={description}
+        fields={fields}
+        register={register}
+        onClose={closeModal}
+        onReset={() => {
+          if (editingRecord) {
+            reset(getRecordFormValues(editingRecord))
+            return
+          }
+
+          reset(defaultFormValues)
+        }}
+        onSubmit={handleSubmit(onSubmit)}
+        submitLabel={editingRecord ? "Update Record" : "Submit Record"}
+      />
+      {recordPendingDelete ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-4">
+          <div className="w-full max-w-md rounded-[2rem] border border-border/70 bg-card p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold">Delete record?</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              This action will permanently remove the selected record from the list.
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => setRecordPendingDelete(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="rounded-2xl"
+                onClick={() => {
+                  dispatch(
+                    deleteFormSubmission({
+                      storageKey,
+                      recordId: recordPendingDelete.id,
+                    })
+                  )
+                  toast.success("Record deleted successfully.")
+                  setRecordPendingDelete(null)
+                }}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
