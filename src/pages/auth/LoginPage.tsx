@@ -17,7 +17,7 @@ export function LoginPage() {
   const navigate = useNavigate()
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [login, { isLoading }] = useLoginMutation()
-  const { register, handleSubmit } = useForm<LoginPayload>({
+  const { register, handleSubmit, setValue } = useForm<LoginPayload>({
     defaultValues: {
       email: "admin@linkin.ai",
       password: "password123",
@@ -105,11 +105,25 @@ export function LoginPage() {
         <span className="text-muted-foreground">{mockUsers.length} demo users available</span>
       </div>
       <div className="mt-6 rounded-[1.5rem] bg-secondary/60 p-4 text-xs leading-6 text-muted-foreground">
-        Demo accounts: `admin@linkin.ai`, `merch@linkin.ai`, `yarn@linkin.ai`,
-        `store@linkin.ai`, `knit@linkin.ai`, `linking@linkin.ai`,
-        `finishing@linkin.ai`, `management@linkin.ai`
-        <br />
-        Password: `password123`
+        <p className="font-medium text-foreground">Demo accounts</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {mockUsers.map((user) => (
+            <button
+              key={user.id}
+              type="button"
+              className="rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs transition hover:border-primary/40 hover:text-foreground"
+              onClick={() => {
+                setValue("email", user.email, { shouldDirty: true })
+                setValue("password", user.password, { shouldDirty: true })
+              }}
+            >
+              {user.email}
+            </button>
+          ))}
+        </div>
+        <p className="mt-3">
+          Password: <span className="font-medium text-foreground">password123</span>
+        </p>
       </div>
     </div>
   )
