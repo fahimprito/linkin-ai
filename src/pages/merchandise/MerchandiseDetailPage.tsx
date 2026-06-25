@@ -1,24 +1,37 @@
 import { useParams } from "react-router"
 
+import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { LoadingState } from "@/components/shared/loading-state"
 import { PageHeader } from "@/components/shared/page-header"
+import {
+  StageTracker,
+  PO_LIFECYCLE_STAGES,
+  poStatusToStage,
+} from "@/components/shared/stage-tracker"
 import { StatusBadge } from "@/components/shared/status-badge"
-import { useGetPurchaseOrderByIdQuery } from "@/services/linkin-api"
+import { useAppSelector } from "@/store/hooks"
 
 export function MerchandiseDetailPage() {
   const { poId = "" } = useParams()
-  const { data, isLoading, isError } = useGetPurchaseOrderByIdQuery(poId)
+  const po = useAppSelector((state) =>
+    state.merchandise.purchaseOrders.find((order) => order.id === poId)
+  )
+  const yarnCheckRequest = useAppSelector((state) =>
+    state.yarnCheck.checkRequests.find((r) => r.poId === poId)
+  )
+  const supplierOrders = useAppSelector((state) =>
+    state.yarnCheck.supplierOrders.filter((o) => o.poId === poId)
+  )
+  const deliveryBatches = useAppSelector((state) =>
+    state.yarnCheck.deliveryBatches.filter((b) => b.poId === poId)
+  )
 
-  if (isLoading) {
-    return <LoadingState />
-  }
-
-  if (isError || !data) {
+  if (!po) {
     return (
       <EmptyState
         title="Purchase order not found"
-        description="The requested PO detail could not be loaded from the mock service."
+        description="The requested PO detail could not be loaded."
       />
     )
   }
@@ -26,77 +39,186 @@ export function MerchandiseDetailPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${data.poNumber} • ${data.style}`}
-        description="Review design layout, approval status, technical pack details, timeline milestones, and related documents."
+        title={`${po.poNumber} • ${po.style}`}
+        description="Full PO detail with yarn check status, delivery log, and production timeline."
       />
+
+      {/* Stage Tracker */}
+      <section className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Current Stage
+        </p>
+        <StageTracker
+          stages={PO_LIFECYCLE_STAGES}
+          currentStage={poStatusToStage(po.status)}
+        />
+      </section>
+
+      {/* PO Information Cards */}
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm">
           <p className="text-sm text-muted-foreground">Buyer</p>
-          <p className="mt-2 text-xl font-semibold">{data.buyer}</p>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">{data.buyerInfo}</p>
+          <p className="mt-2 text-xl font-semibold">{po.buyer}</p>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            {po.design}
+          </p>
         </div>
         <div className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm">
-          <p className="text-sm text-muted-foreground">Production status</p>
+          <p className="text-sm text-muted-foreground">Status</p>
           <div className="mt-2">
-            <StatusBadge value={data.status} />
+            <StatusBadge value={po.status} />
           </div>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Delivery target: {data.deliveryDate}
+            Delivery target: {po.deliveryDate}
           </p>
         </div>
         <div className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm">
-          <p className="text-sm text-muted-foreground">Supplier</p>
-          <p className="mt-2 text-xl font-semibold">{data.supplier}</p>
+          <p className="text-sm text-muted-foreground">Order Details</p>
+          <p className="mt-2 text-xl font-semibold">
+            {po.quantity.toLocaleString()} pcs
+          </p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Quantity: {data.quantity.toLocaleString()} pcs
+            GG: {po.gg ?? "–"} · Yarn: {po.requiredYarnQty ?? "–"} kg
           </p>
         </div>
       </section>
-      <section className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
+
+      {/* Yarn Details */}
+      <section className="grid gap-4 xl:grid-cols-2">
         <div className="rounded-[2rem] border border-border/70 bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold">Design & approvals</h2>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <h2 className="text-lg font-semibold">Yarn Specification</h2>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
             <div className="rounded-[1.5rem] bg-secondary/60 p-4">
-              <p className="text-sm font-medium">Design layout</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {data.designLayout}
+              <p className="text-sm font-medium">Composition</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {po.yarnComposition || "–"}
               </p>
             </div>
             <div className="rounded-[1.5rem] bg-secondary/60 p-4">
-              <p className="text-sm font-medium">Approval information</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {data.approvalInfo}
+              <p className="text-sm font-medium">Color</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {po.color || "–"}
               </p>
             </div>
-            <div className="rounded-[1.5rem] bg-secondary/60 p-4 md:col-span-2">
-              <p className="text-sm font-medium">Technical pack</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {data.technicalPack}
+            <div className="rounded-[1.5rem] bg-secondary/60 p-4">
+              <p className="text-sm font-medium">Supplier</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {po.supplier || "–"}
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] bg-secondary/60 p-4">
+              <p className="text-sm font-medium">Required Qty</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {po.requiredYarnQty ? `${po.requiredYarnQty} kg` : "–"}
               </p>
             </div>
           </div>
         </div>
+
+        {/* Yarn Check Request Status */}
         <div className="rounded-[2rem] border border-border/70 bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold">Production timeline</h2>
-          <div className="mt-5 space-y-3">
-            {data.productionTimeline.map((item: string) => (
-              <div key={item} className="rounded-[1.5rem] border border-border/70 p-4">
-                <p className="font-medium">{item}</p>
+          <h2 className="text-lg font-semibold">Yarn Check Request</h2>
+          {yarnCheckRequest ? (
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center justify-between rounded-[1.5rem] bg-secondary/60 p-4">
+                <div>
+                  <p className="text-sm font-medium">Status</p>
+                  <div className="mt-1">
+                    <StatusBadge value={yarnCheckRequest.status} />
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium">Requested</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {new Date(yarnCheckRequest.requestedAt).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
-          <h3 className="mt-6 text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-            Related documents
-          </h3>
-          <div className="mt-3 space-y-2">
-            {data.relatedDocuments.map((item: string) => (
-              <div key={item} className="rounded-full bg-secondary px-4 py-2 text-sm">
-                {item}
+              <div className="rounded-[1.5rem] bg-secondary/60 p-4">
+                <p className="text-sm font-medium">Requested By</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {yarnCheckRequest.requestedBy}
+                </p>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">
+              No yarn check request yet. Send from the PO list to initiate.
+            </p>
+          )}
         </div>
       </section>
+
+      {/* Supplier Orders */}
+      {supplierOrders.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Supplier Orders</h2>
+          <DataTable
+            columns={[
+              { key: "supplier", header: "Supplier" },
+              { key: "yarnType", header: "Yarn Type" },
+              { key: "color", header: "Color" },
+              {
+                key: "orderedQty",
+                header: "Ordered Qty (kg)",
+                render: (row) => String(row.orderedQty),
+              },
+              { key: "expectedArrival", header: "Expected Arrival" },
+              {
+                key: "status",
+                header: "Status",
+                render: (row) => (
+                  <StatusBadge value={String(row.status)} />
+                ),
+              },
+            ]}
+            data={supplierOrders}
+          />
+        </section>
+      )}
+
+      {/* Yarn Delivery Log */}
+      {deliveryBatches.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Yarn Delivery Log</h2>
+          <DataTable
+            columns={[
+              { key: "batchNumber", header: "Batch No" },
+              {
+                key: "quantity",
+                header: "Qty (kg)",
+                render: (row) => String(row.quantity),
+              },
+              { key: "deliveryDate", header: "Delivery Date" },
+              {
+                key: "inspectionStatus",
+                header: "Inspection",
+                render: (row) => (
+                  <StatusBadge value={String(row.inspectionStatus)} />
+                ),
+              },
+              {
+                key: "testReportName",
+                header: "Test Report",
+                render: (row) =>
+                  row.testReportName ? (
+                    <span className="text-sm text-sky-600 dark:text-sky-400">
+                      {String(row.testReportName)}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">–</span>
+                  ),
+              },
+              {
+                key: "remarks",
+                header: "Remarks",
+                render: (row) => String(row.remarks ?? "–"),
+              },
+            ]}
+            data={deliveryBatches}
+          />
+        </section>
+      )}
     </div>
   )
 }

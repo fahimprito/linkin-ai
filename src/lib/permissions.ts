@@ -21,6 +21,8 @@ import {
   ShoppingBag,
   Truck,
   Warehouse,
+  CheckCircle,
+  FileSearch,
 } from "lucide-react"
 
 import type { AppModuleKey, UserRole } from "@/types/auth"
@@ -83,6 +85,10 @@ export const dashboardNavigation: NavigationItem[] = [
       { label: "Inspection", to: "/yarn/inspection", icon: ScanSearch },
       { label: "Floor Delivery", to: "/yarn/floor-delivery", icon: Truck },
       { label: "Mgmt Report", to: "/yarn/management-report", icon: FileText },
+      { label: "Check Requests", to: "/yarn/check-requests", icon: CheckCircle },
+      { label: "Supplier Orders", to: "/yarn/supplier-orders", icon: ShoppingBag },
+      { label: "Delivery Log", to: "/yarn/delivery-log", icon: Truck },
+      { label: "Batch Inspection", to: "/yarn/batch-inspection", icon: FileSearch },
     ],
   },
   {

@@ -55,6 +55,10 @@ import { ReportsPage } from "@/pages/reports/ReportsPage"
 import { DefaultRedirect } from "@/routes/default-redirect"
 import { StoreControlPage } from "@/pages/store/StoreControlPage"
 import { YarnControlPage } from "@/pages/yarn/YarnControlPage"
+import { YarnCheckRequestsPage } from "@/pages/yarn/YarnCheckRequestsPage"
+import { YarnSupplierOrderPage } from "@/pages/yarn/YarnSupplierOrderPage"
+import { YarnDeliveryLogPage } from "@/pages/yarn/YarnDeliveryLogPage"
+import { YarnBatchInspectionPage } from "@/pages/yarn/YarnBatchInspectionPage"
 import { ProtectedRoute } from "@/routes/protected-route"
 
 export const router = createBrowserRouter([
@@ -201,6 +205,26 @@ export const router = createBrowserRouter([
                 path: "/yarn/management-report",
                 element: <YarnManagementReportPage />,
                 handle: { breadcrumb: "Mgmt Report" },
+              },
+              {
+                path: "/yarn/check-requests",
+                element: <YarnCheckRequestsPage />,
+                handle: { breadcrumb: "Check Requests" },
+              },
+              {
+                path: "/yarn/supplier-orders",
+                element: <YarnSupplierOrderPage />,
+                handle: { breadcrumb: "Supplier Orders" },
+              },
+              {
+                path: "/yarn/delivery-log",
+                element: <YarnDeliveryLogPage />,
+                handle: { breadcrumb: "Delivery Log" },
+              },
+              {
+                path: "/yarn/batch-inspection",
+                element: <YarnBatchInspectionPage />,
+                handle: { breadcrumb: "Batch Inspection" },
               },
             ],
           },

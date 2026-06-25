@@ -43,6 +43,7 @@ export function savePurchaseOrders(orders: PurchaseOrder[]) {
 export function buildPurchaseOrder(payload: CreatePurchaseOrderPayload) {
   return {
     id: `po-${Date.now()}`,
+    createdAt: new Date().toISOString(),
     ...payload,
   } satisfies PurchaseOrder
 }

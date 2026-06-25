@@ -7,6 +7,7 @@ import {
 } from "@/lib/purchase-orders"
 import type {
   CreatePurchaseOrderPayload,
+  POStatus,
   PurchaseOrder,
 } from "@/types/modules"
 
@@ -39,7 +40,33 @@ const merchandiseSlice = createSlice({
     ) => {
       state.purchaseOrders = state.purchaseOrders.map((order) =>
         order.id === action.payload.id
-          ? { id: order.id, ...action.payload.updates }
+          ? { id: order.id, createdAt: order.createdAt, ...action.payload.updates }
+          : order
+      )
+      savePurchaseOrders(state.purchaseOrders)
+    },
+    updatePoStatus: (
+      state,
+      action: PayloadAction<{ id: string; status: POStatus }>
+    ) => {
+      state.purchaseOrders = state.purchaseOrders.map((order) =>
+        order.id === action.payload.id
+          ? { ...order, status: action.payload.status }
+          : order
+      )
+      savePurchaseOrders(state.purchaseOrders)
+    },
+    linkYarnCheckRequest: (
+      state,
+      action: PayloadAction<{ poId: string; yarnCheckRequestId: string }>
+    ) => {
+      state.purchaseOrders = state.purchaseOrders.map((order) =>
+        order.id === action.payload.poId
+          ? {
+              ...order,
+              yarnCheckRequestId: action.payload.yarnCheckRequestId,
+              status: "Pending Yarn Check" as POStatus,
+            }
           : order
       )
       savePurchaseOrders(state.purchaseOrders)
@@ -56,6 +83,8 @@ const merchandiseSlice = createSlice({
 export const {
   addPurchaseOrder,
   updatePurchaseOrder,
+  updatePoStatus,
+  linkYarnCheckRequest,
   deletePurchaseOrder,
 } = merchandiseSlice.actions
 
