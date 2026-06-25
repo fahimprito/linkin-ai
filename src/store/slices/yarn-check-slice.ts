@@ -6,12 +6,14 @@ import type {
   YarnDeliveryBatch,
   YarnBatchInspectionStatus,
 } from "@/types/modules"
+import type { YarnStockMovement } from "@/types/production"
 
 // ── localStorage helpers ─────────────────────────────────────────────
 const KEYS = {
   checkRequests: "linkin-yarn-check-requests",
   supplierOrders: "linkin-yarn-supplier-orders",
   deliveryBatches: "linkin-yarn-delivery-batches",
+  stockMovements: "linkin-yarn-stock-movements",
 } as const
 
 function load<T>(key: string): T[] {
@@ -35,12 +37,14 @@ type YarnCheckState = {
   checkRequests: YarnCheckRequest[]
   supplierOrders: YarnSupplierOrder[]
   deliveryBatches: YarnDeliveryBatch[]
+  stockMovements: YarnStockMovement[]
 }
 
 const initialState: YarnCheckState = {
   checkRequests: load<YarnCheckRequest>(KEYS.checkRequests),
   supplierOrders: load<YarnSupplierOrder>(KEYS.supplierOrders),
   deliveryBatches: load<YarnDeliveryBatch>(KEYS.deliveryBatches),
+  stockMovements: load<YarnStockMovement>(KEYS.stockMovements),
 }
 
 // ── Slice ────────────────────────────────────────────────────────────
@@ -93,6 +97,10 @@ const yarnCheckSlice = createSlice({
       state.deliveryBatches.unshift(action.payload)
       save(KEYS.deliveryBatches, state.deliveryBatches)
     },
+    addStockMovement: (state, action: PayloadAction<YarnStockMovement>) => {
+      state.stockMovements.unshift(action.payload)
+      save(KEYS.stockMovements, state.stockMovements)
+    },
     updateBatchInspectionStatus: (
       state,
       action: PayloadAction<{
@@ -134,6 +142,7 @@ export const {
   addSupplierOrder,
   updateSupplierOrderStatus,
   addDeliveryBatch,
+  addStockMovement,
   updateBatchInspectionStatus,
 } = yarnCheckSlice.actions
 

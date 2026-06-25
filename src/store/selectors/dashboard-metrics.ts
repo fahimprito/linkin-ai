@@ -98,10 +98,22 @@ function metric(
 export function selectExecutiveDashboardMetrics(
   state: RootState
 ): DashboardMetric[] {
-  const totalEntries = Object.values(state.formSubmissions.recordsByKey).reduce(
+  const totalFormEntries = Object.values(state.formSubmissions.recordsByKey).reduce(
     (total, records) => total + records.length,
     0
   )
+  const totalEntries =
+    totalFormEntries +
+    state.merchandise.purchaseOrders.length +
+    state.yarnCheck.checkRequests.length +
+    state.yarnCheck.supplierOrders.length +
+    state.yarnCheck.deliveryBatches.length +
+    state.storeService.requisitions.length +
+    state.storeService.issueLogs.length +
+    state.knitting.requisitions.length +
+    state.knitting.issueLogs.length +
+    state.knitting.productionPlans.length +
+    state.knitting.dailyProgress.length
   const todayEntries = Object.values(state.formSubmissions.recordsByKey).reduce(
     (total, records) => total + countRecordsToday(records),
     0
@@ -112,6 +124,8 @@ export function selectExecutiveDashboardMetrics(
     ...Object.values(moduleFormStorageKeys).map(
       (storageKeys) => countForKeys(state, storageKeys) > 0
     ),
+    state.storeService.requisitions.length > 0 ||
+      state.storeService.issueLogs.length > 0,
   ].filter(Boolean).length
 
   return [
@@ -154,75 +168,104 @@ export function selectMerchandiseDashboardMetrics(
     metric(
       "merch-2",
       "Yarn Requests",
-      getRecordsByKey(state, "form-merchandise-yarn-request").length,
-      `${formatCount(countForKeyToday(state, "form-merchandise-yarn-request"))} today`,
+      state.yarnCheck.checkRequests.length,
+      `${formatCount(
+        state.yarnCheck.checkRequests.filter((request) => request.status === "Pending").length
+      )} pending`,
       "warning"
     ),
     metric(
       "merch-3",
       "Supplier Follow-ups",
-      getRecordsByKey(state, "form-merchandise-supplier-follow-up").length,
-      `${formatCount(countForKeyToday(state, "form-merchandise-supplier-follow-up"))} today`,
+      state.yarnCheck.supplierOrders.length,
+      `${formatCount(
+        state.yarnCheck.supplierOrders.filter((order) => order.status !== "Fully Received").length
+      )} active`,
       "default"
     ),
     metric(
       "merch-4",
-      "Production Updates",
-      getRecordsByKey(state, "form-merchandise-production-updates").length,
-      `${formatCount(countForKeyToday(state, "form-merchandise-production-updates"))} today`,
-      "warning"
+      "Ready for Production",
+      state.merchandise.purchaseOrders.filter(
+        (po) => po.status === "Ready for Production"
+      ).length,
+      "Released from Stage 1",
+      "success"
     ),
   ]
 }
 
 export function selectYarnDashboardMetrics(state: RootState): DashboardMetric[] {
+  const availableStock = state.yarnCheck.stockMovements.reduce(
+    (sum, movement) =>
+      movement.movementType === "Issued to Knitting"
+        ? sum - movement.quantity
+        : sum + movement.quantity,
+    0
+  )
+
   return [
     metric(
       "yarn-1",
-      "Accepted Yarn POs",
-      getRecordsByKey(state, "form-yarn-po-intake").length,
-      "Yarn intake records",
-      "default"
+      "Check Requests",
+      state.yarnCheck.checkRequests.length,
+      `${formatCount(
+        state.yarnCheck.checkRequests.filter((request) => request.status === "Pending").length
+      )} pending`,
+      "warning"
     ),
     metric(
       "yarn-2",
-      "Supplier Receipts",
-      getRecordsByKey(state, "form-yarn-supplier-receipt").length,
-      `${formatCount(countForKeyToday(state, "form-yarn-supplier-receipt"))} today`,
+      "Supplier Orders",
+      state.yarnCheck.supplierOrders.length,
+      `${formatCount(
+        state.yarnCheck.supplierOrders.filter((order) => order.status !== "Fully Received").length
+      )} active`,
       "success"
     ),
     metric(
       "yarn-3",
-      "Inspections Logged",
-      getRecordsByKey(state, "form-yarn-inspection").length,
-      `${formatCount(countForKeyToday(state, "form-yarn-inspection"))} today`,
+      "Available Stock",
+      Math.round(availableStock),
+      `${formatCount(state.knitting.requisitions.length)} knitting requisitions`,
       "success"
     ),
   ]
 }
 
 export function selectStoreDashboardMetrics(state: RootState): DashboardMetric[] {
+  const openRequisitions = state.storeService.requisitions.filter(
+    (requisition) => requisition.status !== "Issued"
+  ).length
+  const todayIso = new Date().toISOString().split("T")[0]
+  const issuesToday = state.storeService.issueLogs.filter(
+    (log) => log.issueDate === todayIso
+  ).length
+  const activeSourceModules = new Set(
+    state.storeService.requisitions.map((requisition) => requisition.sourceModule)
+  ).size
+
   return [
     metric(
       "store-1",
-      "Accessory POs",
-      getRecordsByKey(state, "form-store-accessories-po").length,
-      "Accepted into store",
-      "default"
+      "Open Requisitions",
+      openRequisitions,
+      "Awaiting store issue",
+      "warning"
     ),
     metric(
       "store-2",
-      "Stock Receipts",
-      getRecordsByKey(state, "form-store-stock-receipt").length,
-      `${formatCount(countForKeyToday(state, "form-store-stock-receipt"))} today`,
+      "Issue Logs",
+      state.storeService.issueLogs.length,
+      `${formatCount(issuesToday)} today`,
       "success"
     ),
     metric(
       "store-3",
-      "Floor Deliveries",
-      getRecordsByKey(state, "form-store-floor-delivery").length,
-      `${formatCount(countForKeyToday(state, "form-store-floor-delivery"))} today`,
-      "warning"
+      "Source Modules",
+      activeSourceModules,
+      activeSourceModules > 0 ? "Shared production service" : "Ready for Linking and Finishing",
+      "default"
     ),
   ]
 }
@@ -230,26 +273,36 @@ export function selectStoreDashboardMetrics(state: RootState): DashboardMetric[]
 export function selectKnittingDashboardMetrics(
   state: RootState
 ): DashboardMetric[] {
+  const queueOrders = state.merchandise.purchaseOrders.filter(
+    (po) => po.status === "Ready for Production" || po.status === "Knitting"
+  )
+  const todayIso = new Date().toISOString().split("T")[0]
+  const todayOutput = state.knitting.dailyProgress
+    .filter((entry) => entry.entryDate === todayIso)
+    .reduce((sum, entry) => sum + entry.producedQty, 0)
+
   return [
     metric(
       "knit-1",
-      "Accepted Orders",
-      getRecordsByKey(state, "form-knitting-accept-po").length,
-      "Registered for knitting",
+      "Queue POs",
+      queueOrders.length,
+      "Released from Yarn Control",
       "default"
     ),
     metric(
       "knit-2",
       "Requisitions",
-      getRecordsByKey(state, "form-knitting-requisition").length,
-      `${formatCount(countForKeyToday(state, "form-knitting-requisition"))} today`,
+      state.knitting.requisitions.length,
+      `${formatCount(
+        state.knitting.requisitions.filter((requisition) => requisition.status !== "Issued").length
+      )} open`,
       "warning"
     ),
     metric(
       "knit-3",
-      "Daily Updates",
-      getRecordsByKey(state, "form-knitting-daily-update").length,
-      `${formatCount(countForKeyToday(state, "form-knitting-daily-update"))} today`,
+      "Daily Output",
+      todayOutput,
+      `${formatCount(state.knitting.productionPlans.length)} active plans`,
       "success"
     ),
   ]
@@ -258,24 +311,30 @@ export function selectKnittingDashboardMetrics(
 export function selectLinkingDashboardMetrics(
   state: RootState
 ): DashboardMetric[] {
+  const queueOrders = state.merchandise.purchaseOrders.filter(
+    (po) => po.status === "Linking" || po.status === "Finishing"
+  ).length
+
   return [
     metric(
       "link-1",
-      "Accepted Orders",
-      getRecordsByKey(state, "form-linking-accept-po").length,
-      "Registered for linking",
+      "Queue POs",
+      queueOrders,
+      "Received from Knitting",
       "default"
     ),
     metric(
       "link-2",
-      "Planning Entries",
-      getRecordsByKey(state, "form-linking-planning").length,
-      `${formatCount(countForKeyToday(state, "form-linking-planning"))} today`,
+      "Store Requisitions",
+      getRecordsByKey(state, "form-linking-store-requisition").length,
+      `${formatCount(
+        state.storeService.issueLogs.filter((log) => log.sourceModule === "Linking").length
+      )} store issues`,
       "success"
     ),
     metric(
       "link-3",
-      "Daily Updates",
+      "Daily Reports",
       getRecordsByKey(state, "form-linking-daily-update").length,
       `${formatCount(countForKeyToday(state, "form-linking-daily-update"))} today`,
       "warning"
@@ -286,24 +345,30 @@ export function selectLinkingDashboardMetrics(
 export function selectFinishingDashboardMetrics(
   state: RootState
 ): DashboardMetric[] {
+  const queueOrders = state.merchandise.purchaseOrders.filter(
+    (po) => po.status === "Finishing"
+  ).length
+
   return [
     metric(
       "finish-1",
-      "Accepted Orders",
-      getRecordsByKey(state, "form-finishing-accept-po").length,
-      "Registered for finishing",
+      "Queue POs",
+      queueOrders,
+      "Received from Linking",
       "default"
     ),
     metric(
       "finish-2",
-      "Planning Entries",
-      getRecordsByKey(state, "form-finishing-planning").length,
-      `${formatCount(countForKeyToday(state, "form-finishing-planning"))} today`,
+      "Store Requisitions",
+      getRecordsByKey(state, "form-finishing-requisition").length,
+      `${formatCount(
+        state.storeService.issueLogs.filter((log) => log.sourceModule === "Finishing").length
+      )} store issues`,
       "success"
     ),
     metric(
       "finish-3",
-      "Daily Updates",
+      "Daily Reports",
       getRecordsByKey(state, "form-finishing-daily-update").length,
       `${formatCount(countForKeyToday(state, "form-finishing-daily-update"))} today`,
       "warning"
@@ -371,8 +436,49 @@ export function selectSubmissionCountForRole(
   const storageKeys = getStorageKeysForRole(role)
   const formSubmissionCount = countForKeys(state, storageKeys)
 
-  if (role === "merchandise_user" || role === "super_admin") {
+  if (role === "super_admin") {
+    return (
+      formSubmissionCount +
+      state.merchandise.purchaseOrders.length +
+      state.yarnCheck.checkRequests.length +
+      state.yarnCheck.supplierOrders.length +
+      state.yarnCheck.deliveryBatches.length +
+      state.storeService.requisitions.length +
+      state.storeService.issueLogs.length +
+      state.knitting.requisitions.length +
+      state.knitting.issueLogs.length +
+      state.knitting.productionPlans.length +
+      state.knitting.dailyProgress.length
+    )
+  }
+
+  if (role === "merchandise_user") {
     return formSubmissionCount + state.merchandise.purchaseOrders.length
+  }
+
+  if (role === "yarn_control_user") {
+    return (
+      state.yarnCheck.checkRequests.length +
+      state.yarnCheck.supplierOrders.length +
+      state.yarnCheck.deliveryBatches.length +
+      state.yarnCheck.stockMovements.length
+    )
+  }
+
+  if (role === "knitting_user") {
+    return (
+      state.knitting.requisitions.length +
+      state.knitting.issueLogs.length +
+      state.knitting.productionPlans.length +
+      state.knitting.dailyProgress.length
+    )
+  }
+
+  if (role === "store_control_user") {
+    return (
+      state.storeService.requisitions.length +
+      state.storeService.issueLogs.length
+    )
   }
 
   return formSubmissionCount
@@ -382,5 +488,34 @@ export function selectTodaySubmissionCountForRole(
   state: RootState,
   role: UserRole
 ) {
+  const todayIso = new Date().toISOString().split("T")[0]
+
+  if (role === "yarn_control_user") {
+    return (
+      state.yarnCheck.deliveryBatches.filter(
+        (batch) => batch.deliveryDate === todayIso
+      ).length +
+      state.yarnCheck.stockMovements.filter(
+        (movement) => movement.movementDate.split("T")[0] === todayIso
+      ).length
+    )
+  }
+
+  if (role === "knitting_user") {
+    return state.knitting.dailyProgress.filter(
+      (entry) => entry.entryDate === todayIso
+    ).length
+  }
+
+  if (role === "store_control_user") {
+    return (
+      state.storeService.requisitions.filter(
+        (requisition) => requisition.requestedDate === todayIso
+      ).length +
+      state.storeService.issueLogs.filter((log) => log.issueDate === todayIso)
+        .length
+    )
+  }
+
   return countForKeysToday(state, getStorageKeysForRole(role))
 }

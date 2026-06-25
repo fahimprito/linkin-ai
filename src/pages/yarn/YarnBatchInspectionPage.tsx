@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/shared/status-badge"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
 import {
+  addStockMovement,
   updateBatchInspectionStatus,
   updateCheckRequestStatus,
   updateSupplierOrderStatus,
@@ -23,6 +24,9 @@ export function YarnBatchInspectionPage() {
   )
   const supplierOrders = useAppSelector(
     (state) => state.yarnCheck.supplierOrders
+  )
+  const purchaseOrders = useAppSelector(
+    (state) => state.merchandise.purchaseOrders
   )
   const [inspectingBatch, setInspectingBatch] =
     useState<YarnDeliveryBatch | null>(null)
@@ -65,25 +69,47 @@ export function YarnBatchInspectionPage() {
       (o) => o.id === inspectingBatch.supplierOrderId
     )
     if (order) {
-      const allBatches = deliveryBatches.filter(
-        (b) => b.supplierOrderId === order.id
-      )
-      const totalAccepted = allBatches
+      const purchaseOrder = purchaseOrders.find((po) => po.id === order.poId)
+      const requiredQty = purchaseOrder?.requiredYarnQty ?? order.orderedQty
+      const poBatches = deliveryBatches.filter((b) => b.poId === order.poId)
+      const totalAccepted = poBatches
         .filter((b) =>
           b.id === inspectingBatch.id
             ? true // this batch is being accepted now
             : b.inspectionStatus === "Accepted"
         )
         .reduce((sum, b) => sum + b.quantity, 0)
+      const totalReceivedForOrder = deliveryBatches
+        .filter((batch) => batch.supplierOrderId === order.id)
+        .reduce((sum, batch) => sum + batch.quantity, 0)
 
-      if (totalAccepted >= order.orderedQty) {
-        // All quantity fulfilled
+      dispatch(
+        addStockMovement({
+          id: `ysm-${Date.now()}`,
+          poId: order.poId,
+          poNumber: order.poNumber,
+          yarnType: order.yarnType,
+          color: order.color,
+          quantity: inspectingBatch.quantity,
+          movementType: "Accepted Receipt",
+          movementDate: new Date().toISOString(),
+          referenceId: inspectingBatch.id,
+          referenceLabel: inspectingBatch.batchNumber,
+          createdBy: "Yarn Controller",
+          remarks: remarks || "Accepted yarn inspection batch.",
+        })
+      )
+
+      if (totalReceivedForOrder >= order.orderedQty) {
         dispatch(
           updateSupplierOrderStatus({
             id: order.id,
             status: "Fully Received",
           })
         )
+      }
+
+      if (totalAccepted >= requiredQty) {
         dispatch(
           updateCheckRequestStatus({
             id: order.yarnCheckRequestId,
@@ -98,7 +124,7 @@ export function YarnBatchInspectionPage() {
         )
       } else {
         toast.success(
-          `Batch ${inspectingBatch.batchNumber} accepted. ${totalAccepted}/${order.orderedQty} kg received.`
+          `Batch ${inspectingBatch.batchNumber} accepted. ${totalAccepted}/${requiredQty} kg approved for release.`
         )
       }
     } else {

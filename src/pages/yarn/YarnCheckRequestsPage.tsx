@@ -8,7 +8,10 @@ import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
-import { updateCheckRequestStatus } from "@/store/slices/yarn-check-slice"
+import {
+  addStockMovement,
+  updateCheckRequestStatus,
+} from "@/store/slices/yarn-check-slice"
 import type { YarnCheckRequest } from "@/types/modules"
 
 export function YarnCheckRequestsPage() {
@@ -23,6 +26,22 @@ export function YarnCheckRequestsPage() {
   const handleMarkAvailable = (request: YarnCheckRequest) => {
     dispatch(
       updateCheckRequestStatus({ id: request.id, status: "Available" })
+    )
+    dispatch(
+      addStockMovement({
+        id: `ysm-${Date.now()}`,
+        poId: request.poId,
+        poNumber: request.poNumber,
+        yarnType: request.yarnComposition,
+        color: request.color,
+        quantity: request.requiredQty,
+        movementType: "Allocated Stock",
+        movementDate: new Date().toISOString(),
+        referenceId: request.id,
+        referenceLabel: "Manual stock allocation",
+        createdBy: "Yarn Controller",
+        remarks: "Existing yarn stock allocated after availability check.",
+      })
     )
     dispatch(
       updatePoStatus({ id: request.poId, status: "Ready for Production" })

@@ -1,17 +1,31 @@
-import { Cable, ClipboardCheck, Package, Truck } from "lucide-react"
+import { Cable, ClipboardCheck, Package, Send, Truck } from "lucide-react"
 import { Link } from "react-router"
 
 import { Button } from "@/components/ui/button"
+import {
+  getKnittingWorkflowGuidance,
+  getKnittingWorkflowStageForPo,
+  KNITTING_STAGE_2_STEPS,
+} from "@/lib/knitting-workflow"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { DataTable } from "@/components/shared/data-table"
+import { WorkflowTrackerCard } from "@/components/shared/workflow-tracker-card"
 import { useAppSelector } from "@/store/hooks"
 
 export function YarnControlPage() {
+  const purchaseOrders = useAppSelector(
+    (state) => state.merchandise.purchaseOrders
+  )
   const checkRequests = useAppSelector((state) => state.yarnCheck.checkRequests)
   const supplierOrders = useAppSelector((state) => state.yarnCheck.supplierOrders)
   const deliveryBatches = useAppSelector((state) => state.yarnCheck.deliveryBatches)
+  const stockMovements = useAppSelector((state) => state.yarnCheck.stockMovements)
+  const requisitions = useAppSelector((state) => state.knitting.requisitions)
+  const issueLogs = useAppSelector((state) => state.knitting.issueLogs)
+  const plans = useAppSelector((state) => state.knitting.productionPlans)
+  const progressEntries = useAppSelector((state) => state.knitting.dailyProgress)
 
   const pendingChecks = checkRequests.filter((r) => r.status === "Pending").length
   const activeOrders = supplierOrders.filter(
@@ -21,9 +35,31 @@ export function YarnControlPage() {
     (b) =>
       b.inspectionStatus === "Pending" || b.inspectionStatus === "Received"
   ).length
-  const acceptedBatches = deliveryBatches.filter(
-    (b) => b.inspectionStatus === "Accepted"
+  const availableStock = stockMovements
+    .reduce(
+      (sum, movement) =>
+        movement.movementType === "Issued to Knitting"
+          ? sum - movement.quantity
+          : sum + movement.quantity,
+      0
+    )
+  const openRequisitions = requisitions.filter(
+    (requisition) => requisition.status !== "Issued"
   ).length
+  const stage2FocusPo =
+    purchaseOrders.find((po) => po.status === "Ready for Production") ??
+    purchaseOrders.find((po) => po.status === "Knitting") ??
+    purchaseOrders.find((po) => po.status === "Linking")
+  const stage2CurrentStage = stage2FocusPo
+    ? getKnittingWorkflowStageForPo({
+        po: stage2FocusPo,
+        requisitions,
+        issueLogs,
+        plans,
+        progressEntries,
+      })
+    : "Queue"
+  const stage2Guidance = getKnittingWorkflowGuidance(stage2CurrentStage)
 
   return (
     <div className="space-y-6">
@@ -53,12 +89,26 @@ export function YarnControlPage() {
           tone="warning"
         />
         <MetricCard
-          label="Accepted Batches"
-          value={String(acceptedBatches).padStart(2, "0")}
-          delta="Stock updated"
+          label="Available Stock"
+          value={`${Math.round(availableStock)} kg`}
+          delta={`${String(openRequisitions).padStart(2, "0")} open requisitions`}
           tone="success"
         />
       </section>
+
+      <WorkflowTrackerCard
+        trackerLabel="Stage 2 Handoff Tracker"
+        title="Yarn Control to Knitting flow"
+        summary={
+          stage2FocusPo
+            ? `Current focus PO: ${stage2FocusPo.poNumber}. ${stage2Guidance.summary}`
+            : "Knitting handoff steps will appear here once a PO enters Stage 2."
+        }
+        nextAction={stage2Guidance.nextAction}
+        stages={KNITTING_STAGE_2_STEPS}
+        currentStage={stage2CurrentStage}
+        badgeValue={stage2FocusPo?.status}
+      />
 
       {/* Quick Links */}
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -86,6 +136,12 @@ export function YarnControlPage() {
             icon: ClipboardCheck,
             label: "Batch Inspection",
             desc: "Inspect & accept/reject",
+          },
+          {
+            to: "/yarn/issue-to-knitting",
+            icon: Send,
+            label: "Issue to Knitting",
+            desc: "Release yarn to requisitions",
           },
         ].map((item) => (
           <Link

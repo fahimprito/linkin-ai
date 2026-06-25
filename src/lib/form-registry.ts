@@ -33,17 +33,14 @@ export const moduleFormStorageKeys: Record<
     "form-knitting-status-report",
   ],
   linking: [
-    "form-linking-accept-po",
+    "form-linking-store-requisition",
     "form-linking-planning",
     "form-linking-daily-update",
-    "form-linking-status-report",
   ],
   finishing: [
-    "form-finishing-accept-po",
     "form-finishing-requisition",
     "form-finishing-planning",
     "form-finishing-daily-update",
-    "form-finishing-status-report",
   ],
   reports: [
     "form-report-full-system-production",

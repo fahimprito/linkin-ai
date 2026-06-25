@@ -51,41 +51,41 @@ const roleDashboardContent = {
   store_control_user: {
     title: "Store control dashboard",
     description:
-      "Track accessories receiving, inspection, stock balance, and issue materials to the floor through one store control flow.",
+      "Operate Store Control as a shared service module so Linking and Finishing both follow the same requisition, issuance, and audit-log pattern.",
     quickActions: [
-      { label: "Accessories PO", note: "Accept purchase orders for accessories." },
-      { label: "Receive & Stock", note: "Update current supplier receipt and stock." },
-      { label: "Floor Delivery", note: "Issue store items against department requisitions." },
+      { label: "Review Requisitions", note: "Receive incoming material requests from downstream production modules." },
+      { label: "Issue Materials", note: "Release approved quantities against each requisition." },
+      { label: "Maintain Log", note: "Keep a read-only issuance history for compliance and traceability." },
     ],
   },
   knitting_user: {
     title: "Knitting production dashboard",
     description:
-      "Coordinate knitting PO intake, requisitions, production planning, line updates, and management reporting.",
+      "Run the real knitting workflow from released PO queue through requisition, yarn issue visibility, planning, and daily production.",
     quickActions: [
-      { label: "Accept PO", note: "Register production orders for knitting." },
-      { label: "Requisition", note: "Request yarn and store materials." },
-      { label: "Daily Update", note: "Track current output and line remarks." },
+      { label: "Queue Review", note: "Receive Ready for Production POs from Yarn Control." },
+      { label: "Yarn Requisition", note: "Raise the knitting yarn request for each PO." },
+      { label: "Daily Progress", note: "Track produced quantity, output weight, and waste." },
     ],
   },
   linking_user: {
     title: "Linking production dashboard",
     description:
-      "Plan linking orders, monitor current production, and maintain status updates for downstream finishing readiness.",
+      "Run Stage 3 from received knit output through store requisition, planning, daily progress, and transfer to Finishing.",
     quickActions: [
-      { label: "Accept PO", note: "Register linking orders into the workflow." },
-      { label: "Planning", note: "Plan current production assignments." },
-      { label: "Daily Update", note: "Track linking, trimming, and mending status." },
+      { label: "Store Requisition", note: "Request the required materials from Store Control." },
+      { label: "Planning", note: "Create the linking production plan once materials are issued." },
+      { label: "Daily Progress", note: "Submit the daily linking report and monitor transfer readiness." },
     ],
   },
   finishing_user: {
     title: "Finishing dashboard",
     description:
-      "Run wash, ironing, packing, requisition, and current finishing output updates from a single operational view.",
+      "Run finishing through the nested sub-stage flow of wash, sew, iron, and pack while keeping daily output and store requests visible in one place.",
     quickActions: [
-      { label: "Accept PO", note: "Receive finishing work orders for wash and packing." },
-      { label: "Planning", note: "Plan ironing and packing throughput." },
-      { label: "Daily Update", note: "Track wash, sewing, attachment, and packing." },
+      { label: "Track Sub-Stages", note: "Follow wash, sew, iron, and pack progress inside the module tracker." },
+      { label: "Request Materials", note: "Send any finishing material need through the shared Store Control flow." },
+      { label: "Daily Update", note: "Log finishing output for both the local module and management dashboard." },
     ],
   },
 } satisfies Record<DepartmentDashboardRole, DepartmentDashboardContent>

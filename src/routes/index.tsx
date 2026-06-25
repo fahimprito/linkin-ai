@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router"
+import { createBrowserRouter, Navigate } from "react-router"
 
 import { AuthLayout } from "@/layouts/AuthLayout"
 import { DashboardLayout } from "@/layouts/DashboardLayout"
@@ -9,34 +9,26 @@ import { NotFoundPage } from "@/pages/common/NotFoundPage"
 import { UnauthorizedPage } from "@/pages/common/UnauthorizedPage"
 import { ExecutiveDashboardPage } from "@/pages/dashboard/ExecutiveDashboardPage"
 import {
-  FinishingAcceptPoPage,
   FinishingDailyUpdatePage,
   FinishingPlanningPage,
   FinishingRequisitionPage,
-  FinishingStatusReportPage,
   FullSystemProductionReportPage,
-  KnittingAcceptPoPage,
-  KnittingDailyUpdatePage,
-  KnittingPlanningPage,
-  KnittingRequisitionPage,
-  KnittingStatusReportPage,
-  LinkingAcceptPoPage,
   LinkingDailyUpdatePage,
   LinkingPlanningPage,
   LinkingProductionReportPage,
-  LinkingStatusReportPage,
-  PackingSectionReportPage,
   PoTrackerReportPage,
-  StoreAccessoriesPoPage,
-  StoreFloorDeliveryPage,
-  StoreInspectionPage,
-  StoreStatusReportPage,
-  StoreStockReceiptPage,
   YarnInformationReportPage,
   YarnStockCalculationReportPage,
 } from "@/pages/forms/OperationsFormPages"
+import { FinishingStoreIssueLogPage } from "@/pages/finishing/FinishingStoreIssueLogPage"
+import { LinkingStoreIssueLogPage } from "@/pages/linking/LinkingStoreIssueLogPage"
+import { LinkingStoreRequisitionPage } from "@/pages/linking/LinkingStoreRequisitionPage"
 import { MerchandiseDetailPage } from "@/pages/merchandise/MerchandiseDetailPage"
 import { MerchandiseListPage } from "@/pages/merchandise/MerchandiseListPage"
+import { KnittingDailyProgressPage } from "@/pages/knitting/KnittingDailyProgressPage"
+import { KnittingIssuanceLogPage } from "@/pages/knitting/KnittingIssuanceLogPage"
+import { KnittingPlanningPage } from "@/pages/knitting/KnittingPlanningPage"
+import { KnittingRequisitionPage } from "@/pages/knitting/KnittingRequisitionPage"
 import { UserProfilePage } from "@/pages/profile/UserProfilePage"
 import { FinishingPage } from "@/pages/production/FinishingPage"
 import { KnittingPage } from "@/pages/production/KnittingPage"
@@ -44,11 +36,14 @@ import { LinkingPage } from "@/pages/production/LinkingPage"
 import { ReportsPage } from "@/pages/reports/ReportsPage"
 import { DefaultRedirect } from "@/routes/default-redirect"
 import { StoreControlPage } from "@/pages/store/StoreControlPage"
+import { StoreIssueLogPage } from "@/pages/store/StoreIssueLogPage"
+import { StoreRequisitionsPage } from "@/pages/store/StoreRequisitionsPage"
 import { YarnControlPage } from "@/pages/yarn/YarnControlPage"
 import { YarnCheckRequestsPage } from "@/pages/yarn/YarnCheckRequestsPage"
 import { YarnSupplierOrderPage } from "@/pages/yarn/YarnSupplierOrderPage"
 import { YarnDeliveryLogPage } from "@/pages/yarn/YarnDeliveryLogPage"
 import { YarnBatchInspectionPage } from "@/pages/yarn/YarnBatchInspectionPage"
+import { YarnIssueToKnittingPage } from "@/pages/yarn/YarnIssueToKnittingPage"
 import { ProtectedRoute } from "@/routes/protected-route"
 
 export const router = createBrowserRouter([
@@ -166,6 +161,11 @@ export const router = createBrowserRouter([
                 element: <YarnBatchInspectionPage />,
                 handle: { breadcrumb: "Batch Inspection" },
               },
+              {
+                path: "/yarn/issue-to-knitting",
+                element: <YarnIssueToKnittingPage />,
+                handle: { breadcrumb: "Issue to Knitting" },
+              },
             ],
           },
           {
@@ -183,29 +183,39 @@ export const router = createBrowserRouter([
                 handle: { breadcrumb: "Overview" },
               },
               {
+                path: "/store/requisitions",
+                element: <StoreRequisitionsPage />,
+                handle: { breadcrumb: "Requisitions" },
+              },
+              {
+                path: "/store/issue-log",
+                element: <StoreIssueLogPage />,
+                handle: { breadcrumb: "Issue Log" },
+              },
+              {
                 path: "/store/accessories-po",
-                element: <StoreAccessoriesPoPage />,
-                handle: { breadcrumb: "Accessories PO" },
+                element: <Navigate to="/store" replace />,
+                handle: { breadcrumb: "Overview" },
               },
               {
                 path: "/store/stock-receipt",
-                element: <StoreStockReceiptPage />,
-                handle: { breadcrumb: "Receive & Stock" },
+                element: <Navigate to="/store" replace />,
+                handle: { breadcrumb: "Overview" },
               },
               {
                 path: "/store/inspection",
-                element: <StoreInspectionPage />,
-                handle: { breadcrumb: "Inspection" },
+                element: <Navigate to="/store" replace />,
+                handle: { breadcrumb: "Overview" },
               },
               {
                 path: "/store/floor-delivery",
-                element: <StoreFloorDeliveryPage />,
-                handle: { breadcrumb: "Floor Delivery" },
+                element: <Navigate to="/store/issue-log" replace />,
+                handle: { breadcrumb: "Issue Log" },
               },
               {
                 path: "/store/status-report",
-                element: <StoreStatusReportPage />,
-                handle: { breadcrumb: "Status Report" },
+                element: <Navigate to="/store" replace />,
+                handle: { breadcrumb: "Overview" },
               },
             ],
           },
@@ -224,14 +234,19 @@ export const router = createBrowserRouter([
                 handle: { breadcrumb: "Overview" },
               },
               {
-                path: "/knitting/accept-po",
-                element: <KnittingAcceptPoPage />,
-                handle: { breadcrumb: "Accept PO" },
-              },
-              {
                 path: "/knitting/requisition",
                 element: <KnittingRequisitionPage />,
-                handle: { breadcrumb: "Requisition" },
+                handle: { breadcrumb: "Yarn Requisition" },
+              },
+              {
+                path: "/knitting/accept-po",
+                element: <Navigate to="/knitting/requisition" replace />,
+                handle: { breadcrumb: "Yarn Requisition" },
+              },
+              {
+                path: "/knitting/issuance-log",
+                element: <KnittingIssuanceLogPage />,
+                handle: { breadcrumb: "Yarn Issuance" },
               },
               {
                 path: "/knitting/planning",
@@ -239,14 +254,19 @@ export const router = createBrowserRouter([
                 handle: { breadcrumb: "Planning" },
               },
               {
+                path: "/knitting/daily-progress",
+                element: <KnittingDailyProgressPage />,
+                handle: { breadcrumb: "Daily Progress" },
+              },
+              {
                 path: "/knitting/daily-update",
-                element: <KnittingDailyUpdatePage />,
-                handle: { breadcrumb: "Daily Update" },
+                element: <Navigate to="/knitting/daily-progress" replace />,
+                handle: { breadcrumb: "Daily Progress" },
               },
               {
                 path: "/knitting/status-report",
-                element: <KnittingStatusReportPage />,
-                handle: { breadcrumb: "Status Report" },
+                element: <Navigate to="/knitting" replace />,
+                handle: { breadcrumb: "Overview" },
               },
             ],
           },
@@ -265,9 +285,14 @@ export const router = createBrowserRouter([
                 handle: { breadcrumb: "Overview" },
               },
               {
-                path: "/linking/accept-po",
-                element: <LinkingAcceptPoPage />,
-                handle: { breadcrumb: "Accept PO" },
+                path: "/linking/store-requisition",
+                element: <LinkingStoreRequisitionPage />,
+                handle: { breadcrumb: "Store Requisition" },
+              },
+              {
+                path: "/linking/store-issuance-log",
+                element: <LinkingStoreIssueLogPage />,
+                handle: { breadcrumb: "Store Issuance Log" },
               },
               {
                 path: "/linking/planning",
@@ -275,14 +300,24 @@ export const router = createBrowserRouter([
                 handle: { breadcrumb: "Planning" },
               },
               {
-                path: "/linking/daily-update",
+                path: "/linking/daily-progress",
                 element: <LinkingDailyUpdatePage />,
-                handle: { breadcrumb: "Daily Update" },
+                handle: { breadcrumb: "Daily Progress" },
+              },
+              {
+                path: "/linking/accept-po",
+                element: <Navigate to="/linking" replace />,
+                handle: { breadcrumb: "Overview" },
+              },
+              {
+                path: "/linking/daily-update",
+                element: <Navigate to="/linking/daily-progress" replace />,
+                handle: { breadcrumb: "Daily Progress" },
               },
               {
                 path: "/linking/status-report",
-                element: <LinkingStatusReportPage />,
-                handle: { breadcrumb: "Status Report" },
+                element: <Navigate to="/linking" replace />,
+                handle: { breadcrumb: "Overview" },
               },
             ],
           },
@@ -301,14 +336,14 @@ export const router = createBrowserRouter([
                 handle: { breadcrumb: "Overview" },
               },
               {
-                path: "/finishing/accept-po",
-                element: <FinishingAcceptPoPage />,
-                handle: { breadcrumb: "Accept PO" },
+                path: "/finishing/store-requisition",
+                element: <FinishingRequisitionPage />,
+                handle: { breadcrumb: "Store Requisition" },
               },
               {
-                path: "/finishing/requisition",
-                element: <FinishingRequisitionPage />,
-                handle: { breadcrumb: "Requisition" },
+                path: "/finishing/store-issuance-log",
+                element: <FinishingStoreIssueLogPage />,
+                handle: { breadcrumb: "Store Issuance Log" },
               },
               {
                 path: "/finishing/planning",
@@ -316,14 +351,29 @@ export const router = createBrowserRouter([
                 handle: { breadcrumb: "Planning" },
               },
               {
-                path: "/finishing/daily-update",
+                path: "/finishing/daily-progress",
                 element: <FinishingDailyUpdatePage />,
-                handle: { breadcrumb: "Daily Update" },
+                handle: { breadcrumb: "Daily Progress" },
+              },
+              {
+                path: "/finishing/accept-po",
+                element: <Navigate to="/finishing" replace />,
+                handle: { breadcrumb: "Overview" },
+              },
+              {
+                path: "/finishing/requisition",
+                element: <Navigate to="/finishing/store-requisition" replace />,
+                handle: { breadcrumb: "Store Requisition" },
+              },
+              {
+                path: "/finishing/daily-update",
+                element: <Navigate to="/finishing/daily-progress" replace />,
+                handle: { breadcrumb: "Daily Progress" },
               },
               {
                 path: "/finishing/status-report",
-                element: <FinishingStatusReportPage />,
-                handle: { breadcrumb: "Status Report" },
+                element: <Navigate to="/finishing" replace />,
+                handle: { breadcrumb: "Overview" },
               },
             ],
           },
@@ -343,8 +393,8 @@ export const router = createBrowserRouter([
               },
               {
                 path: "/reports/executive-analytics",
-                element: <ReportsPage />,
-                handle: { breadcrumb: "Executive Analytics" },
+                element: <Navigate to="/reports" replace />,
+                handle: { breadcrumb: "Overview" },
               },
               {
                 path: "/reports/full-system-production",
@@ -363,8 +413,8 @@ export const router = createBrowserRouter([
               },
               {
                 path: "/reports/packing-section",
-                element: <PackingSectionReportPage />,
-                handle: { breadcrumb: "Packing Section" },
+                element: <Navigate to="/reports" replace />,
+                handle: { breadcrumb: "Overview" },
               },
               {
                 path: "/reports/linking-production",

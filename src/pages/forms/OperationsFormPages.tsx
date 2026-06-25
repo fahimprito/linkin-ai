@@ -2,6 +2,7 @@ import { ModuleFormPage } from "@/pages/shared/ModuleFormPage"
 
 const statusOptions = ["Knitting", "Linking", "Finishing"]
 const requisitionTypeOptions = ["Yarn", "Accessories", "Packing Materials"]
+const finishingSubStageOptions = ["Wash", "Sew", "Iron", "Pack"]
 
 export function MerchandiseFetchPoPage() {
   return (
@@ -420,16 +421,17 @@ export function LinkingAcceptPoPage() {
 export function LinkingPlanningPage() {
   return (
     <ModuleFormPage
-      title="Linking Production Planning"
-      description="Plan linking output and update current production scheduling records."
+      title="Linking Production Plan"
+      description="Create the linking plan after Store Control has issued the required materials."
       storageKey="form-linking-planning"
       fields={[
-        { name: "serial", label: "Serial", placeholder: "01" },
-        { name: "buyerName", label: "Buyer Name", placeholder: "Zara" },
-        { name: "line", label: "Line", placeholder: "Line A" },
-        { name: "todayPlan", label: "Today Plan", placeholder: "1200" },
-        { name: "totalPlan", label: "Total Plan", placeholder: "8500" },
-        { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Operator allocation finalized." },
+        { name: "poNumber", label: "PO Number", placeholder: "LK-2002" },
+        { name: "line", label: "Line / Team", placeholder: "Line A" },
+        { name: "startDate", label: "Start Date", type: "date" },
+        { name: "endDate", label: "End Date", type: "date" },
+        { name: "totalDays", label: "Total Days", placeholder: "7" },
+        { name: "dailyTarget", label: "Daily Target", placeholder: "1200" },
+        { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Plan aligned with available store issue and operator capacity." },
       ]}
     />
   )
@@ -438,19 +440,15 @@ export function LinkingPlanningPage() {
 export function LinkingDailyUpdatePage() {
   return (
     <ModuleFormPage
-      title="Linking Daily Update"
-      description="Update linking, trimming, and mending progress across current orders."
+      title="Linking Daily Production Progress"
+      description="Submit the daily linking report so the module dashboard and management dashboard stay updated."
       storageKey="form-linking-daily-update"
       fields={[
-        { name: "serial", label: "Serial", placeholder: "01" },
-        { name: "buyerName", label: "Buyer Name", placeholder: "Zara" },
-        { name: "gg", label: "GG", placeholder: "12" },
-        { name: "orderQty", label: "Order Qty", placeholder: "8500" },
-        { name: "knittingReceivedToday", label: "Knitting Recvd Today", placeholder: "1200" },
-        { name: "linkingToday", label: "Linking Today", placeholder: "900" },
-        { name: "trimmingToday", label: "Trimming Today", placeholder: "600" },
-        { name: "mendingToday", label: "Mending Today", placeholder: "500" },
-        { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Current balance updated." },
+        { name: "poNumber", label: "PO Number", placeholder: "LK-2002" },
+        { name: "reportDate", label: "Report Date", type: "date" },
+        { name: "plannedQty", label: "Planned Qty", placeholder: "1200" },
+        { name: "producedQty", label: "Produced Qty", placeholder: "950" },
+        { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Daily linking progress and floor remarks." },
       ]}
     />
   )
@@ -494,13 +492,15 @@ export function FinishingAcceptPoPage() {
 export function FinishingRequisitionPage() {
   return (
     <ModuleFormPage
-      title="Finishing Requisition"
-      description="Raise requisitions from finishing to yarn and store where supporting materials are required."
+      title="Finishing Store Requisition"
+      description="Send a material requisition from Finishing to Store Control for stage support items."
       storageKey="form-finishing-requisition"
       fields={[
         { name: "requisitionNo", label: "Requisition No", placeholder: "REQ-FN-221" },
-        { name: "requestType", label: "Request Type", type: "select", options: requisitionTypeOptions },
-        { name: "requiredQty", label: "Required Qty", placeholder: "3,000 pcs poly bag" },
+        { name: "poNumber", label: "PO Number", placeholder: "LK-2003" },
+        { name: "itemName", label: "Item Name", placeholder: "Poly Bag Large" },
+        { name: "requestType", label: "Request Type", type: "select", options: ["Accessories", "Packing Materials"] },
+        { name: "requiredQty", label: "Required Qty", placeholder: "3,000 pcs" },
         { name: "requiredDate", label: "Required Date", type: "date" },
         { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Required before final packing." },
       ]}
@@ -511,15 +511,17 @@ export function FinishingRequisitionPage() {
 export function FinishingPlanningPage() {
   return (
     <ModuleFormPage
-      title="Finishing Production Planning"
-      description="Plan wash, iron, and packing execution and update current finishing records."
+      title="Finishing Sub-stage Planning"
+      description="Create separate finishing plans for wash, sew, iron, and pack under the same PO."
       storageKey="form-finishing-planning"
       fields={[
-        { name: "batch", label: "Batch", placeholder: "FN-231" },
-        { name: "section", label: "Section", type: "select", options: ["Wash", "Iron", "Packing"] },
-        { name: "todayPlan", label: "Today Plan", placeholder: "2500" },
-        { name: "totalPlan", label: "Total Plan", placeholder: "15000" },
-        { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Plan aligned with washing capacity." },
+        { name: "poNumber", label: "PO Number", placeholder: "LK-2003" },
+        { name: "subStage", label: "Sub-stage", type: "select", options: finishingSubStageOptions },
+        { name: "startDate", label: "Start Date", type: "date" },
+        { name: "endDate", label: "End Date", type: "date" },
+        { name: "totalDays", label: "Total Days", placeholder: "4" },
+        { name: "dailyTarget", label: "Daily Target", placeholder: "2500" },
+        { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Plan aligned with finishing section capacity." },
       ]}
     />
   )
@@ -528,18 +530,16 @@ export function FinishingPlanningPage() {
 export function FinishingDailyUpdatePage() {
   return (
     <ModuleFormPage
-      title="Finishing Daily Update"
-      description="Track current finishing output across wash, attachment, sewing, and packing."
+      title="Finishing Daily Progress"
+      description="Submit the daily progress for each finishing sub-stage so the dashboards stay in sync."
       storageKey="form-finishing-daily-update"
       fields={[
-        { name: "serialNo", label: "Serial No", placeholder: "01" },
-        { name: "buyerName", label: "Buyer Name", placeholder: "Uniqlo" },
-        { name: "styleNo", label: "Style No", placeholder: "FN-2044" },
-        { name: "washToday", label: "Wash Today", placeholder: "900" },
-        { name: "attachmentToday", label: "Attachment Today", placeholder: "700" },
-        { name: "sewingToday", label: "Sewing Today", placeholder: "650" },
-        { name: "packingToday", label: "Packing Today", placeholder: "500" },
-        { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Ironing line awaiting trimmed goods." },
+        { name: "poNumber", label: "PO Number", placeholder: "LK-2003" },
+        { name: "subStage", label: "Sub-stage", type: "select", options: finishingSubStageOptions },
+        { name: "reportDate", label: "Report Date", type: "date" },
+        { name: "plannedQty", label: "Planned Qty", placeholder: "2500" },
+        { name: "producedQty", label: "Produced Qty", placeholder: "2100" },
+        { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Daily finishing remarks for this sub-stage." },
       ]}
     />
   )
