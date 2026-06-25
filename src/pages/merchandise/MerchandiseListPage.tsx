@@ -1,4 +1,4 @@
-import { Pencil, Send, Trash2 } from "lucide-react"
+import { FileUp, Pencil, Send, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { Link } from "react-router"
@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/shared/data-table"
+import { FileUploadField } from "@/components/shared/file-upload-field"
 import { PageHeader } from "@/components/shared/page-header"
 import {
   RecordFormModal,
@@ -63,10 +64,12 @@ function createYarnCheckNotificationId() {
 export function MerchandiseListPage() {
   const dispatch = useAppDispatch()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null)
   const [orderPendingDelete, setOrderPendingDelete] =
     useState<PurchaseOrder | null>(null)
   const [yarnCheckPo, setYarnCheckPo] = useState<PurchaseOrder | null>(null)
+  const [uploadedPoFileName, setUploadedPoFileName] = useState("")
   const purchaseOrders = useAppSelector(
     (state) => state.merchandise.purchaseOrders
   )
@@ -122,6 +125,17 @@ export function MerchandiseListPage() {
     setEditingOrder(null)
     reset(defaultFormValues)
     setIsCreateModalOpen(true)
+  }
+
+  const handleUploadPo = () => {
+    if (!uploadedPoFileName) {
+      toast.error("Please select a file first.")
+      return
+    }
+
+    toast.success(`PO file ${uploadedPoFileName} uploaded successfully.`)
+    setIsUploadModalOpen(false)
+    setUploadedPoFileName("")
   }
 
   const openEditModal = (order: PurchaseOrder) => {
@@ -218,13 +232,24 @@ export function MerchandiseListPage() {
         title="Purchase Order Workflow"
         description="Manage PO lifecycle from buyer intake through yarn check to production routing."
         actions={
-          <Button
-            type="button"
-            className="rounded-2xl"
-            onClick={openCreateModal}
-          >
-            Create PO
-          </Button>
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-2xl"
+              onClick={() => setIsUploadModalOpen(true)}
+            >
+              <FileUp className="mr-1.5 size-4" />
+              Upload PO
+            </Button>
+            <Button
+              type="button"
+              className="rounded-2xl"
+              onClick={openCreateModal}
+            >
+              Create PO
+            </Button>
+          </>
         }
       />
 
@@ -381,6 +406,52 @@ export function MerchandiseListPage() {
         }
         maxWidthClassName="max-w-3xl"
       />
+
+      {isUploadModalOpen ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-4">
+          <div className="w-full max-w-xl rounded-[2rem] border border-border/70 bg-card p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-semibold">Upload PO File</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Upload the buyer PO file here. This demo stores the file name only for the intake flow preview.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <FileUploadField
+                label="PO File"
+                value={uploadedPoFileName}
+                onChange={setUploadedPoFileName}
+                onClear={() => setUploadedPoFileName("")}
+                accept=".xlsx,.xls,.csv,.pdf"
+              />
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => {
+                  setIsUploadModalOpen(false)
+                  setUploadedPoFileName("")
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="rounded-2xl"
+                onClick={handleUploadPo}
+              >
+                Upload File
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Yarn Check Confirmation Dialog */}
       {yarnCheckPo ? (

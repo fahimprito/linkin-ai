@@ -25,6 +25,7 @@ import { LinkingStoreIssueLogPage } from "@/pages/linking/LinkingStoreIssueLogPa
 import { LinkingStoreRequisitionPage } from "@/pages/linking/LinkingStoreRequisitionPage"
 import { MerchandiseDetailPage } from "@/pages/merchandise/MerchandiseDetailPage"
 import { MerchandiseListPage } from "@/pages/merchandise/MerchandiseListPage"
+import { MerchandiseMasterExcelPage } from "@/pages/merchandise/MerchandiseMasterExcelPage"
 import { KnittingDailyProgressPage } from "@/pages/knitting/KnittingDailyProgressPage"
 import { KnittingIssuanceLogPage } from "@/pages/knitting/KnittingIssuanceLogPage"
 import { KnittingPlanningPage } from "@/pages/knitting/KnittingPlanningPage"
@@ -116,6 +117,11 @@ export const router = createBrowserRouter([
                 path: "/merchandise",
                 element: <MerchandiseListPage />,
                 handle: { breadcrumb: "PO List" },
+              },
+              {
+                path: "/merchandise/master-excel",
+                element: <MerchandiseMasterExcelPage />,
+                handle: { breadcrumb: "Master Excel" },
               },
               {
                 path: "/merchandise/:poId",

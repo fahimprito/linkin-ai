@@ -61,6 +61,7 @@ export const dashboardNavigation: NavigationItem[] = [
     allowedRoles: ["super_admin", "merchandise_user"],
     children: [
       { label: "PO List", to: "/merchandise", icon: List },
+      { label: "Master Excel", to: "/merchandise/master-excel", icon: ClipboardList },
     ],
   },
   {
