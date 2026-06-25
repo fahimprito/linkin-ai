@@ -25,11 +25,6 @@ import {
   LinkingPlanningPage,
   LinkingProductionReportPage,
   LinkingStatusReportPage,
-  MerchandiseFetchPoPage,
-  MerchandiseManagementReportPage,
-  MerchandiseProductionUpdatesPage,
-  MerchandiseSupplierFollowUpPage,
-  MerchandiseYarnRequestPage,
   PackingSectionReportPage,
   PoTrackerReportPage,
   StoreAccessoriesPoPage,
@@ -37,13 +32,8 @@ import {
   StoreInspectionPage,
   StoreStatusReportPage,
   StoreStockReceiptPage,
-  YarnFloorDeliveryPage,
   YarnInformationReportPage,
-  YarnInspectionPage,
-  YarnManagementReportPage,
-  YarnPoIntakePage,
   YarnStockCalculationReportPage,
-  YarnSupplierReceiptPage,
 } from "@/pages/forms/OperationsFormPages"
 import { MerchandiseDetailPage } from "@/pages/merchandise/MerchandiseDetailPage"
 import { MerchandiseListPage } from "@/pages/merchandise/MerchandiseListPage"
@@ -133,31 +123,6 @@ export const router = createBrowserRouter([
                 handle: { breadcrumb: "PO List" },
               },
               {
-                path: "/merchandise/fetch-po",
-                element: <MerchandiseFetchPoPage />,
-                handle: { breadcrumb: "Fetch Buyer PO" },
-              },
-              {
-                path: "/merchandise/yarn-request",
-                element: <MerchandiseYarnRequestPage />,
-                handle: { breadcrumb: "Yarn Request" },
-              },
-              {
-                path: "/merchandise/supplier-follow-up",
-                element: <MerchandiseSupplierFollowUpPage />,
-                handle: { breadcrumb: "Supplier Follow-up" },
-              },
-              {
-                path: "/merchandise/production-updates",
-                element: <MerchandiseProductionUpdatesPage />,
-                handle: { breadcrumb: "Production Updates" },
-              },
-              {
-                path: "/merchandise/management-report",
-                element: <MerchandiseManagementReportPage />,
-                handle: { breadcrumb: "Mgmt Report" },
-              },
-              {
                 path: "/merchandise/:poId",
                 element: <MerchandiseDetailPage />,
                 handle: {
@@ -180,31 +145,6 @@ export const router = createBrowserRouter([
                 path: "/yarn",
                 element: <YarnControlPage />,
                 handle: { breadcrumb: "Overview" },
-              },
-              {
-                path: "/yarn/po-intake",
-                element: <YarnPoIntakePage />,
-                handle: { breadcrumb: "Accept PO" },
-              },
-              {
-                path: "/yarn/supplier-receipt",
-                element: <YarnSupplierReceiptPage />,
-                handle: { breadcrumb: "Supplier Receipt" },
-              },
-              {
-                path: "/yarn/inspection",
-                element: <YarnInspectionPage />,
-                handle: { breadcrumb: "Inspection" },
-              },
-              {
-                path: "/yarn/floor-delivery",
-                element: <YarnFloorDeliveryPage />,
-                handle: { breadcrumb: "Floor Delivery" },
-              },
-              {
-                path: "/yarn/management-report",
-                element: <YarnManagementReportPage />,
-                handle: { breadcrumb: "Mgmt Report" },
               },
               {
                 path: "/yarn/check-requests",

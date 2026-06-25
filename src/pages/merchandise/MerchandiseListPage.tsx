@@ -16,7 +16,6 @@ import { StatusBadge } from "@/components/shared/status-badge"
 import {
   StageTracker,
   PO_LIFECYCLE_STAGES,
-  poStatusToStage,
 } from "@/components/shared/stage-tracker"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
@@ -25,20 +24,9 @@ import {
   updatePurchaseOrder,
   linkYarnCheckRequest,
 } from "@/store/slices/merchandise-slice"
+import { addNotification } from "@/store/slices/notification-slice"
 import { addCheckRequest } from "@/store/slices/yarn-check-slice"
 import type { CreatePurchaseOrderPayload, PurchaseOrder } from "@/types/modules"
-
-const poStatusOptions: CreatePurchaseOrderPayload["status"][] = [
-  "Draft",
-  "Pending Yarn Check",
-  "Yarn Available",
-  "Yarn Ordered",
-  "Yarn Receiving",
-  "Ready for Production",
-  "Knitting",
-  "Linking",
-  "Finishing",
-]
 
 const purchaseOrderFields: ModalFormField[] = [
   { name: "poNumber", label: "PO Number", placeholder: "LK-2099" },
@@ -65,14 +53,12 @@ const purchaseOrderFields: ModalFormField[] = [
     type: "number",
     placeholder: "1500",
   },
-  {
-    name: "status",
-    label: "PO Status",
-    type: "select",
-    options: [...poStatusOptions],
-  },
   { name: "deliveryDate", label: "Delivery Date", type: "date" },
 ]
+
+function createYarnCheckNotificationId() {
+  return `notif-${Date.now()}`
+}
 
 export function MerchandiseListPage() {
   const dispatch = useAppDispatch()
@@ -145,7 +131,6 @@ export function MerchandiseListPage() {
       style: order.style,
       design: order.design,
       quantity: order.quantity,
-      status: order.status,
       supplier: order.supplier,
       deliveryDate: order.deliveryDate,
       gg: order.gg ?? "",
@@ -162,6 +147,7 @@ export function MerchandiseListPage() {
       ...values,
       quantity: Number(values.quantity),
       requiredYarnQty: Number(values.requiredYarnQty),
+      status: editingOrder?.status ?? "Draft",
     }
 
     if (editingOrder) {
@@ -200,6 +186,15 @@ export function MerchandiseListPage() {
       })
     )
     dispatch(linkYarnCheckRequest({ poId: po.id, yarnCheckRequestId: yarnCheckId }))
+    dispatch(
+      addNotification({
+        id: createYarnCheckNotificationId(),
+        title: `New yarn check request: ${po.poNumber}`,
+        description: `${po.buyer} - ${po.style} has been sent from Merchandise to Yarn Control for availability review.`,
+        time: "Just now",
+        read: false,
+      })
+    )
     toast.success(
       `Yarn check request sent for ${po.poNumber}. Yarn Controller will review.`
     )
@@ -369,7 +364,6 @@ export function MerchandiseListPage() {
               style: editingOrder.style,
               design: editingOrder.design,
               quantity: editingOrder.quantity,
-              status: editingOrder.status,
               supplier: editingOrder.supplier,
               deliveryDate: editingOrder.deliveryDate,
               gg: editingOrder.gg ?? "",

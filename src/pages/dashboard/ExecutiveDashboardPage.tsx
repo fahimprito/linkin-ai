@@ -10,30 +10,42 @@ import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { Button } from "@/components/ui/button"
 import { useAppSelector } from "@/store/hooks"
+import type { UserRole } from "@/types/auth"
 import {
   selectExecutiveDashboardMetrics,
   selectMetricsForRole,
 } from "@/store/selectors/dashboard-metrics"
 
+type DepartmentDashboardRole = Exclude<UserRole, "super_admin" | "management_user">
+
+type DepartmentDashboardContent = {
+  title: string
+  description: string
+  quickActions: Array<{
+    label: string
+    note: string
+  }>
+}
+
 const roleDashboardContent = {
   merchandise_user: {
     title: "Merchandise operations dashboard",
     description:
-      "Follow buyer PO intake, yarn requests, supplier coordination, and cross-production updates from one merchandising workspace.",
+      "Manage Stage 1 from buyer PO intake through yarn-check handoff without leaving the merchandising workspace.",
     quickActions: [
-      { label: "Fetch Buyer PO", note: "Capture and standardize new buyer portal PO data." },
-      { label: "Yarn Request", note: "Raise consumption requests to design and sourcing." },
-      { label: "Production Updates", note: "Monitor knitting, linking, and finishing progress." },
+      { label: "Create PO", note: "Capture the buyer PO and required yarn details." },
+      { label: "Send Yarn Check", note: "Route the PO to Yarn Control for availability review." },
+      { label: "Track Stage 1", note: "Monitor check requests, ETA updates, and delivery progress." },
     ],
   },
   yarn_control_user: {
     title: "Yarn control dashboard",
     description:
-      "Manage yarn PO intake, receiving, inspection, stock position, and floor delivery against production requisitions.",
+      "Run the Stage 1 yarn decision flow: review requests, place supplier orders, receive batches, and inspect for release.",
     quickActions: [
-      { label: "Accept PO", note: "Register incoming yarn control orders." },
-      { label: "Supplier Receipt", note: "Update received quantities and stock count." },
-      { label: "Inspection", note: "Record quality, elasticity, moisture, and quantity." },
+      { label: "Check Requests", note: "Decide whether stock is available or supplier ordering is needed." },
+      { label: "Supplier Orders", note: "Create supplier orders and log ETA back to merchandise." },
+      { label: "Batch Inspection", note: "Accept or reject delivery batches with permanent audit logging." },
     ],
   },
   store_control_user: {
@@ -76,7 +88,7 @@ const roleDashboardContent = {
       { label: "Daily Update", note: "Track wash, sewing, attachment, and packing." },
     ],
   },
-}
+} satisfies Record<DepartmentDashboardRole, DepartmentDashboardContent>
 
 export function ExecutiveDashboardPage() {
   const { data, isLoading } = useGetExecutiveDashboardQuery(undefined)
@@ -99,7 +111,7 @@ export function ExecutiveDashboardPage() {
     user.role === "super_admin" || user.role === "management_user"
 
   if (!isExecutiveView) {
-    const dashboard = roleDashboardContent[user.role]
+    const dashboard = roleDashboardContent[user.role as DepartmentDashboardRole]
 
     return (
       <div className="space-y-6">

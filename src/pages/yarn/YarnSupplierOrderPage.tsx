@@ -12,6 +12,7 @@ import {
 import { StatusBadge } from "@/components/shared/status-badge"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
+import { addNotification } from "@/store/slices/notification-slice"
 import {
   addSupplierOrder,
   updateCheckRequestStatus,
@@ -26,6 +27,14 @@ type SupplierOrderFormValues = {
   color: string
   orderedQty: string
   expectedArrival: string
+}
+
+function createSupplierOrderId() {
+  return `yso-${Date.now()}`
+}
+
+function createEtaNotificationId() {
+  return `notif-${Date.now()}`
 }
 
 const supplierOrderFields: ModalFormField[] = [
@@ -60,8 +69,7 @@ export function YarnSupplierOrderPage() {
   )
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedCheckRequest, setSelectedCheckRequest] = useState<string>("")
-  const { register, handleSubmit, reset, setValue } =
-    useForm<SupplierOrderFormValues>({
+  const { register, handleSubmit, reset } = useForm<SupplierOrderFormValues>({
       defaultValues: {
         poId: "",
         poNumber: "",
@@ -101,7 +109,7 @@ export function YarnSupplierOrderPage() {
   }
 
   const onSubmit = (values: SupplierOrderFormValues) => {
-    const orderId = `yso-${Date.now()}`
+    const orderId = createSupplierOrderId()
     dispatch(
       addSupplierOrder({
         id: orderId,
@@ -128,6 +136,15 @@ export function YarnSupplierOrderPage() {
 
     // Update PO status
     dispatch(updatePoStatus({ id: values.poId, status: "Yarn Ordered" }))
+    dispatch(
+      addNotification({
+        id: createEtaNotificationId(),
+        title: `ETA logged for ${values.poNumber}`,
+        description: `Yarn order placed with ${values.supplier}. Expected arrival: ${values.expectedArrival}.`,
+        time: "Just now",
+        read: false,
+      })
+    )
 
     toast.success(
       `Supplier order placed for PO ${values.poNumber}. ETA: ${values.expectedArrival}`

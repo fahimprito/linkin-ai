@@ -28,6 +28,10 @@ type DeliveryFormValues = {
   remarks: string
 }
 
+function createDeliveryBatchId() {
+  return `ydb-${Date.now()}`
+}
+
 const deliveryFields: ModalFormField[] = [
   {
     name: "poNumber",
@@ -61,9 +65,6 @@ export function YarnDeliveryLogPage() {
   )
   const supplierOrders = useAppSelector(
     (state) => state.yarnCheck.supplierOrders
-  )
-  const checkRequests = useAppSelector(
-    (state) => state.yarnCheck.checkRequests
   )
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedOrderId, setSelectedOrderId] = useState("")
@@ -108,7 +109,7 @@ export function YarnDeliveryLogPage() {
   }
 
   const onSubmit = (values: DeliveryFormValues) => {
-    const batchId = `ydb-${Date.now()}`
+    const batchId = createDeliveryBatchId()
     dispatch(
       addDeliveryBatch({
         id: batchId,

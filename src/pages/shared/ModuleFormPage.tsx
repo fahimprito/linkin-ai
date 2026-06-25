@@ -42,6 +42,10 @@ type ModuleFormPageProps = {
 
 type FormValues = Record<string, string>
 
+function createSubmissionRecordId() {
+  return `frm-${Date.now()}`
+}
+
 export function ModuleFormPage({
   title,
   description,
@@ -146,7 +150,7 @@ export function ModuleFormPage({
   const onSubmit = (values: FormValues) => {
     const submittedAtIso = new Date().toISOString()
     const nextRecord: StoredFormRecord = {
-      id: editingRecord?.id ?? `frm-${Date.now()}`,
+      id: editingRecord?.id ?? createSubmissionRecordId(),
       submittedAt: new Date(submittedAtIso).toLocaleString(),
       submittedAtIso,
       ...Object.fromEntries(
@@ -161,7 +165,7 @@ export function ModuleFormPage({
           recordId: editingRecord.id,
           updates: {
             submittedAt: nextRecord.submittedAt,
-            submittedAtIso: nextRecord.submittedAtIso,
+            submittedAtIso,
             ...Object.fromEntries(
               Object.entries(values).map(([key, value]) => [key, String(value)])
             ),

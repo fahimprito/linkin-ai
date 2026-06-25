@@ -1,13 +1,11 @@
 import {
   Activity,
   BarChart3,
-  BellRing,
   Boxes,
   Cable,
   CalendarRange,
   ClipboardCheck,
   ClipboardList,
-  Download,
   Factory,
   FileText,
   Handshake,
@@ -65,11 +63,6 @@ export const dashboardNavigation: NavigationItem[] = [
     allowedRoles: ["super_admin", "merchandise_user"],
     children: [
       { label: "PO List", to: "/merchandise", icon: List },
-      { label: "Fetch Buyer PO", to: "/merchandise/fetch-po", icon: Download },
-      { label: "Yarn Request", to: "/merchandise/yarn-request", icon: Send },
-      { label: "Supplier Follow-up", to: "/merchandise/supplier-follow-up", icon: BellRing },
-      { label: "Production Updates", to: "/merchandise/production-updates", icon: Activity },
-      { label: "Mgmt Report", to: "/merchandise/management-report", icon: FileText },
     ],
   },
   {
@@ -80,11 +73,6 @@ export const dashboardNavigation: NavigationItem[] = [
     allowedRoles: ["super_admin", "yarn_control_user"],
     children: [
       { label: "Overview", to: "/yarn", icon: Gauge },
-      { label: "Accept PO", to: "/yarn/po-intake", icon: ClipboardList },
-      { label: "Supplier Receipt", to: "/yarn/supplier-receipt", icon: ShoppingBag },
-      { label: "Inspection", to: "/yarn/inspection", icon: ScanSearch },
-      { label: "Floor Delivery", to: "/yarn/floor-delivery", icon: Truck },
-      { label: "Mgmt Report", to: "/yarn/management-report", icon: FileText },
       { label: "Check Requests", to: "/yarn/check-requests", icon: CheckCircle },
       { label: "Supplier Orders", to: "/yarn/supplier-orders", icon: ShoppingBag },
       { label: "Delivery Log", to: "/yarn/delivery-log", icon: Truck },

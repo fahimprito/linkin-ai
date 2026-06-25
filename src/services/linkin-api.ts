@@ -45,7 +45,8 @@ export const linkinApi = baseApi.injectEndpoints({
           }
         }
 
-        const { password: _password, ...user } = matchedUser
+        const { password, ...user } = matchedUser
+        void password
         return { data: buildMockSession(user) }
       },
     }),

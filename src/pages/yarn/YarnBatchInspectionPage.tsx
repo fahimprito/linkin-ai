@@ -24,10 +24,6 @@ export function YarnBatchInspectionPage() {
   const supplierOrders = useAppSelector(
     (state) => state.yarnCheck.supplierOrders
   )
-  const checkRequests = useAppSelector(
-    (state) => state.yarnCheck.checkRequests
-  )
-
   const [inspectingBatch, setInspectingBatch] =
     useState<YarnDeliveryBatch | null>(null)
   const [testReportName, setTestReportName] = useState("")
