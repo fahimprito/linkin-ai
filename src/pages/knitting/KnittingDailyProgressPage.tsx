@@ -1,4 +1,4 @@
-import { useState } from "react"
+﻿import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -176,26 +176,22 @@ export function KnittingDailyProgressPage() {
     <div className="space-y-6">
       <PageHeader
         title="Knitting Daily Progress"
-        description="Submit daily knitting production, record finished knit output weight, and let the system calculate waste percentage automatically."
       />
 
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Active POs"
           value={String(activeOrders.length).padStart(2, "0")}
-          delta="Plans in progress"
           tone="default"
         />
         <MetricCard
           label="Today's Output"
           value={`${todayOutput.toLocaleString()} pcs`}
-          delta={todayIso}
           tone="success"
         />
         <MetricCard
           label="Daily Entries"
           value={String(progressEntries.length).padStart(2, "0")}
-          delta="Progress logs"
           tone="warning"
         />
       </section>
@@ -222,7 +218,7 @@ export function KnittingDailyProgressPage() {
                     <div>
                       <p className="font-semibold">{po.poNumber}</p>
                       <p className="text-sm text-muted-foreground">
-                        {po.buyer} · {po.style}
+                        {po.buyer} Â· {po.style}
                       </p>
                     </div>
                     <StatusBadge value={po.status} />
@@ -370,3 +366,4 @@ export function KnittingDailyProgressPage() {
     </div>
   )
 }
+

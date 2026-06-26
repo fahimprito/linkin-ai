@@ -1,4 +1,4 @@
-import { useState } from "react"
+﻿import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -135,7 +135,6 @@ export function KnittingRequisitionPage() {
     <div className="space-y-6">
       <PageHeader
         title="Knitting Yarn Requisitions"
-        description="Raise yarn requisitions for Ready for Production POs. Yarn Control will issue from available stock and the issuance log will update automatically."
       />
 
       <section className="space-y-3">
@@ -156,7 +155,7 @@ export function KnittingRequisitionPage() {
                     <div>
                       <p className="font-semibold">{po.poNumber}</p>
                       <p className="text-sm text-muted-foreground">
-                        {po.buyer} · {po.style}
+                        {po.buyer} Â· {po.style}
                       </p>
                     </div>
                     <StatusBadge value={po.status} />
@@ -249,3 +248,4 @@ export function KnittingRequisitionPage() {
     </div>
   )
 }
+

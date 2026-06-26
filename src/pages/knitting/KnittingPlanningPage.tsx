@@ -1,4 +1,4 @@
-import { useState } from "react"
+﻿import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -121,7 +121,6 @@ export function KnittingPlanningPage() {
     <div className="space-y-6">
       <PageHeader
         title="Knitting Production Planning"
-        description="Create production plans after yarn has been issued. The system calculates total days and daily target automatically."
       />
 
       <section className="space-y-3">
@@ -141,7 +140,7 @@ export function KnittingPlanningPage() {
                     <div>
                       <p className="font-semibold">{po.poNumber}</p>
                       <p className="text-sm text-muted-foreground">
-                        {po.buyer} · {po.style}
+                        {po.buyer} Â· {po.style}
                       </p>
                     </div>
                     <StatusBadge value={po.status} />
@@ -231,3 +230,4 @@ export function KnittingPlanningPage() {
     </div>
   )
 }
+

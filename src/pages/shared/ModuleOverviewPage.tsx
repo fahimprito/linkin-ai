@@ -1,4 +1,4 @@
-import { DataTable } from "@/components/shared/data-table"
+﻿import { DataTable } from "@/components/shared/data-table"
 import { LoadingState } from "@/components/shared/loading-state"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
@@ -17,15 +17,8 @@ type ModuleOverviewPageProps = {
   metrics?: DashboardMetric[]
 }
 
-export function ModuleOverviewPage({
-  title,
-  description,
-  filters,
-  data,
-  isLoading,
-  extraTableTitle,
-  metrics,
-}: ModuleOverviewPageProps) {
+export function ModuleOverviewPage(props: ModuleOverviewPageProps) {
+  const { title, filters, data, isLoading, extraTableTitle, metrics } = props
   if (isLoading || !data) {
     return <LoadingState />
   }
@@ -44,7 +37,7 @@ export function ModuleOverviewPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader title={title} description={description} />
+      <PageHeader title={title} />
       <SearchFilterBar filters={filters} />
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {(metrics ?? data.metrics).map((metric) => (
@@ -61,3 +54,4 @@ export function ModuleOverviewPage({
     </div>
   )
 }
+

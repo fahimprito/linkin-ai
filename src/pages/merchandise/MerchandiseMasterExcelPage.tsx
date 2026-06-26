@@ -1,4 +1,4 @@
-import { DataTable } from "@/components/shared/data-table"
+﻿import { DataTable } from "@/components/shared/data-table"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
@@ -15,51 +15,42 @@ export function MerchandiseMasterExcelPage() {
   const readyForProductionCount = purchaseOrders.filter(
     (po) => po.status === "Ready for Production"
   ).length
-  const inProductionCount = purchaseOrders.filter((po) =>
-    ["Knitting", "Linking", "Finishing"].includes(po.status)
+  const yarnAvailableCount = purchaseOrders.filter((po) =>
+    po.status === "Yarn Available"
   ).length
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Master Excel"
-        description="Live merchandising master sheet generated directly from PO List data. No separate submission is required here."
       />
 
       <SearchFilterBar
         filters={[
           "All POs",
           "Pending Yarn Check",
+          "Yarn Available",
           "Ready for Production",
-          "In Production",
-          "Finished",
+          "Yarn Ordered",
         ]}
       />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Total POs"
-          value={String(purchaseOrders.length).padStart(2, "0")}
-          delta="Live from PO List"
-          tone="default"
+          value={String(purchaseOrders.length).padStart(2, "0")}          tone="default"
         />
         <MetricCard
           label="Yarn Check"
-          value={String(pendingYarnCheckCount).padStart(2, "0")}
-          delta="Awaiting Stage 1 closure"
-          tone="warning"
+          value={String(pendingYarnCheckCount).padStart(2, "0")}          tone="warning"
         />
         <MetricCard
           label="Ready for Production"
-          value={String(readyForProductionCount).padStart(2, "0")}
-          delta="Released from Yarn"
-          tone="success"
+          value={String(readyForProductionCount).padStart(2, "0")}          tone="success"
         />
         <MetricCard
-          label="In Production"
-          value={String(inProductionCount).padStart(2, "0")}
-          delta="Knitting to Finishing"
-          tone="success"
+          label="Yarn Available"
+          value={String(yarnAvailableCount).padStart(2, "0")}          tone="success"
         />
       </section>
 
@@ -102,3 +93,4 @@ export function MerchandiseMasterExcelPage() {
     </div>
   )
 }
+

@@ -29,7 +29,7 @@ export function LoginPage() {
       const session = await login(values).unwrap()
       dispatch(setSession(session))
       toast.success(`Welcome back, ${session.user.name}`)
-      navigate(getDefaultRoute(session.user.permissions))
+      navigate(getDefaultRoute(session.user.role, session.user.permissions))
     } catch (error) {
       const message =
         typeof error === "object" &&

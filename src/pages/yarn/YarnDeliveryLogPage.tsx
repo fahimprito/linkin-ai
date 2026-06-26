@@ -1,4 +1,4 @@
-import { useState } from "react"
+﻿import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -66,6 +66,9 @@ export function YarnDeliveryLogPage() {
   const supplierOrders = useAppSelector(
     (state) => state.yarnCheck.supplierOrders
   )
+  const yarnSupplierOrders = supplierOrders.filter(
+    (order) => (order.itemCategory ?? "Yarn") === "Yarn"
+  )
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedOrderId, setSelectedOrderId] = useState("")
   const { register, handleSubmit, reset } = useForm<DeliveryFormValues>({
@@ -81,12 +84,12 @@ export function YarnDeliveryLogPage() {
   })
 
   // Only active supplier orders
-  const activeOrders = supplierOrders.filter(
+  const activeOrders = yarnSupplierOrders.filter(
     (o) => o.status !== "Fully Received"
   )
 
   const openCreateForOrder = (orderId: string) => {
-    const order = supplierOrders.find((o) => o.id === orderId)
+    const order = yarnSupplierOrders.find((o) => o.id === orderId)
     if (!order) return
 
     // Calculate next batch number
@@ -138,7 +141,7 @@ export function YarnDeliveryLogPage() {
     dispatch(updatePoStatus({ id: values.poId, status: "Yarn Receiving" }))
 
     // Update check request status
-    const order = supplierOrders.find(
+    const order = yarnSupplierOrders.find(
       (o) => o.id === values.supplierOrderId
     )
     if (order) {
@@ -164,7 +167,6 @@ export function YarnDeliveryLogPage() {
     <div className="space-y-6">
       <PageHeader
         title="Yarn Delivery Log"
-        description="Log incoming yarn deliveries from suppliers. Multiple batches can be received per supplier order."
       />
 
       {/* Status Flow Reference */}
@@ -177,7 +179,7 @@ export function YarnDeliveryLogPage() {
             <div key={status} className="flex items-center gap-2">
               <StatusBadge value={status} />
               {index < statusFlow.length - 1 && (
-                <span className="text-muted-foreground">→</span>
+                <span className="text-muted-foreground">â†’</span>
               )}
             </div>
           ))}
@@ -281,13 +283,13 @@ export function YarnDeliveryLogPage() {
                       {String(row.testReportName)}
                     </span>
                   ) : (
-                    <span className="text-muted-foreground">–</span>
+                    <span className="text-muted-foreground">â€“</span>
                   ),
               },
               {
                 key: "remarks",
                 header: "Remarks",
-                render: (row) => String(row.remarks ?? "–"),
+                render: (row) => String(row.remarks ?? "â€“"),
               },
             ]}
             data={deliveryBatches}
@@ -313,7 +315,7 @@ export function YarnDeliveryLogPage() {
           setSelectedOrderId("")
         }}
         onReset={() => {
-          const order = supplierOrders.find((o) => o.id === selectedOrderId)
+          const order = yarnSupplierOrders.find((o) => o.id === selectedOrderId)
           if (order) {
             const existingBatches = deliveryBatches.filter(
               (b) => b.supplierOrderId === selectedOrderId
@@ -335,3 +337,4 @@ export function YarnDeliveryLogPage() {
     </div>
   )
 }
+

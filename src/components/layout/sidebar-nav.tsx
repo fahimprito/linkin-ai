@@ -21,7 +21,7 @@ export function SidebarNav({ items }: SidebarNavProps) {
             <Bot className="size-5" />
           </div>
           <div>
-            <p className="text-sm font-semibold">Linkin AI</p>
+            <p className="text-sm lg:text-xl font-semibold">KnitOps</p>
             <p className="text-xs text-muted-foreground">
               {roleLabel ?? "Operations ERP"}
             </p>

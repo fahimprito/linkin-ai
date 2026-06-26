@@ -1,4 +1,4 @@
-import { ClipboardList, Package2 } from "lucide-react"
+﻿import { ClipboardList, Package2 } from "lucide-react"
 import { Link } from "react-router"
 
 import { STORE_SERVICE_STEPS, getStoreWorkflowGuidance } from "@/lib/store-workflow"
@@ -15,8 +15,6 @@ export function StoreControlPage() {
   const openRequisitions = requisitions.filter(
     (requisition) => requisition.status !== "Issued"
   ).length
-  const todayIso = new Date().toISOString().split("T")[0]
-  const issuesToday = issueLogs.filter((log) => log.issueDate === todayIso).length
   const trackerStage =
     requisitions.length === 0
       ? "Incoming Requisition"
@@ -31,26 +29,22 @@ export function StoreControlPage() {
     <div className="space-y-6">
       <PageHeader
         title="Store Control Service"
-        description="Store Control is a shared service module for Linking and Finishing. It receives material requisitions, issues items, and keeps the issuance log."
       />
 
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Open Requisitions"
           value={String(openRequisitions).padStart(2, "0")}
-          delta="Awaiting issue"
           tone="warning"
         />
         <MetricCard
           label="Issue Logs"
           value={String(issueLogs.length).padStart(2, "0")}
-          delta={`${String(issuesToday).padStart(2, "0")} today`}
           tone="success"
         />
         <MetricCard
           label="Source Modules"
           value="02"
-          delta="Linking and Finishing"
           tone="default"
         />
       </section>
@@ -61,7 +55,7 @@ export function StoreControlPage() {
         summary={
           requisitions.length > 0
             ? guidance.summary
-            : "No requisitions have arrived yet. This service module will be used by Linking and Finishing through the same requisition -> issuance -> log pattern."
+            : "No requisitions have arrived yet. This service module is ready for the same requisition -> issuance -> log flow whenever the next stage is enabled."
         }
         nextAction={guidance.nextAction}
         stages={STORE_SERVICE_STEPS}
@@ -107,7 +101,7 @@ export function StoreControlPage() {
       {requisitions.length === 0 ? (
         <EmptyState
           title="Store service is ready"
-          description="Linking and Finishing have not sent any material requisitions yet. Once Stage 3 and Stage 4 are live, requests will appear here automatically."
+          description="No active module has sent a material requisition yet. Requests will appear here automatically when the next shared-service flow is enabled."
         />
       ) : (
         <section className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm">
@@ -127,3 +121,4 @@ export function StoreControlPage() {
     </div>
   )
 }
+

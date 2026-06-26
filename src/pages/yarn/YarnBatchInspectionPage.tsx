@@ -1,4 +1,4 @@
-import { CheckCircle, ShieldAlert, XCircle } from "lucide-react"
+﻿import { CheckCircle, ShieldAlert, XCircle } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -165,7 +165,6 @@ export function YarnBatchInspectionPage() {
     <div className="space-y-6">
       <PageHeader
         title="Batch Inspection"
-        description="Inspect delivery batches, upload test reports, and accept or reject. Records are permanent after submission (audit trail)."
       />
 
       {/* Audit Trail Notice */}
@@ -260,7 +259,7 @@ export function YarnBatchInspectionPage() {
                       {String(row.testReportName)}
                     </span>
                   ) : (
-                    <span className="text-muted-foreground">–</span>
+                    <span className="text-muted-foreground">â€“</span>
                   ),
               },
               {
@@ -272,13 +271,13 @@ export function YarnBatchInspectionPage() {
                       {String(row.rejectionReason)}
                     </span>
                   ) : (
-                    <span className="text-muted-foreground">–</span>
+                    <span className="text-muted-foreground">â€“</span>
                   ),
               },
               {
                 key: "inspectedBy",
                 header: "Inspector",
-                render: (row) => String(row.inspectedBy ?? "–"),
+                render: (row) => String(row.inspectedBy ?? "â€“"),
               },
               {
                 key: "inspectedAt",
@@ -286,7 +285,7 @@ export function YarnBatchInspectionPage() {
                 render: (row) =>
                   row.inspectedAt
                     ? new Date(String(row.inspectedAt)).toLocaleString()
-                    : "–",
+                    : "â€“",
               },
             ]}
             data={inspectedBatches}
@@ -310,8 +309,8 @@ export function YarnBatchInspectionPage() {
                   Inspect {inspectingBatch.batchNumber}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  PO: {inspectingBatch.poNumber} · Qty:{" "}
-                  {inspectingBatch.quantity} kg · Delivered:{" "}
+                  PO: {inspectingBatch.poNumber} Â· Qty:{" "}
+                  {inspectingBatch.quantity} kg Â· Delivered:{" "}
                   {inspectingBatch.deliveryDate}
                 </p>
               </div>
@@ -405,3 +404,4 @@ export function YarnBatchInspectionPage() {
     </div>
   )
 }
+

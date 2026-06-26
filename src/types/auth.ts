@@ -1,22 +1,24 @@
-export type UserRole =
-  | "super_admin"
-  | "merchandise_user"
-  | "yarn_control_user"
-  | "store_control_user"
-  | "knitting_user"
-  | "linking_user"
-  | "finishing_user"
-  | "management_user"
+export const userRoles = [
+  "super_admin",
+  "merchandising_user",
+  "design_user",
+  "yarn_user",
+  "store_user",
+  "management_user",
+] as const
 
-export type AppModuleKey =
-  | "dashboard"
-  | "merchandise"
-  | "yarn"
-  | "store"
-  | "knitting"
-  | "linking"
-  | "finishing"
-  | "reports"
+export type UserRole = (typeof userRoles)[number]
+
+export const appModuleKeys = [
+  "dashboard",
+  "merchandise",
+  "design",
+  "yarn",
+  "store",
+  "reports",
+] as const
+
+export type AppModuleKey = (typeof appModuleKeys)[number]
 
 export type User = {
   id: string

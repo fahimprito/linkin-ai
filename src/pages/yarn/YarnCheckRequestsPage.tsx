@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle } from "lucide-react"
+﻿import { CheckCircle, XCircle } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -65,26 +65,22 @@ export function YarnCheckRequestsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Yarn Check Requests"
-        description="Review incoming yarn availability requests from Merchandisers. Check stock and decide: mark available or order from supplier."
       />
 
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Pending Checks"
           value={String(pendingCount).padStart(2, "0")}
-          delta="Awaiting decision"
           tone="warning"
         />
         <MetricCard
           label="Processed"
           value={String(processedCount).padStart(2, "0")}
-          delta="Decided"
           tone="success"
         />
         <MetricCard
           label="Total Requests"
           value={String(checkRequests.length).padStart(2, "0")}
-          delta="All time"
           tone="default"
         />
       </section>
@@ -156,3 +152,4 @@ export function YarnCheckRequestsPage() {
     </div>
   )
 }
+

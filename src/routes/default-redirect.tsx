@@ -10,5 +10,5 @@ export function DefaultRedirect() {
     return <Navigate to="/login" replace />
   }
 
-  return <Navigate to={getDefaultRoute(user.permissions)} replace />
+  return <Navigate to={getDefaultRoute(user.role, user.permissions)} replace />
 }

@@ -1,4 +1,4 @@
-import { DataTable } from "@/components/shared/data-table"
+﻿import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PageHeader } from "@/components/shared/page-header"
 import { useAppSelector } from "@/store/hooks"
@@ -11,19 +11,15 @@ type StoreIssueLogTableProps = {
   title: string
 }
 
-export function StoreIssueLogTable({
-  description,
-  emptyDescription,
-  sourceModule,
-  title,
-}: StoreIssueLogTableProps) {
+export function StoreIssueLogTable(props: StoreIssueLogTableProps) {
+  const { emptyDescription, sourceModule, title } = props
   const issueLogs = useAppSelector((state) =>
     state.storeService.issueLogs.filter((log) => log.sourceModule === sourceModule)
   )
 
   return (
     <div className="space-y-6">
-      <PageHeader title={title} description={description} />
+      <PageHeader title={title} />
 
       {issueLogs.length > 0 ? (
         <DataTable
@@ -54,3 +50,4 @@ export function StoreIssueLogTable({
     </div>
   )
 }
+

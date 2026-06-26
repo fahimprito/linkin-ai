@@ -1,4 +1,4 @@
-import { Link } from "react-router"
+﻿import { Link } from "react-router"
 
 import { FINISHING_SUB_STAGES, getFinishingSubStageGuidance } from "@/lib/finishing-workflow"
 import { Button } from "@/components/ui/button"
@@ -64,7 +64,6 @@ export function FinishingPage() {
     <div className="space-y-6">
       <PageHeader
         title="Finishing sub-stage control"
-        description="Track finishing through wash, sew, iron, and pack while keeping daily output and shared Store Control requisitions visible in one place."
       />
 
       <SearchFilterBar
@@ -165,3 +164,4 @@ export function FinishingPage() {
     </div>
   )
 }
+

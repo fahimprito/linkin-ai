@@ -1,4 +1,4 @@
-import { CalendarRange, ClipboardList, Factory, Package2 } from "lucide-react"
+﻿import { CalendarRange, ClipboardList, Factory, Package2 } from "lucide-react"
 import { Link } from "react-router"
 
 import {
@@ -72,32 +72,27 @@ export function KnittingPage() {
     <div className="space-y-6">
       <PageHeader
         title="Knitting Module"
-        description="Receive released POs from Yarn Control, raise yarn requisitions, follow issued stock, build production plans, and report daily knitting progress."
       />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Knitting Queue"
           value={String(queueOrders.length).padStart(2, "0")}
-          delta="Ready or running"
           tone="default"
         />
         <MetricCard
           label="Open Requisitions"
           value={String(activeRequisitions).padStart(2, "0")}
-          delta="Need Yarn Control issue"
           tone="warning"
         />
         <MetricCard
           label="Active Plans"
           value={String(activePlans).padStart(2, "0")}
-          delta="Scheduled lines"
           tone="success"
         />
         <MetricCard
           label="Today's Output"
           value={`${todayOutput.toLocaleString()} pcs`}
-          delta={todayIso}
           tone="success"
         />
       </section>
@@ -296,3 +291,4 @@ export function KnittingPage() {
     </div>
   )
 }
+

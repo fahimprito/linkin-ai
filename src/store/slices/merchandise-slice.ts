@@ -40,7 +40,12 @@ const merchandiseSlice = createSlice({
     ) => {
       state.purchaseOrders = state.purchaseOrders.map((order) =>
         order.id === action.payload.id
-          ? { id: order.id, createdAt: order.createdAt, ...action.payload.updates }
+          ? {
+              ...order,
+              ...action.payload.updates,
+              id: order.id,
+              createdAt: order.createdAt,
+            }
           : order
       )
       savePurchaseOrders(state.purchaseOrders)
@@ -77,6 +82,43 @@ const merchandiseSlice = createSlice({
       )
       savePurchaseOrders(state.purchaseOrders)
     },
+    requestConsumption: (state, action: PayloadAction<{ id: string }>) => {
+      state.purchaseOrders = state.purchaseOrders.map((order) =>
+        order.id === action.payload.id
+          ? {
+              ...order,
+              status: "Consumption Requested" as POStatus,
+              consumptionRequestedAt:
+                order.consumptionRequestedAt ?? new Date().toISOString(),
+            }
+          : order
+      )
+      savePurchaseOrders(state.purchaseOrders)
+    },
+    submitConsumption: (
+      state,
+      action: PayloadAction<{
+        id: string
+        totalYarnKg: number
+        totalFabricKg: number
+        totalAccessoriesQty: number
+      }>
+    ) => {
+      state.purchaseOrders = state.purchaseOrders.map((order) =>
+        order.id === action.payload.id
+          ? {
+              ...order,
+              totalYarnKg: action.payload.totalYarnKg,
+              totalFabricKg: action.payload.totalFabricKg,
+              totalAccessoriesQty: action.payload.totalAccessoriesQty,
+              requiredYarnQty: action.payload.totalYarnKg,
+              consumptionRequestedAt:
+                order.consumptionRequestedAt ?? new Date().toISOString(),
+            }
+          : order
+      )
+      savePurchaseOrders(state.purchaseOrders)
+    },
   },
 })
 
@@ -86,6 +128,8 @@ export const {
   updatePoStatus,
   linkYarnCheckRequest,
   deletePurchaseOrder,
+  requestConsumption,
+  submitConsumption,
 } = merchandiseSlice.actions
 
 export default merchandiseSlice.reducer

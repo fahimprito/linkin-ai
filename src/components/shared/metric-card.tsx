@@ -1,17 +1,12 @@
+import type { LucideIcon } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 
 type MetricCardProps = {
   label: string
   value: string
-  delta: string
   tone?: "default" | "success" | "warning" | "danger"
-}
-
-const deltaToneMap = {
-  default: "text-muted-foreground",
-  success: "text-emerald-600 dark:text-emerald-300",
-  warning: "text-amber-600 dark:text-amber-300",
-  danger: "text-rose-600 dark:text-rose-300",
+  icon?: LucideIcon
 }
 
 const cardToneMap = {
@@ -25,25 +20,41 @@ const cardToneMap = {
     "bg-[linear-gradient(135deg,_rgba(244,63,94,0.08),_rgba(255,255,255,0.88))] dark:bg-[linear-gradient(135deg,_rgba(244,63,94,0.12),_rgba(24,24,27,0.92))]",
 }
 
+const iconToneMap = {
+  default: "bg-primary/10 text-primary",
+  success: "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
+  warning: "bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
+  danger: "bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",
+}
+
 export function MetricCard({
   label,
   value,
-  delta,
   tone = "default",
+  icon: Icon,
 }: MetricCardProps) {
   return (
     <div
       className={cn(
-        "rounded-[1.75rem] border border-border/70 p-5 shadow-sm",
+        "rounded-xl border border-border/70 p-5 shadow-sm",
         cardToneMap[tone]
       )}
     >
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <div className="mt-4 flex items-end justify-between gap-4">
+      <div className="flex items-start justify-between gap-1">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        {Icon ? (
+          <div
+            className={cn(
+              "flex size-10 shrink-0 items-center justify-center rounded-xl",
+              iconToneMap[tone]
+            )}
+          >
+            <Icon className="size-5" />
+          </div>
+        ) : null}
+      </div>
+      <div className="mt-1">
         <span className="text-3xl font-semibold tracking-tight">{value}</span>
-        <span className={cn("text-sm font-semibold", deltaToneMap[tone])}>
-          {delta}
-        </span>
       </div>
     </div>
   )

@@ -11,27 +11,14 @@ export function MerchandiseFetchPoPage() {
       description="Capture purchase order intake from the buyer portal, standardize incoming fields, and prepare the merchandising workflow."
       storageKey="form-merchandise-fetch-po"
       summaryCards={(records) => {
-        const todayCount = records.filter((record) => {
-          const recordDate = new Date(record.submittedAtIso ?? record.submittedAt)
-
-          return (
-            !Number.isNaN(recordDate.getTime()) &&
-            recordDate.toDateString() === new Date().toDateString()
-          )
-        }).length
-
         return [
           {
             label: "Portal Captures",
-            value: String(records.length).padStart(2, "0"),
-            delta: `${String(todayCount).padStart(2, "0")} today`,
-            tone: "success",
+            value: String(records.length).padStart(2, "0"),            tone: "success",
           },
           {
             label: "Standardized Entries",
-            value: String(records.length).padStart(2, "0"),
-            delta: "Live form submissions",
-            tone: "default",
+            value: String(records.length).padStart(2, "0"),            tone: "default",
           },
         ]
       }}

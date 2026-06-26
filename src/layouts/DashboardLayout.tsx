@@ -1,7 +1,6 @@
 import { Outlet } from "react-router"
 
 import { AppHeader } from "@/components/layout/app-header"
-import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { SidebarNav } from "@/components/layout/sidebar-nav"
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog"
 import { useAuth } from "@/hooks/use-auth"
@@ -35,9 +34,6 @@ export function DashboardLayout() {
           <AppHeader />
           <div className="flex-1 overflow-y-auto">
             <main className="p-4 md:p-6">
-              <div className="mb-5">
-                <Breadcrumbs />
-              </div>
               <Outlet />
             </main>
           </div>

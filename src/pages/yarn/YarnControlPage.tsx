@@ -1,4 +1,4 @@
-import { Cable, ClipboardCheck, Package, Send, Truck } from "lucide-react"
+﻿import { Cable, ClipboardCheck, Package, Send, Truck } from "lucide-react"
 import { Link } from "react-router"
 
 import { Button } from "@/components/ui/button"
@@ -20,6 +20,9 @@ export function YarnControlPage() {
   )
   const checkRequests = useAppSelector((state) => state.yarnCheck.checkRequests)
   const supplierOrders = useAppSelector((state) => state.yarnCheck.supplierOrders)
+  const yarnSupplierOrders = supplierOrders.filter(
+    (order) => (order.itemCategory ?? "Yarn") === "Yarn"
+  )
   const deliveryBatches = useAppSelector((state) => state.yarnCheck.deliveryBatches)
   const stockMovements = useAppSelector((state) => state.yarnCheck.stockMovements)
   const requisitions = useAppSelector((state) => state.knitting.requisitions)
@@ -28,7 +31,7 @@ export function YarnControlPage() {
   const progressEntries = useAppSelector((state) => state.knitting.dailyProgress)
 
   const pendingChecks = checkRequests.filter((r) => r.status === "Pending").length
-  const activeOrders = supplierOrders.filter(
+  const activeOrders = yarnSupplierOrders.filter(
     (o) => o.status !== "Fully Received"
   ).length
   const pendingInspections = deliveryBatches.filter(
@@ -43,9 +46,6 @@ export function YarnControlPage() {
           : sum + movement.quantity,
       0
     )
-  const openRequisitions = requisitions.filter(
-    (requisition) => requisition.status !== "Issued"
-  ).length
   const stage2FocusPo =
     purchaseOrders.find((po) => po.status === "Ready for Production") ??
     purchaseOrders.find((po) => po.status === "Knitting") ??
@@ -65,7 +65,6 @@ export function YarnControlPage() {
     <div className="space-y-6">
       <PageHeader
         title="Yarn Control Dashboard"
-        description="Manage yarn check requests from merchandisers, supplier orders, delivery receipts, and batch inspections."
       />
 
       {/* Metrics */}
@@ -73,25 +72,21 @@ export function YarnControlPage() {
         <MetricCard
           label="Pending Checks"
           value={String(pendingChecks).padStart(2, "0")}
-          delta="From Merchandise"
           tone="warning"
         />
         <MetricCard
           label="Active Orders"
           value={String(activeOrders).padStart(2, "0")}
-          delta="Supplier POs"
           tone="default"
         />
         <MetricCard
           label="Awaiting Inspection"
           value={String(pendingInspections).padStart(2, "0")}
-          delta="Delivery batches"
           tone="warning"
         />
         <MetricCard
           label="Available Stock"
           value={`${Math.round(availableStock)} kg`}
-          delta={`${String(openRequisitions).padStart(2, "0")} open requisitions`}
           tone="success"
         />
       </section>
@@ -229,3 +224,4 @@ export function YarnControlPage() {
     </div>
   )
 }
+

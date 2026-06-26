@@ -1,6 +1,7 @@
 // ── PO Status Lifecycle ──────────────────────────────────────────────
 export type POStatus =
   | "Draft"
+  | "Consumption Requested"
   | "Pending Yarn Check"
   | "Yarn Available"
   | "Yarn Ordered"
@@ -12,6 +13,11 @@ export type POStatus =
   | "Finished – Ready to Ship"
 
 // ── Purchase Order ───────────────────────────────────────────────────
+export type ConsumptionStatus =
+  | "Not Requested"
+  | "Requested"
+  | "Submitted"
+
 export type PurchaseOrder = {
   id: string
   poNumber: string
@@ -22,6 +28,40 @@ export type PurchaseOrder = {
   status: POStatus
   supplier: string
   deliveryDate: string
+  sl?: string
+  styleName?: string
+  styleNo?: string
+  callNumber?: string
+  orderNo?: string
+  productionUnit?: string
+  mainSizeHangTagBooking?: string
+  careLabelBooking?: string
+  priceStickerBooking?: string
+  tissue?: string
+  polyCartonBooking?: string
+  buttonZip?: string
+  doneInspection?: string
+  sampleStatus?: string
+  shipMode?: string
+  ccd?: string
+  excessQty?: number
+  newCcd?: string
+  inspectionStyle?: string
+  stylePhoto?: string
+  sizeRange?: string
+  poQty?: number
+  yarn?: string
+  gauge?: string
+  price?: number
+  amount?: number
+  factoryCosting?: string
+  labTest?: string
+  yarnEta?: string
+  totalYarnKg?: number
+  totalFabricKg?: number
+  totalAccessoriesQty?: number
+  consumptionStatus?: ConsumptionStatus
+  consumptionRequestedAt?: string
   // Stage 1 additions
   gg?: string
   yarnComposition?: string
@@ -67,6 +107,8 @@ export type YarnSupplierOrderStatus =
   | "Partially Received"
   | "Fully Received"
 
+export type SupplierOrderItemCategory = "Yarn" | "Accessories"
+
 export type YarnSupplierOrder = {
   id: string
   yarnCheckRequestId: string
@@ -74,10 +116,14 @@ export type YarnSupplierOrder = {
   poNumber: string
   supplier: string
   yarnType: string
+  itemName?: string
+  itemCategory?: SupplierOrderItemCategory
   color: string
   orderedQty: number
   expectedArrival: string
   orderedAt: string
+  deliveryDate?: string
+  inspectionDate?: string
   status: YarnSupplierOrderStatus
 }
 
@@ -113,7 +159,6 @@ export type DashboardMetric = {
   id: string
   label: string
   value: string
-  delta: string
   tone: "default" | "success" | "warning" | "danger"
 }
 

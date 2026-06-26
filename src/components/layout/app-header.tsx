@@ -27,12 +27,7 @@ export function AppHeader() {
           <Menu className="size-4" />
         </Button>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-            Linkin AI Platform
-          </p>
-          <h1 className="truncate text-lg font-semibold">
-            Garment Manufacturing Operations
-          </h1>
+          
         </div>
         <div className="hidden items-center gap-2 rounded-full border border-border/70 bg-card px-3 py-2 shadow-sm md:flex">
           <Search className="size-4 text-muted-foreground" />

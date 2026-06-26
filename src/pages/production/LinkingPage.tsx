@@ -1,4 +1,4 @@
-import { ClipboardList, Package2 } from "lucide-react"
+﻿import { ClipboardList, Package2 } from "lucide-react"
 import { Link } from "react-router"
 
 import { LINKING_STAGE_3_STEPS, getLinkingWorkflowGuidance } from "@/lib/linking-workflow"
@@ -56,7 +56,6 @@ export function LinkingPage() {
     <div className="space-y-6">
       <PageHeader
         title="Linking production control"
-        description="Run Stage 3 from received knit output through store requisition, planning, daily progress, and transfer to Finishing."
       />
 
       <SearchFilterBar
@@ -186,3 +185,4 @@ export function LinkingPage() {
     </div>
   )
 }
+

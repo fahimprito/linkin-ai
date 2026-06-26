@@ -1,4 +1,4 @@
-import { useState } from "react"
+﻿import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -64,6 +64,9 @@ export function YarnSupplierOrderPage() {
   const supplierOrders = useAppSelector(
     (state) => state.yarnCheck.supplierOrders
   )
+  const yarnSupplierOrders = supplierOrders.filter(
+    (order) => (order.itemCategory ?? "Yarn") === "Yarn"
+  )
   const checkRequests = useAppSelector(
     (state) => state.yarnCheck.checkRequests
   )
@@ -118,10 +121,14 @@ export function YarnSupplierOrderPage() {
         poNumber: values.poNumber,
         supplier: values.supplier,
         yarnType: values.yarnType,
+        itemName: values.yarnType,
+        itemCategory: "Yarn",
         color: values.color,
         orderedQty: Number(values.orderedQty),
         expectedArrival: values.expectedArrival,
         orderedAt: new Date().toISOString(),
+        deliveryDate: "",
+        inspectionDate: "",
         status: "Placed",
       })
     )
@@ -157,7 +164,6 @@ export function YarnSupplierOrderPage() {
     <div className="space-y-6">
       <PageHeader
         title="Yarn Supplier Orders"
-        description="Place yarn orders to suppliers when stock is not available. Track order status and expected arrivals."
       />
 
       {/* Orderable Requests */}
@@ -168,7 +174,7 @@ export function YarnSupplierOrderPage() {
           </h2>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {orderableRequests.map((req) => {
-              const hasOrder = supplierOrders.some(
+              const hasOrder = yarnSupplierOrders.some(
                 (o) => o.yarnCheckRequestId === req.id
               )
               return (
@@ -180,7 +186,7 @@ export function YarnSupplierOrderPage() {
                     <div>
                       <p className="font-semibold">{req.poNumber}</p>
                       <p className="text-sm text-muted-foreground">
-                        {req.buyer} · {req.style}
+                        {req.buyer} Â· {req.style}
                       </p>
                     </div>
                     <StatusBadge value={req.status} />
@@ -202,7 +208,7 @@ export function YarnSupplierOrderPage() {
                   )}
                   {hasOrder && (
                     <p className="mt-4 text-center text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                      ✓ Order placed
+                      âœ“ Order placed
                     </p>
                   )}
                 </div>
@@ -215,7 +221,7 @@ export function YarnSupplierOrderPage() {
       {/* All Supplier Orders Table */}
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">All Supplier Orders</h2>
-        {supplierOrders.length > 0 ? (
+        {yarnSupplierOrders.length > 0 ? (
           <DataTable
             columns={[
               { key: "poNumber", header: "PO" },
@@ -242,7 +248,7 @@ export function YarnSupplierOrderPage() {
                 ),
               },
             ]}
-            data={supplierOrders}
+            data={yarnSupplierOrders}
           />
         ) : (
           <div className="rounded-[1.75rem] border border-border/70 bg-card p-8 text-center shadow-sm">
@@ -287,3 +293,4 @@ export function YarnSupplierOrderPage() {
     </div>
   )
 }
+

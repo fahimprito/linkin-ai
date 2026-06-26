@@ -1,7 +1,5 @@
-import { ArrowRight, ClipboardList, FileText, Layers3, PackageSearch } from "lucide-react"
+﻿import { ArrowRight, ClipboardList, FileText, Layers3, PackageSearch } from "lucide-react"
 
-import { useAuth } from "@/hooks/use-auth"
-import { useGetExecutiveDashboardQuery } from "@/services/linkin-api"
 import { DataTable } from "@/components/shared/data-table"
 import { LoadingState } from "@/components/shared/loading-state"
 import { MetricCard } from "@/components/shared/metric-card"
@@ -9,12 +7,14 @@ import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/hooks/use-auth"
+import { useGetExecutiveDashboardQuery } from "@/services/linkin-api"
 import { useAppSelector } from "@/store/hooks"
-import type { UserRole } from "@/types/auth"
 import {
   selectExecutiveDashboardMetrics,
   selectMetricsForRole,
 } from "@/store/selectors/dashboard-metrics"
+import type { UserRole } from "@/types/auth"
 
 type DepartmentDashboardRole = Exclude<UserRole, "super_admin" | "management_user">
 
@@ -28,64 +28,44 @@ type DepartmentDashboardContent = {
 }
 
 const roleDashboardContent = {
-  merchandise_user: {
-    title: "Merchandise operations dashboard",
+  merchandising_user: {
+    title: "Merchandising operations dashboard",
     description:
-      "Manage Stage 1 from buyer PO intake through yarn-check handoff without leaving the merchandising workspace.",
+      "Manage the active PO intake flow, keep the master Excel current, and hand clean requirements into the next workspace.",
     quickActions: [
-      { label: "Create PO", note: "Capture the buyer PO and required yarn details." },
-      { label: "Send Yarn Check", note: "Route the PO to Yarn Control for availability review." },
-      { label: "Track Stage 1", note: "Monitor check requests, ETA updates, and delivery progress." },
+      { label: "Create PO", note: "Capture buyer PO data and keep the editable master sheet aligned." },
+      { label: "Send Yarn Check", note: "Route complete PO requirements to the Yarn team for availability review." },
+      { label: "Track Stage 1", note: "Follow each order from intake to yarn decision without leaving the module." },
     ],
   },
-  yarn_control_user: {
-    title: "Yarn control dashboard",
+  design_user: {
+    title: "Design workspace dashboard",
     description:
-      "Run the Stage 1 yarn decision flow: review requests, place supplier orders, receive batches, and inspect for release.",
+      "Review PO styles, design names, and spec readiness so the design team works from the same live order base as merchandising.",
     quickActions: [
-      { label: "Check Requests", note: "Decide whether stock is available or supplier ordering is needed." },
-      { label: "Supplier Orders", note: "Create supplier orders and log ETA back to merchandise." },
-      { label: "Batch Inspection", note: "Accept or reject delivery batches with permanent audit logging." },
+      { label: "Review Styles", note: "Check buyer styles and design names against the current PO list." },
+      { label: "Confirm Specs", note: "Verify GG, color, and yarn details before downstream follow-up begins." },
+      { label: "Watch Handoffs", note: "Use the shared queue to spot POs that still need design clarification." },
     ],
   },
-  store_control_user: {
-    title: "Store control dashboard",
+  yarn_user: {
+    title: "Yarn operations dashboard",
     description:
-      "Operate Store Control as a shared service module so Linking and Finishing both follow the same requisition, issuance, and audit-log pattern.",
+      "Run the yarn decision flow: check requests, place supplier orders, receive batches, inspect them, and handle issue activity.",
     quickActions: [
-      { label: "Review Requisitions", note: "Receive incoming material requests from downstream production modules." },
-      { label: "Issue Materials", note: "Release approved quantities against each requisition." },
-      { label: "Maintain Log", note: "Keep a read-only issuance history for compliance and traceability." },
+      { label: "Check Requests", note: "Decide whether yarn is available or supplier ordering is required." },
+      { label: "Supplier Orders", note: "Create and track supplier orders for missing yarn requirements." },
+      { label: "Batch Inspection", note: "Keep a permanent acceptance and rejection trail for compliance." },
     ],
   },
-  knitting_user: {
-    title: "Knitting production dashboard",
+  store_user: {
+    title: "Store service dashboard",
     description:
-      "Run the real knitting workflow from released PO queue through requisition, yarn issue visibility, planning, and daily production.",
+      "Operate Store as a shared service module with a reusable requisition, issuance, and log pattern ready for future stages.",
     quickActions: [
-      { label: "Queue Review", note: "Receive Ready for Production POs from Yarn Control." },
-      { label: "Yarn Requisition", note: "Raise the knitting yarn request for each PO." },
-      { label: "Daily Progress", note: "Track produced quantity, output weight, and waste." },
-    ],
-  },
-  linking_user: {
-    title: "Linking production dashboard",
-    description:
-      "Run Stage 3 from received knit output through store requisition, planning, daily progress, and transfer to Finishing.",
-    quickActions: [
-      { label: "Store Requisition", note: "Request the required materials from Store Control." },
-      { label: "Planning", note: "Create the linking production plan once materials are issued." },
-      { label: "Daily Progress", note: "Submit the daily linking report and monitor transfer readiness." },
-    ],
-  },
-  finishing_user: {
-    title: "Finishing dashboard",
-    description:
-      "Run finishing through the nested sub-stage flow of wash, sew, iron, and pack while keeping daily output and store requests visible in one place.",
-    quickActions: [
-      { label: "Track Sub-Stages", note: "Follow wash, sew, iron, and pack progress inside the module tracker." },
-      { label: "Request Materials", note: "Send any finishing material need through the shared Store Control flow." },
-      { label: "Daily Update", note: "Log finishing output for both the local module and management dashboard." },
+      { label: "Review Requisitions", note: "Receive and verify incoming material requests from shared-service flows." },
+      { label: "Issue Materials", note: "Release approved quantities against active requisitions." },
+      { label: "Maintain Log", note: "Keep a read-only issue history for traceability and management review." },
     ],
   },
 } satisfies Record<DepartmentDashboardRole, DepartmentDashboardContent>
@@ -99,11 +79,7 @@ export function ExecutiveDashboardPage() {
     selectMetricsForRole(state, userRole)
   )
 
-  if (isLoading || !data) {
-    return <LoadingState />
-  }
-
-  if (!user) {
+  if (isLoading || !data || !user) {
     return <LoadingState />
   }
 
@@ -115,10 +91,7 @@ export function ExecutiveDashboardPage() {
 
     return (
       <div className="space-y-6">
-        <PageHeader
-          title={dashboard.title}
-          description={dashboard.description}
-        />
+        <PageHeader title={dashboard.title} />
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {roleMetrics.map((metric) => (
             <MetricCard key={metric.id} {...metric} />
@@ -183,7 +156,7 @@ export function ExecutiveDashboardPage() {
               <div>
                 <h2 className="text-lg font-semibold">PO tracking snapshot</h2>
                 <p className="text-sm text-muted-foreground">
-                  Department teams can still search and follow active production orders.
+                  The active user groups still work from one shared PO data set.
                 </p>
               </div>
             </div>
@@ -212,42 +185,41 @@ export function ExecutiveDashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title="Executive operations dashboard"
-        description="Linkin AI connects merchandise, yarn control, store control, knitting, linking, finishing, and management into one standardized workflow with shared forms, progress tracking, and auto-generated visibility."
       />
       <SearchFilterBar
         filters={[
           "Search by PO Number",
           "Search by Buyer",
-          "Search by Date",
-          "Search by Production Status",
+          "Search by Module",
+          "Search by Status",
         ]}
       />
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-[2rem] border border-border/70 bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold">Unified system flow</h2>
+          <h2 className="text-lg font-semibold">Active system flow</h2>
           <div className="mt-5 grid gap-3 md:grid-cols-2">
             <div className="rounded-[1.5rem] bg-secondary/60 p-4">
-              <p className="text-sm font-semibold">Merchandise</p>
+              <p className="text-sm font-semibold">Merchandising</p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Fetch buyer POs, automate formatting, coordinate yarn and accessory needs, and follow production updates.
+                Capture buyer POs, manage the editable master sheet, and prepare complete order data.
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] bg-secondary/60 p-4">
+              <p className="text-sm font-semibold">Design</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Review styles, design names, GG, color, and yarn details from the live PO set.
               </p>
             </div>
             <div className="rounded-[1.5rem] bg-secondary/60 p-4">
               <p className="text-sm font-semibold">Yarn & Store</p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Receive supplier quantities, inspect inputs, update stock, and deliver materials against requisitions.
-              </p>
-            </div>
-            <div className="rounded-[1.5rem] bg-secondary/60 p-4">
-              <p className="text-sm font-semibold">Production</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Plan knitting, linking, and finishing operations while tracking today, total, balance, and remarks by process.
+                Handle yarn availability, supplier receipts, inspections, and reusable service issuance logs.
               </p>
             </div>
             <div className="rounded-[1.5rem] bg-secondary/60 p-4">
               <p className="text-sm font-semibold">Management Reporting</p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Aggregate module data into current, ongoing, and future production, yarn, store, and shipping insights.
+                Track PO visibility, yarn information, stock calculation, and active workspace metrics.
               </p>
             </div>
           </div>
@@ -258,21 +230,21 @@ export function ExecutiveDashboardPage() {
               <FileText className="size-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">Key reporting fields</h2>
+              <h2 className="text-lg font-semibold">Current reporting scope</h2>
               <p className="text-sm text-muted-foreground">
-                Shared data structures powering daily dashboards and reports.
+                The visible reports are aligned with the modules currently in rollout.
               </p>
             </div>
           </div>
           <div className="mt-5 space-y-3 text-sm text-muted-foreground">
             <div className="rounded-[1.5rem] border border-border/70 p-4">
-              Daily production: serial, GG, buyer, style, order qty, inspection, knitting, linking, trimming, mending, wash, attachment, sewing, packing, remarks.
+              PO tracker: buyer, style, design, status, delivery milestone, and stage ownership.
             </div>
             <div className="rounded-[1.5rem] border border-border/70 p-4">
-              Yarn info: buyer, style, color, lot, composition, received date, quantity, bag, supplier, remarks.
+              Yarn information: buyer, style, color, lot, composition, supplier, received date, and remarks.
             </div>
             <div className="rounded-[1.5rem] border border-border/70 p-4">
-              Stock calculation: date, color qty, delivery yarn, delivery bag, balance yarn, balance bag, controller signature.
+              Yarn stock calculation: delivery quantities, balance quantities, and controller sign-off visibility.
             </div>
           </div>
         </div>
@@ -306,19 +278,19 @@ export function ExecutiveDashboardPage() {
           </div>
         </div>
         <div className="rounded-[2rem] border border-border/70 bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold">Production overview</h2>
+          <h2 className="text-lg font-semibold">Rollout focus</h2>
           <div className="mt-6 space-y-4">
             <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,_rgba(34,197,94,0.14),_rgba(15,23,42,0))] p-5">
-              <p className="text-sm text-muted-foreground">Knitting output</p>
-              <p className="mt-2 text-3xl font-semibold">74%</p>
-            </div>
-            <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,_rgba(245,158,11,0.14),_rgba(15,23,42,0))] p-5">
-              <p className="text-sm text-muted-foreground">Linking throughput</p>
-              <p className="mt-2 text-3xl font-semibold">61%</p>
+              <p className="text-sm text-muted-foreground">Stage 1 operations</p>
+              <p className="mt-2 text-3xl font-semibold">Live</p>
             </div>
             <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,_rgba(59,130,246,0.14),_rgba(15,23,42,0))] p-5">
-              <p className="text-sm text-muted-foreground">Finishing readiness</p>
-              <p className="mt-2 text-3xl font-semibold">82%</p>
+              <p className="text-sm text-muted-foreground">Design workspace</p>
+              <p className="mt-2 text-3xl font-semibold">Visible</p>
+            </div>
+            <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,_rgba(245,158,11,0.14),_rgba(15,23,42,0))] p-5">
+              <p className="text-sm text-muted-foreground">Downstream production</p>
+              <p className="mt-2 text-3xl font-semibold">Hidden</p>
             </div>
           </div>
         </div>
@@ -332,7 +304,7 @@ export function ExecutiveDashboardPage() {
             <div>
               <h2 className="text-lg font-semibold">PO detail tracking</h2>
               <p className="text-sm text-muted-foreground">
-                Searchable purchase order visibility with buyer, style, status, and delivery milestones.
+                One searchable PO stream for merchandising, design, yarn, store, and management.
               </p>
             </div>
           </div>
@@ -358,3 +330,4 @@ export function ExecutiveDashboardPage() {
     </div>
   )
 }
+

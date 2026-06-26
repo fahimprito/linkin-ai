@@ -1,4 +1,4 @@
-import { useState } from "react"
+﻿import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -107,14 +107,8 @@ export function YarnIssueToKnittingPage() {
   const canSolveNowCount = requisitionRows.filter(
     (row) => row.remainingQty > 0 && row.availableQty > 0
   ).length
-  const blockedCount = requisitionRows.filter(
-    (row) => row.remainingQty > 0 && row.availableQty <= 0
-  ).length
   const solvedCount = requisitionRows.filter(
     (row) => row.requisition.status === "Issued"
-  ).length
-  const issuedToday = issueLogs.filter(
-    (log) => log.issueDate === new Date().toISOString().split("T")[0]
   ).length
   const filteredRequisitionRows = requisitionRows.filter((row) => {
     if (activeFilter === "Needs Issue") {
@@ -242,28 +236,22 @@ export function YarnIssueToKnittingPage() {
     <div className="space-y-6">
       <PageHeader
         title="Issue Yarn to Knitting"
-        description="Review knitting requisitions, verify available yarn stock, and log yarn issuance from Yarn Control."
       />
 
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Open Requisitions"
           value={String(openRequisitions.length).padStart(2, "0")}
-          delta="Awaiting full issue"
           tone="warning"
         />
         <MetricCard
           label="Can Solve Now"
           value={String(canSolveNowCount).padStart(2, "0")}
-          delta={`${String(blockedCount).padStart(2, "0")} blocked by stock`}
           tone="success"
         />
         <MetricCard
           label="Issue Logs"
           value={String(issueLogs.length).padStart(2, "0")}
-          delta={`${String(issuedToday).padStart(2, "0")} today · ${String(
-            solvedCount
-          ).padStart(2, "0")} solved`}
           tone="default"
         />
       </section>
@@ -304,7 +292,7 @@ export function YarnIssueToKnittingPage() {
                     <div>
                       <p className="font-semibold">{requisition.poNumber}</p>
                       <p className="text-sm text-muted-foreground">
-                        {requisition.buyer} · {requisition.style}
+                        {requisition.buyer} Â· {requisition.style}
                       </p>
                     </div>
                     <StatusBadge value={requisition.status} />
@@ -417,3 +405,4 @@ export function YarnIssueToKnittingPage() {
     </div>
   )
 }
+

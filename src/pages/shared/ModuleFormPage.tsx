@@ -29,13 +29,11 @@ type ModuleFormPageProps = {
   | Array<{
     label: string
     value: string
-    delta: string
     tone?: "default" | "success" | "warning" | "danger"
   }>
   | ((records: StoredFormRecord[]) => Array<{
     label: string
     value: string
-    delta: string
     tone?: "default" | "success" | "warning" | "danger"
   }>)
 }
@@ -192,7 +190,6 @@ export function ModuleFormPage({
     <div className="space-y-6">
       <PageHeader
         title={title}
-        description={description}
         actions={
           <Button
             type="button"
@@ -210,7 +207,6 @@ export function ModuleFormPage({
               key={card.label}
               label={card.label}
               value={card.value}
-              delta={card.delta}
               tone={card.tone ?? "default"}
             />
           ))}

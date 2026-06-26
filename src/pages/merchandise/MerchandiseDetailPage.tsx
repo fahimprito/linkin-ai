@@ -1,4 +1,4 @@
-import { useParams } from "react-router"
+﻿import { useParams } from "react-router"
 
 import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -38,8 +38,7 @@ export function MerchandiseDetailPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${po.poNumber} • ${po.style}`}
-        description="Full PO detail with yarn check status, delivery log, and production timeline."
+        title={`${po.poNumber} â€¢ ${po.style}`}
       />
 
       {/* Stage Tracker */}
@@ -77,7 +76,7 @@ export function MerchandiseDetailPage() {
             {po.quantity.toLocaleString()} pcs
           </p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            GG: {po.gg ?? "–"} · Yarn: {po.requiredYarnQty ?? "–"} kg
+            GG: {po.gg ?? "â€“"} Â· Yarn: {po.requiredYarnQty ?? "â€“"} kg
           </p>
         </div>
       </section>
@@ -90,25 +89,25 @@ export function MerchandiseDetailPage() {
             <div className="rounded-[1.5rem] bg-secondary/60 p-4">
               <p className="text-sm font-medium">Composition</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {po.yarnComposition || "–"}
+                {po.yarnComposition || "â€“"}
               </p>
             </div>
             <div className="rounded-[1.5rem] bg-secondary/60 p-4">
               <p className="text-sm font-medium">Color</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {po.color || "–"}
+                {po.color || "â€“"}
               </p>
             </div>
             <div className="rounded-[1.5rem] bg-secondary/60 p-4">
               <p className="text-sm font-medium">Supplier</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {po.supplier || "–"}
+                {po.supplier || "â€“"}
               </p>
             </div>
             <div className="rounded-[1.5rem] bg-secondary/60 p-4">
               <p className="text-sm font-medium">Required Qty</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {po.requiredYarnQty ? `${po.requiredYarnQty} kg` : "–"}
+                {po.requiredYarnQty ? `${po.requiredYarnQty} kg` : "â€“"}
               </p>
             </div>
           </div>
@@ -154,15 +153,34 @@ export function MerchandiseDetailPage() {
           <h2 className="text-lg font-semibold">Supplier Orders</h2>
           <DataTable
             columns={[
+              {
+                key: "itemCategory",
+                header: "Type",
+                render: (row) => String(row.itemCategory ?? "Yarn"),
+              },
               { key: "supplier", header: "Supplier" },
-              { key: "yarnType", header: "Yarn Type" },
+              {
+                key: "itemName",
+                header: "Item",
+                render: (row) => String(row.itemName ?? row.yarnType),
+              },
               { key: "color", header: "Color" },
               {
                 key: "orderedQty",
-                header: "Ordered Qty (kg)",
+                header: "Ordered Qty",
                 render: (row) => String(row.orderedQty),
               },
               { key: "expectedArrival", header: "Expected Arrival" },
+              {
+                key: "deliveryDate",
+                header: "Delivery Date",
+                render: (row) => String(row.deliveryDate ?? "-"),
+              },
+              {
+                key: "inspectionDate",
+                header: "Inspection Date",
+                render: (row) => String(row.inspectionDate ?? "-"),
+              },
               {
                 key: "status",
                 header: "Status",
@@ -205,13 +223,13 @@ export function MerchandiseDetailPage() {
                       {String(row.testReportName)}
                     </span>
                   ) : (
-                    <span className="text-muted-foreground">–</span>
+                    <span className="text-muted-foreground">â€“</span>
                   ),
               },
               {
                 key: "remarks",
                 header: "Remarks",
-                render: (row) => String(row.remarks ?? "–"),
+                render: (row) => String(row.remarks ?? "â€“"),
               },
             ]}
             data={deliveryBatches}
@@ -221,3 +239,4 @@ export function MerchandiseDetailPage() {
     </div>
   )
 }
+

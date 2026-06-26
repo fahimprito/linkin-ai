@@ -1,4 +1,4 @@
-import { DataTable } from "@/components/shared/data-table"
+﻿import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PageHeader } from "@/components/shared/page-header"
 import { useAppSelector } from "@/store/hooks"
@@ -10,7 +10,6 @@ export function StoreIssueLogPage() {
     <div className="space-y-6">
       <PageHeader
         title="Store Issue Log"
-        description="Read-only history of all materials issued by Store Control to downstream production modules."
       />
 
       {issueLogs.length > 0 ? (
@@ -43,3 +42,4 @@ export function StoreIssueLogPage() {
     </div>
   )
 }
+

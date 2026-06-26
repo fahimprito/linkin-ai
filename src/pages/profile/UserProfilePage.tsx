@@ -28,19 +28,16 @@ export function UserProfilePage() {
     {
       label: "Saved Entries",
       value: String(totalEntries).padStart(2, "0"),
-      delta: "Department activity",
       tone: "default" as const,
     },
     {
       label: "Accessible Modules",
       value: String(navigation.length).padStart(2, "0"),
-      delta: "Role-based",
       tone: "success" as const,
     },
     {
       label: "Updated Today",
       value: String(todayEntries).padStart(2, "0"),
-      delta: "Live submissions",
       tone: "success" as const,
     },
   ]
@@ -49,7 +46,6 @@ export function UserProfilePage() {
     <div className="space-y-6">
       <PageHeader
         title="User Profile"
-        description="Review account details, role permissions, contact information, and workspace access across the Linkin AI platform."
         actions={
           <Button type="button" variant="outline" className="rounded-2xl">
             Edit Profile
@@ -149,7 +145,6 @@ export function UserProfilePage() {
                     ? String(navigation.length)
                     : metric.value
                 }
-                delta={metric.delta}
                 tone={metric.tone}
               />
             ))}

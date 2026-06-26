@@ -1,37 +1,30 @@
 import {
-  Activity,
   BarChart3,
   Boxes,
   Cable,
-  CalendarRange,
-  ClipboardCheck,
+  CheckCircle,
   ClipboardList,
-  Factory,
-  Handshake,
+  FileSearch,
   Gauge,
+  Handshake,
   List,
-  PackageOpen,
+  Palette,
   ScanSearch,
-  Send,
-  Shirt,
+  Settings,
   ShoppingBag,
   Truck,
   Warehouse,
-  CheckCircle,
-  FileSearch,
 } from "lucide-react"
 
 import type { AppModuleKey, UserRole } from "@/types/auth"
 import type { NavigationItem } from "@/types/navigation"
 
 export const roleLabels: Record<UserRole, string> = {
-  super_admin: "Super Admin",
-  merchandise_user: "Merchandise User",
-  yarn_control_user: "Yarn Control User",
-  store_control_user: "Store Control User",
-  knitting_user: "Knitting User",
-  linking_user: "Linking User",
-  finishing_user: "Finishing User",
+  super_admin: "Admin",
+  merchandising_user: "Merchandising User",
+  design_user: "Design User",
+  yarn_user: "Yarn User",
+  store_user: "Store User",
   management_user: "Management User",
 }
 
@@ -43,109 +36,93 @@ export const dashboardNavigation: NavigationItem[] = [
     module: "dashboard",
     allowedRoles: [
       "super_admin",
-      "merchandise_user",
-      "yarn_control_user",
-      "store_control_user",
-      "knitting_user",
-      "linking_user",
-      "finishing_user",
+      "merchandising_user",
+      "design_user",
+      "yarn_user",
+      "store_user",
       "management_user",
     ],
     children: [{ label: "Overview", to: "/dashboard", icon: Gauge }],
   },
   {
     label: "Merchandise",
-    to: "/merchandise",
+    to: "/merchandise/dashboard",
     icon: Handshake,
     module: "merchandise",
-    allowedRoles: ["super_admin", "merchandise_user"],
+    allowedRoles: ["super_admin", "merchandising_user"],
     children: [
+      { label: "Dashboard", to: "/merchandise/dashboard", icon: Gauge },
       { label: "PO List", to: "/merchandise", icon: List },
-      { label: "Master Excel", to: "/merchandise/master-excel", icon: ClipboardList },
+      { label: "Sourcing", to: "/merchandise/sourcing", icon: ShoppingBag },
+      { label: "Supplier", to: "/merchandise/supplier", icon: ShoppingBag },
+      { label: "Production", to: "/merchandise/production", icon: ClipboardList },
+      { label: "Inventory", to: "/merchandise/inventory", icon: Boxes },
+      { label: "Shipment", to: "/merchandise/shipment", icon: Truck },
+      { label: "Report", to: "/merchandise/report", icon: BarChart3 },
+      { label: "Settings", to: "/merchandise/settings", icon: Settings },
     ],
   },
   {
-    label: "Yarn Control",
-    to: "/yarn",
+    label: "Design",
+    to: "/design/dashboard",
+    icon: Palette,
+    module: "design",
+    allowedRoles: ["super_admin", "design_user"],
+    children: [
+      { label: "Dashboard", to: "/design/dashboard", icon: Gauge },
+      {
+        label: "Request Consumption",
+        to: "/design/request-consumption",
+        icon: ClipboardList,
+      },
+      {
+        label: "Submitted PO List",
+        to: "/design/submitted-po-list",
+        icon: CheckCircle,
+      },
+      { label: "Reports", to: "/design/reports", icon: BarChart3 },
+      { label: "Settings", to: "/design/settings", icon: Settings },
+    ],
+  },
+  {
+    label: "Yarn",
+    to: "/yarn/dashboard",
     icon: Cable,
     module: "yarn",
-    allowedRoles: ["super_admin", "yarn_control_user"],
+    allowedRoles: ["super_admin", "yarn_user"],
     children: [
-      { label: "Overview", to: "/yarn", icon: Gauge },
-      { label: "Check Requests", to: "/yarn/check-requests", icon: CheckCircle },
-      { label: "Supplier Orders", to: "/yarn/supplier-orders", icon: ShoppingBag },
-      { label: "Delivery Log", to: "/yarn/delivery-log", icon: Truck },
-      { label: "Batch Inspection", to: "/yarn/batch-inspection", icon: FileSearch },
-      { label: "Issue to Knitting", to: "/yarn/issue-to-knitting", icon: Send },
+      { label: "Dashboard", to: "/yarn/dashboard", icon: Gauge },
+      { label: "Yarn Type", to: "/yarn/type", icon: Cable },
+      { label: "Requisition", to: "/yarn/requisition", icon: CheckCircle },
+      { label: "Receipt", to: "/yarn/receipt", icon: Truck },
+      { label: "Inspection", to: "/yarn/inspection", icon: FileSearch },
+      { label: "Report", to: "/yarn/report", icon: BarChart3 },
+      { label: "Inventory", to: "/yarn/inventory", icon: Boxes },
     ],
   },
   {
-    label: "Store Control",
+    label: "Store",
     to: "/store",
     icon: Warehouse,
     module: "store",
-    allowedRoles: ["super_admin", "store_control_user"],
+    allowedRoles: ["super_admin", "store_user"],
     children: [
-      { label: "Overview", to: "/store", icon: Gauge },
+      { label: "Dashboard", to: "/store", icon: Gauge },
       { label: "Requisitions", to: "/store/requisitions", icon: ClipboardList },
       { label: "Issue Log", to: "/store/issue-log", icon: Truck },
     ],
   },
   {
-    label: "Knitting",
-    to: "/knitting",
-    icon: Factory,
-    module: "knitting",
-    allowedRoles: ["super_admin", "knitting_user"],
-    children: [
-      { label: "Overview", to: "/knitting", icon: Gauge },
-      { label: "Yarn Requisition", to: "/knitting/requisition", icon: Send },
-      { label: "Yarn Issuance", to: "/knitting/issuance-log", icon: Boxes },
-      { label: "Planning", to: "/knitting/planning", icon: CalendarRange },
-      { label: "Daily Progress", to: "/knitting/daily-progress", icon: Activity },
-    ],
-  },
-  {
-    label: "Linking",
-    to: "/linking",
-    icon: Shirt,
-    module: "linking",
-    allowedRoles: ["super_admin", "linking_user"],
-    children: [
-      { label: "Overview", to: "/linking", icon: Gauge },
-      { label: "Store Requisition", to: "/linking/store-requisition", icon: ClipboardList },
-      { label: "Store Issuance Log", to: "/linking/store-issuance-log", icon: ClipboardCheck },
-      { label: "Planning", to: "/linking/planning", icon: CalendarRange },
-      { label: "Daily Progress", to: "/linking/daily-progress", icon: Activity },
-    ],
-  },
-  {
-    label: "Finishing",
-    to: "/finishing",
-    icon: PackageOpen,
-    module: "finishing",
-    allowedRoles: ["super_admin", "finishing_user"],
-    children: [
-      { label: "Overview", to: "/finishing", icon: Gauge },
-      { label: "Store Requisition", to: "/finishing/store-requisition", icon: ClipboardList },
-      { label: "Store Issuance Log", to: "/finishing/store-issuance-log", icon: ClipboardCheck },
-      { label: "Planning", to: "/finishing/planning", icon: CalendarRange },
-      { label: "Daily Progress", to: "/finishing/daily-progress", icon: Activity },
-    ],
-  },
-  {
-    label: "Reports & Analytics",
-    to: "/reports",
+    label: "Management",
+    to: "/management",
     icon: BarChart3,
     module: "reports",
     allowedRoles: ["super_admin", "management_user"],
     children: [
-      { label: "Overview", to: "/reports", icon: Gauge },
-      { label: "Full Production", to: "/reports/full-system-production", icon: Activity },
-      { label: "Yarn Information", to: "/reports/yarn-information", icon: Cable },
-      { label: "Yarn Stock Calc", to: "/reports/yarn-stock-calculation", icon: Boxes },
-      { label: "Linking Report", to: "/reports/linking-production", icon: Shirt },
-      { label: "PO Tracker", to: "/reports/po-tracker", icon: ScanSearch },
+      { label: "Dashboard", to: "/management", icon: Gauge },
+      { label: "Yarn Information", to: "/management/yarn-information", icon: Cable },
+      { label: "Yarn Stock Calc", to: "/management/yarn-stock-calculation", icon: Boxes },
+      { label: "PO Tracker", to: "/management/po-tracker", icon: ScanSearch },
     ],
   },
 ]
@@ -166,7 +143,7 @@ export function hasModuleAccess(
 }
 
 export function isPrivilegedSidebarRole(userRole: UserRole) {
-  return userRole === "super_admin" || userRole === "management_user"
+  return userRole === "super_admin"
 }
 
 export function getNavigationForUser(
@@ -183,12 +160,7 @@ export function getNavigationForUser(
 
   return allowedItems.flatMap((item) => {
     if (item.module === "dashboard") {
-      return [
-        {
-          ...item,
-          children: undefined,
-        },
-      ]
+      return []
     }
 
     if (!item.children?.length) {
@@ -211,7 +183,8 @@ export function getNavigationForUser(
 }
 
 export function getDefaultRoute(
+  userRole: UserRole,
   permissions: AppModuleKey[] | undefined = []
 ) {
-  return dashboardNavigation.find((item) => permissions.includes(item.module))?.to ?? "/login"
+  return getNavigationForUser(userRole, permissions)[0]?.to ?? "/login"
 }

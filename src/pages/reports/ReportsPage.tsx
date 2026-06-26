@@ -1,4 +1,4 @@
-import { DataTable } from "@/components/shared/data-table"
+﻿import { DataTable } from "@/components/shared/data-table"
 import { LoadingState } from "@/components/shared/loading-state"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
@@ -18,15 +18,14 @@ export function ReportsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Executive analytics and reporting"
-        description="Provide management visibility into production, yarn, store, shipment, and KPI performance with fast analytics."
+        title="Management Dashboard"
       />
       <SearchFilterBar
         filters={[
-          "Production Overview",
+          "PO Overview",
+          "Design Visibility",
           "Yarn Overview",
           "Store Overview",
-          "Shipment Overview",
           "KPI Cards",
           "Charts",
           "Analytics",
@@ -57,3 +56,4 @@ export function ReportsPage() {
     </div>
   )
 }
+

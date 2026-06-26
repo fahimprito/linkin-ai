@@ -91,6 +91,24 @@ const yarnCheckSlice = createSlice({
       )
       save(KEYS.supplierOrders, state.supplierOrders)
     },
+    updateSupplierOrder: (
+      state,
+      action: PayloadAction<{
+        id: string
+        updates: Partial<YarnSupplierOrder>
+      }>
+    ) => {
+      state.supplierOrders = state.supplierOrders.map((order) =>
+        order.id === action.payload.id
+          ? {
+              ...order,
+              ...action.payload.updates,
+              id: order.id,
+            }
+          : order
+      )
+      save(KEYS.supplierOrders, state.supplierOrders)
+    },
 
     // ── Delivery Batches ───────────────────────────────────────────
     addDeliveryBatch: (state, action: PayloadAction<YarnDeliveryBatch>) => {
@@ -140,6 +158,7 @@ export const {
   addCheckRequest,
   updateCheckRequestStatus,
   addSupplierOrder,
+  updateSupplierOrder,
   updateSupplierOrderStatus,
   addDeliveryBatch,
   addStockMovement,

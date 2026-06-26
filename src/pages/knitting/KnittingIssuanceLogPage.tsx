@@ -1,4 +1,4 @@
-import { getAvailableYarnForPo, sumIssueLogQtyForPo } from "@/lib/knitting-metrics"
+﻿import { getAvailableYarnForPo, sumIssueLogQtyForPo } from "@/lib/knitting-metrics"
 import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { MetricCard } from "@/components/shared/metric-card"
@@ -21,26 +21,22 @@ export function KnittingIssuanceLogPage() {
     <div className="space-y-6">
       <PageHeader
         title="Knitting Yarn Issuance Log"
-        description="This is the read-only knitting-side view of yarn issue activity. Actual issuing is completed by Yarn Control."
       />
 
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Requisitions"
           value={String(requisitions.length).padStart(2, "0")}
-          delta="Knitting requests"
           tone="warning"
         />
         <MetricCard
           label="Issue Logs"
           value={String(issueLogs.length).padStart(2, "0")}
-          delta="Yarn Control issues"
           tone="success"
         />
         <MetricCard
           label="Queue POs"
           value={String(queueOrders.length).padStart(2, "0")}
-          delta="Ready or running"
           tone="default"
         />
       </section>
@@ -116,3 +112,4 @@ export function KnittingIssuanceLogPage() {
     </div>
   )
 }
+
