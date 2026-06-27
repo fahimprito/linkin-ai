@@ -9,10 +9,8 @@ import { NotFoundPage } from "@/pages/common/NotFoundPage"
 import { UnauthorizedPage } from "@/pages/common/UnauthorizedPage"
 import { ExecutiveDashboardPage } from "@/pages/dashboard/ExecutiveDashboardPage"
 import {
-  MerchandiseManagementReportPage,
   MerchandiseProductionUpdatesPage,
   MerchandiseSupplierFollowUpPage,
-  PoTrackerReportPage,
   YarnManagementReportPage,
   YarnInformationReportPage,
   YarnStockCalculationReportPage,
@@ -34,6 +32,10 @@ import {
   MerchandiseShipmentPage,
 } from "@/pages/merchandise/MerchandiseModulePages"
 import { UserProfilePage } from "@/pages/profile/UserProfilePage"
+import {
+  ManagementPoDetailTrackerPage,
+  MerchandiseManagementReportPage,
+} from "@/pages/reports/ManagementPoDetailTrackerPage"
 import { ReportsPage } from "@/pages/reports/ReportsPage"
 import { DefaultRedirect } from "@/routes/default-redirect"
 import { StoreControlPage } from "@/pages/store/StoreControlPage"
@@ -285,7 +287,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: "/management/po-tracker",
-                element: <PoTrackerReportPage />,
+                element: <ManagementPoDetailTrackerPage />,
               },
               {
                 path: "/reports",
