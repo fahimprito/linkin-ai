@@ -36,25 +36,25 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border/70 p-5 shadow-sm",
+        "rounded-xl border border-border/70 p-3.5 shadow-sm",
         cardToneMap[tone]
       )}
     >
       <div className="flex items-start justify-between gap-1">
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-xs leading-5 text-muted-foreground">{label}</p>
         {Icon ? (
           <div
             className={cn(
-              "flex size-10 shrink-0 items-center justify-center rounded-xl",
+              "flex size-8 shrink-0 items-center justify-center rounded-lg",
               iconToneMap[tone]
             )}
           >
-            <Icon className="size-5" />
+            <Icon className="size-4" />
           </div>
         ) : null}
       </div>
       <div className="mt-1">
-        <span className="text-3xl font-semibold tracking-tight">{value}</span>
+        <span className="text-2xl font-semibold tracking-tight">{value}</span>
       </div>
     </div>
   )

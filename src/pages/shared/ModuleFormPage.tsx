@@ -201,7 +201,7 @@ export function ModuleFormPage({
         }
       />
       {resolvedSummaryCards?.length ? (
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
           {resolvedSummaryCards.map((card) => (
             <MetricCard
               key={card.label}

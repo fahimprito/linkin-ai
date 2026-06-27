@@ -68,7 +68,7 @@ export function YarnControlPage() {
       />
 
       {/* Metrics */}
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         <MetricCard
           label="Pending Checks"
           value={String(pendingChecks).padStart(2, "0")}

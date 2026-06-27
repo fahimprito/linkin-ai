@@ -27,7 +27,7 @@ export function DashboardLayout() {
         />
         <div
           className={`fixed inset-y-0 left-0 z-50 w-72 shrink-0 transform-gpu transition-transform duration-300 ease-out will-change-transform lg:static lg:z-auto lg:h-full lg:translate-x-0 lg:transition-[width] lg:duration-200 ${
-            isSidebarCollapsed ? "lg:w-20" : "lg:w-72"
+            isSidebarCollapsed ? "lg:w-16" : "lg:w-52"
           } ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}

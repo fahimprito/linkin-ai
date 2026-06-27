@@ -8,11 +8,16 @@
   Truck,
   Warehouse,
 } from "lucide-react"
+import { useMemo } from "react"
 
 import { DataTable } from "@/components/shared/data-table"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
+import {
+  getPurchaseOrderWorkflowColumns,
+  purchaseOrderWorkflowHeaderRows,
+} from "@/lib/purchase-order-table-columns"
 import { ModuleSettingsPage } from "@/pages/shared/ModuleSettingsPage"
 import { useAppSelector } from "@/store/hooks"
 
@@ -28,6 +33,8 @@ export function MerchandiseDashboardPage() {
   const purchaseOrders = useAppSelector(
     (state) => state.merchandise.purchaseOrders
   )
+  const deliveryBatches = useAppSelector((state) => state.yarnCheck.deliveryBatches)
+  const stockMovements = useAppSelector((state) => state.yarnCheck.stockMovements)
   const storeRequisitions = useAppSelector(
     (state) => state.storeService.requisitions
   )
@@ -69,12 +76,71 @@ export function MerchandiseDashboardPage() {
       deliveryDate.getMonth() === today.getMonth()
     )
   }).length
+  const draftPoList = purchaseOrders.filter((po) => po.status === "Draft")
+  const purchaseOrderWorkflowMetrics = useMemo(() => {
+    const yarnReceivedQtyByPo: Record<string, number> = {}
+    const yarnIssuedQtyByPo: Record<string, number> = {}
+    const yarnInspectionStatusByPo: Record<string, string | undefined> = {}
+    const yarnInspectionDateByPo: Record<string, string | undefined> = {}
+
+    deliveryBatches.forEach((batch) => {
+      yarnReceivedQtyByPo[batch.poId] =
+        (yarnReceivedQtyByPo[batch.poId] ?? 0) + batch.quantity
+
+      const currentInspectionDate = yarnInspectionDateByPo[batch.poId]
+      const nextInspectionDate = batch.inspectedAt ?? batch.deliveryDate
+
+      if (
+        !currentInspectionDate ||
+        new Date(nextInspectionDate).getTime() >=
+          new Date(currentInspectionDate).getTime()
+      ) {
+        yarnInspectionDateByPo[batch.poId] = nextInspectionDate
+        yarnInspectionStatusByPo[batch.poId] = batch.inspectionStatus
+      }
+    })
+
+    stockMovements
+      .filter((movement) => movement.movementType === "Issued to Knitting")
+      .forEach((movement) => {
+        yarnIssuedQtyByPo[movement.poId] =
+          (yarnIssuedQtyByPo[movement.poId] ?? 0) + movement.quantity
+      })
+
+    return {
+      yarnInspectionDateByPo,
+      yarnInspectionStatusByPo,
+      yarnIssuedQtyByPo,
+      yarnReceivedQtyByPo,
+      storeInspectionDateByPo: {},
+      storeInspectionStatusByPo: {},
+      storeReceivedQtyByPo: {},
+      storeStockBalanceByPo: {},
+      storeSupplierByPo: {},
+    }
+  }, [deliveryBatches, stockMovements])
+  const workflowColumns = useMemo(
+    () => getPurchaseOrderWorkflowColumns(purchaseOrderWorkflowMetrics),
+    [purchaseOrderWorkflowMetrics]
+  )
+  const dashboardHeaderRows = useMemo(
+    () => [
+      {
+        ...purchaseOrderWorkflowHeaderRows[0],
+        cells: purchaseOrderWorkflowHeaderRows[0].cells.filter(
+          (cell) => cell.key !== "action"
+        ),
+      },
+      purchaseOrderWorkflowHeaderRows[1],
+    ],
+    []
+  )
   return (
     <div className="space-y-6">
       <PageHeader
         title="Merchandise Dashboard"
       />
-      <section className="grid grid-cols-2 gap-4 2xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         <MetricCard
           label="Open POs"
           value={String(openPoCount)}
@@ -124,24 +190,12 @@ export function MerchandiseDashboardPage() {
           icon={CalendarCheck2}
         />
       </section>
+      <p className="text-lg font-semibold">New PO List</p>
       <DataTable
-        columns={[
-          { key: "poNumber", header: "PO Number" },
-          { key: "buyer", header: "Buyer" },
-          { key: "style", header: "Style" },
-          { key: "supplier", header: "Supplier" },
-          {
-            key: "status",
-            header: "Status",
-            render: (row) => <StatusBadge value={String(row.status)} />,
-          },
-          {
-            key: "deliveryDate",
-            header: "Delivery Date",
-            render: (row) => formatDate(String(row.deliveryDate)),
-          },
-        ]}
-        data={purchaseOrders}
+        columns={workflowColumns}
+        data={draftPoList}
+        headerRows={dashboardHeaderRows}
+        compact
       />
     </div>
   )
@@ -162,7 +216,7 @@ export function MerchandiseInventoryPage() {
       <PageHeader
         title="Merchandise Inventory View"
       />
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         <MetricCard
           label="Required Yarn"
           value={`${Math.round(totalRequiredYarn)} kg`}

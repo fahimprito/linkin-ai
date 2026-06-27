@@ -32,7 +32,7 @@ export function DesignPage() {
         title="Design workspace"
       />
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         <MetricCard
           label="PO Styles"
           value={String(purchaseOrders.length).padStart(2, "0")}

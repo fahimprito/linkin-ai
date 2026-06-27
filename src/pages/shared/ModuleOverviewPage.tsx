@@ -39,7 +39,7 @@ export function ModuleOverviewPage(props: ModuleOverviewPageProps) {
     <div className="space-y-6">
       <PageHeader title={title} />
       <SearchFilterBar filters={filters} />
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         {(metrics ?? data.metrics).map((metric) => (
           <MetricCard key={metric.id} {...metric} />
         ))}

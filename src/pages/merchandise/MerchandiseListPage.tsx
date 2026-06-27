@@ -1,7 +1,7 @@
 import { FileUp, Pencil, Trash2 } from "lucide-react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
-import { Link, useNavigate } from "react-router"
+import { useNavigate } from "react-router"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -15,8 +15,9 @@ import {
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { useAuth } from "@/hooks/use-auth"
 import {
+  getPurchaseOrderWorkflowColumns,
   getOrderDisplayNo,
-  purchaseOrderTableColumns,
+  purchaseOrderWorkflowHeaderRows,
 } from "@/lib/purchase-order-table-columns"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
@@ -29,78 +30,51 @@ import type { CreatePurchaseOrderPayload, PurchaseOrder } from "@/types/modules"
 
 const purchaseOrderFields: ModalFormField[] = [
   { name: "sl", label: "SL", placeholder: "01" },
-  { name: "styleName", label: "Style Name", placeholder: "Premium Knit Polo" },
-  { name: "styleNo", label: "Style No", placeholder: "ST-2201" },
-  { name: "callNumber", label: "CALL#", placeholder: "CALL-1208" },
-  { name: "orderNo", label: "Order No", placeholder: "LK-2099" },
-  {
-    name: "productionUnit",
-    label: "Production Unit",
-    placeholder: "Unit 3",
-  },
-  {
-    name: "mainSizeHangTagBooking",
-    label: "Main + Size + Hang Tag Booking",
-    placeholder: "Done",
-  },
-  {
-    name: "careLabelBooking",
-    label: "Care Label Booking",
-    placeholder: "Done",
-  },
-  {
-    name: "priceStickerBooking",
-    label: "Price Sticker Booking",
-    placeholder: "Pending",
-  },
-  { name: "tissue", label: "TISSUE", placeholder: "Booked" },
-  {
-    name: "polyCartonBooking",
-    label: "Poly + Carton Booking",
-    placeholder: "Booked",
-  },
-  { name: "buttonZip", label: "But/Zip", placeholder: "Button" },
-  {
-    name: "doneInspection",
-    label: "Done Inspection",
-    placeholder: "Passed",
-  },
-  { name: "color", label: "Color", placeholder: "Navy" },
-  {
-    name: "sampleStatus",
-    label: "Sample Status",
-    placeholder: "Approved",
-  },
-  { name: "shipMode", label: "SHP MODE", placeholder: "Sea" },
-  { name: "ccd", label: "CCD", type: "date" },
-  {
-    name: "excessQty",
-    label: "EXCESS QTY",
-    type: "number",
-    placeholder: "300",
-  },
-  { name: "newCcd", label: "NEW CCD", type: "date" },
-  {
-    name: "inspectionStyle",
-    label: "Inspection Style",
-    placeholder: "Inline",
-  },
-  { name: "stylePhoto", label: "Photo", placeholder: "style-photo-01.jpg" },
-  { name: "sizeRange", label: "Size Range", placeholder: "S-XXL" },
-  { name: "poQty", label: "PO Qty", type: "number", placeholder: "12000" },
-  { name: "yarn", label: "Yarn", placeholder: "100% Combed Cotton" },
-  { name: "gauge", label: "Gauge", placeholder: "12" },
-  { name: "price", label: "Price", type: "number", placeholder: "9.5" },
-  { name: "amount", label: "Amount", type: "number", placeholder: "114000" },
-  {
-    name: "factoryCosting",
-    label: "Factory Costing",
-    placeholder: "8.15 / pcs",
-  },
-  { name: "labTest", label: "Lab Test", placeholder: "Approved" },
-  { name: "yarnEta", label: "Yarn ETA", type: "date" },
   { name: "buyer", label: "Buyer", placeholder: "H&M" },
   { name: "design", label: "Design", placeholder: "Striped Jacquard" },
+  { name: "styleName", label: "Style Name", placeholder: "Premium Knit Polo" },
+  { name: "styleNo", label: "Style Number", placeholder: "ST-2201" },
+  { name: "gauge", label: "Gauge", placeholder: "12" },
+  {
+    name: "quality",
+    label: "Quality",
+    placeholder: "100% Combed Cotton",
+  },
+  { name: "poNumber", label: "PO Number", placeholder: "LK-2099" },
+  { name: "poQty", label: "Quantity", type: "number", placeholder: "12000" },
+  { name: "ccd", label: "CCD", type: "date" },
+  { name: "color", label: "Colors", placeholder: "Navy" },
+  {
+    name: "itemNameCode",
+    label: "Item Name & Code",
+    placeholder: "CALL-1208 / ITM-44",
+  },
+  {
+    name: "accessories",
+    label: "Accessories",
+    placeholder: "Buttons, labels, zipper",
+  },
+  {
+    name: "productionUnit",
+    label: "Poly/CTN",
+    placeholder: "Booked",
+  },
+  {
+    name: "ppStatus",
+    label: "PP Status",
+    placeholder: "Approved",
+  },
+  {
+    name: "shipmentSample",
+    label: "Shipment Sample",
+    placeholder: "Submitted",
+  },
+  {
+    name: "remarks",
+    label: "Remarks",
+    type: "textarea",
+    placeholder: "Urgent order, buyer comments, or merch notes.",
+  },
   { name: "supplier", label: "Supplier", placeholder: "Delta Yarn" },
   {
     name: "requiredYarnQty",
@@ -119,7 +93,6 @@ function getOrderFormValues(
   order?: PurchaseOrder
 ): CreatePurchaseOrderPayload {
   return {
-    poNumber: order?.poNumber ?? "",
     buyer: order?.buyer ?? "",
     style: order?.style ?? "",
     design: order?.design ?? "",
@@ -134,32 +107,21 @@ function getOrderFormValues(
     sl: order?.sl ?? "",
     styleName: order?.styleName ?? order?.style ?? "",
     styleNo: order?.styleNo ?? "",
-    callNumber: order?.callNumber ?? "",
-    orderNo: order?.orderNo ?? order?.poNumber ?? "",
+    poNumber: order?.poNumber ?? order?.orderNo ?? "",
     productionUnit: order?.productionUnit ?? "",
-    mainSizeHangTagBooking: order?.mainSizeHangTagBooking ?? "",
-    careLabelBooking: order?.careLabelBooking ?? "",
-    priceStickerBooking: order?.priceStickerBooking ?? "",
-    tissue: order?.tissue ?? "",
-    polyCartonBooking: order?.polyCartonBooking ?? "",
-    buttonZip: order?.buttonZip ?? "",
-    doneInspection: order?.doneInspection ?? "",
-    sampleStatus: order?.sampleStatus ?? "",
-    shipMode: order?.shipMode ?? "",
+    polyCartonBooking: order?.polyCartonBooking ?? order?.productionUnit ?? "",
+    ppStatus: order?.ppStatus ?? order?.sampleStatus ?? "",
+    shipmentSample: order?.shipmentSample ?? order?.shipMode ?? "",
     ccd: order?.ccd ?? order?.deliveryDate ?? "",
-    excessQty: order?.excessQty ?? 0,
-    newCcd: order?.newCcd ?? "",
-    inspectionStyle: order?.inspectionStyle ?? "",
-    stylePhoto: order?.stylePhoto ?? "",
-    sizeRange: order?.sizeRange ?? "",
     poQty: order?.poQty ?? order?.quantity ?? 0,
-    yarn: order?.yarn ?? order?.yarnComposition ?? "",
+    quality: order?.quality ?? order?.yarn ?? order?.yarnComposition ?? "",
     gauge: order?.gauge ?? order?.gg ?? "",
-    price: order?.price ?? 0,
-    amount: order?.amount ?? 0,
-    factoryCosting: order?.factoryCosting ?? "",
-    labTest: order?.labTest ?? "",
-    yarnEta: order?.yarnEta ?? "",
+    itemNameCode: order?.itemNameCode ?? order?.callNumber ?? "",
+    accessories: order?.accessories ?? order?.buttonZip ?? "",
+    remarks: order?.remarks ?? "",
+    totalYarnKg: order?.totalYarnKg ?? 0,
+    totalFabricKg: order?.totalFabricKg ?? 0,
+    totalAccessoriesQty: order?.totalAccessoriesQty ?? 0,
   }
 }
 
@@ -176,7 +138,10 @@ export function MerchandiseListPage() {
   const purchaseOrders = useAppSelector(
     (state) => state.merchandise.purchaseOrders
   )
+  const deliveryBatches = useAppSelector((state) => state.yarnCheck.deliveryBatches)
+  const stockMovements = useAppSelector((state) => state.yarnCheck.stockMovements)
   const [activeFilter, setActiveFilter] = useState("All POs")
+  const [searchQuery, setSearchQuery] = useState("")
   const { register, handleSubmit, reset } = useForm<CreatePurchaseOrderPayload>(
     {
       defaultValues: getOrderFormValues(),
@@ -200,6 +165,31 @@ export function MerchandiseListPage() {
     if (activeFilter === "__hidden_completed__")
       return po.status === "Finished – Ready to Ship"
     return true
+  })
+  const displayedOrders = filteredOrders.filter((po) => {
+    const normalizedSearch = searchQuery.trim().toLowerCase()
+
+    if (!normalizedSearch) {
+      return true
+    }
+
+    const searchableValues = [
+      po.sl,
+      po.poNumber,
+      po.orderNo,
+      po.buyer,
+      po.styleName,
+      po.style,
+      po.styleNo,
+      po.design,
+      po.color,
+      po.supplier,
+      po.status,
+    ]
+
+    return searchableValues.some((value) =>
+      String(value ?? "").toLowerCase().includes(normalizedSearch)
+    )
   })
 
   const openCreateModal = () => {
@@ -226,38 +216,47 @@ export function MerchandiseListPage() {
   }
 
   const onSubmit = (values: CreatePurchaseOrderPayload) => {
-    const poQty = toNumber(values.poQty ?? values.quantity)
-    const price = toNumber(values.price)
-    const rawAmount = values.amount as unknown
-    const amountInput =
-      rawAmount === undefined || rawAmount === null || rawAmount === ""
-        ? poQty * price
-        : toNumber(rawAmount)
-    const orderNo = values.orderNo?.trim() || values.poNumber?.trim() || ""
+    const poNumber = values.poNumber?.trim() || values.orderNo?.trim() || ""
     const styleName = values.styleName?.trim() || values.style?.trim() || ""
     const gauge = values.gauge?.trim() || values.gg?.trim() || ""
-    const yarn = values.yarn?.trim() || values.yarnComposition?.trim() || ""
+    const quality = values.quality?.trim() || values.yarn?.trim() || values.yarnComposition?.trim() || ""
     const ccd = values.ccd?.trim() || values.deliveryDate?.trim() || ""
-    const newCcd = values.newCcd?.trim() || ""
+    const poQty = toNumber(values.poQty ?? values.quantity)
     const normalizedValues = {
       ...values,
       sl:
         values.sl?.trim() ||
         editingOrder?.sl ||
         String(purchaseOrders.length + (editingOrder ? 0 : 1)).padStart(2, "0"),
-      poNumber: orderNo,
+      poNumber,
+      orderNo: poNumber,
       style: styleName,
       quantity: poQty,
-      deliveryDate: newCcd || ccd,
+      deliveryDate: ccd,
       gg: gauge,
-      yarnComposition: yarn,
-      excessQty: toNumber(values.excessQty),
+      yarnComposition: quality,
+      yarn: quality,
+      quality,
       poQty,
-      yarn,
+      itemNameCode: values.itemNameCode?.trim() || values.callNumber?.trim() || "",
+      callNumber: values.itemNameCode?.trim() || values.callNumber?.trim() || "",
+      accessories: values.accessories?.trim() || values.buttonZip?.trim() || "",
+      buttonZip: values.accessories?.trim() || values.buttonZip?.trim() || "",
+      ppStatus: values.ppStatus?.trim() || values.sampleStatus?.trim() || "",
+      sampleStatus: values.ppStatus?.trim() || values.sampleStatus?.trim() || "",
+      shipmentSample:
+        values.shipmentSample?.trim() || values.shipMode?.trim() || "",
+      shipMode: values.shipmentSample?.trim() || values.shipMode?.trim() || "",
+      polyCartonBooking:
+        values.polyCartonBooking?.trim() || values.productionUnit?.trim() || "",
+      productionUnit:
+        values.productionUnit?.trim() || values.polyCartonBooking?.trim() || "",
+      remarks: values.remarks?.trim() || "",
       gauge,
-      price,
-      amount: amountInput,
       requiredYarnQty: toNumber(values.requiredYarnQty),
+      totalYarnKg: toNumber(values.totalYarnKg),
+      totalFabricKg: toNumber(values.totalFabricKg),
+      totalAccessoriesQty: toNumber(values.totalAccessoriesQty),
       status: editingOrder?.status ?? "Draft",
     }
 
@@ -268,10 +267,10 @@ export function MerchandiseListPage() {
           updates: normalizedValues,
         })
       )
-      toast.success(`Purchase order ${orderNo} updated successfully.`)
+      toast.success(`Purchase order ${poNumber} updated successfully.`)
     } else {
       dispatch(addPurchaseOrder(normalizedValues))
-      toast.success(`Purchase order ${orderNo} created successfully.`)
+      toast.success(`Purchase order ${poNumber} created successfully.`)
     }
 
     reset(defaultFormValues)
@@ -318,6 +317,52 @@ export function MerchandiseListPage() {
   const productionCount = purchaseOrders.filter(
     (p) => p.status === "Ready for Production"
   ).length
+  const purchaseOrderWorkflowMetrics = useMemo(() => {
+    const yarnReceivedQtyByPo: Record<string, number> = {}
+    const yarnIssuedQtyByPo: Record<string, number> = {}
+    const yarnInspectionStatusByPo: Record<string, string | undefined> = {}
+    const yarnInspectionDateByPo: Record<string, string | undefined> = {}
+
+    deliveryBatches.forEach((batch) => {
+      yarnReceivedQtyByPo[batch.poId] =
+        (yarnReceivedQtyByPo[batch.poId] ?? 0) + batch.quantity
+
+      const currentInspectionDate = yarnInspectionDateByPo[batch.poId]
+      const nextInspectionDate = batch.inspectedAt ?? batch.deliveryDate
+
+      if (
+        !currentInspectionDate ||
+        new Date(nextInspectionDate).getTime() >=
+          new Date(currentInspectionDate).getTime()
+      ) {
+        yarnInspectionDateByPo[batch.poId] = nextInspectionDate
+        yarnInspectionStatusByPo[batch.poId] = batch.inspectionStatus
+      }
+    })
+
+    stockMovements
+      .filter((movement) => movement.movementType === "Issued to Knitting")
+      .forEach((movement) => {
+        yarnIssuedQtyByPo[movement.poId] =
+          (yarnIssuedQtyByPo[movement.poId] ?? 0) + movement.quantity
+      })
+
+    return {
+      yarnInspectionDateByPo,
+      yarnInspectionStatusByPo,
+      yarnIssuedQtyByPo,
+      yarnReceivedQtyByPo,
+      storeInspectionDateByPo: {},
+      storeInspectionStatusByPo: {},
+      storeReceivedQtyByPo: {},
+      storeStockBalanceByPo: {},
+      storeSupplierByPo: {},
+    }
+  }, [deliveryBatches, stockMovements])
+  const purchaseOrderWorkflowColumns = useMemo(
+    () => getPurchaseOrderWorkflowColumns(purchaseOrderWorkflowMetrics),
+    [purchaseOrderWorkflowMetrics]
+  )
 
   return (
     <div className="space-y-6">
@@ -383,13 +428,21 @@ export function MerchandiseListPage() {
         ]}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
+        searchPlaceholder="Search PO, buyer, style, design, color"
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        compact
       />
       <DataTable
         columns={[
-          ...purchaseOrderTableColumns,
+          ...purchaseOrderWorkflowColumns,
           {
             key: "action",
             header: "Actions",
+            className: "w-[7.5rem] min-w-[7.5rem]",
+            stickyClassName: "sticky right-0 border-l border-border bg-card",
+            stickyShadowClassName:
+              "shadow-[-6px_0_10px_-8px_rgba(15,23,42,0.35)]",
             render: (row) => {
               const po = row as PurchaseOrder
               const canOpenDesignModule = user?.role === "super_admin"
@@ -405,56 +458,57 @@ export function MerchandiseListPage() {
                   : "Request Consumption"
 
               return (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl"
-                  >
-                    <Link to={`/merchandise/${String(po.id)}`}>View</Link>
-                  </Button>
+                <div className="flex flex-wrap items-center gap-1.5">
                   {shouldShowConsumptionAction ? (
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="rounded-xl"
+                      className="h-7 rounded-lg px-2 text-[11px]"
                       disabled={
                         !canOpenDesignModule &&
                         po.status === "Consumption Requested"
                       }
                       onClick={() => handleRequestConsumption(po)}
                     >
-                      {consumptionButtonLabel}
+                      <span className="hidden sm:inline">
+                        {consumptionButtonLabel}
+                      </span>
+                      <span className="sm:hidden">Req</span>
                     </Button>
                   ) : null}
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer rounded-xl"
+                    className="h-7 w-7 cursor-pointer rounded-lg px-0 text-[11px] sm:w-auto sm:px-2"
                     onClick={() => openEditModal(po)}
+                    aria-label="Edit purchase order"
+                    title="Edit"
                   >
                     <Pencil className="size-3.5" />
-                    Edit
+                    <span className="hidden sm:inline">Edit</span>
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer rounded-xl text-destructive hover:text-destructive"
+                    className="h-7 w-7 cursor-pointer rounded-lg px-0 text-[11px] text-destructive hover:text-destructive sm:w-auto sm:px-2"
                     onClick={() => setOrderPendingDelete(po)}
+                    aria-label="Delete purchase order"
+                    title="Delete"
                   >
                     <Trash2 className="size-3.5" />
-                    Delete
+                    <span className="hidden sm:inline">Delete</span>
                   </Button>
                 </div>
               )
             },
           },
         ]}
-        data={filteredOrders}
+        data={displayedOrders}
+        headerRows={purchaseOrderWorkflowHeaderRows}
+        compact
       />
 
       {/* Create / Edit Modal */}

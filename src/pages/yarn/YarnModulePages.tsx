@@ -23,7 +23,7 @@ export function YarnTypePage() {
       <PageHeader
         title="Yarn Type"
       />
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         <MetricCard
           label="Yarn Types"
           value={String(uniqueYarnTypes.size).padStart(2, "0")}
@@ -81,7 +81,7 @@ export function YarnInventoryPage() {
       <PageHeader
         title="Yarn Inventory"
       />
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         <MetricCard
           label="Available Stock"
           value={`${Math.round(availableStock)} kg`}

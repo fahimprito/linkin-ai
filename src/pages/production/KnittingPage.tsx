@@ -74,7 +74,7 @@ export function KnittingPage() {
         title="Knitting Module"
       />
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         <MetricCard
           label="Knitting Queue"
           value={String(queueOrders.length).padStart(2, "0")}

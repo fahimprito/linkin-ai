@@ -49,6 +49,12 @@ export type PurchaseOrder = {
   inspectionStyle?: string
   stylePhoto?: string
   sizeRange?: string
+  quality?: string
+  itemNameCode?: string
+  accessories?: string
+  ppStatus?: string
+  shipmentSample?: string
+  remarks?: string
   poQty?: number
   yarn?: string
   gauge?: string

@@ -92,7 +92,7 @@ export function StatusBadge({ value }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide",
+        "inline-flex max-w-[6.5rem] whitespace-normal rounded-full px-2.5 py-1 text-center text-xs font-semibold leading-4 tracking-wide",
         tone
       )}
     >

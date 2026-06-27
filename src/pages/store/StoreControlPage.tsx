@@ -31,7 +31,7 @@ export function StoreControlPage() {
         title="Store Control Service"
       />
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         <MetricCard
           label="Open Requisitions"
           value={String(openRequisitions).padStart(2, "0")}

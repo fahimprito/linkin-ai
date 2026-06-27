@@ -13,10 +13,12 @@ import {
   type ModalFormField,
 } from "@/components/shared/record-form-modal"
 import {
+  getDesignRequestHeaderRows,
+  getDesignSubmittedHeaderRows,
+  getDesignRequestWorkflowColumns,
   getOrderDisplayNo,
   getOrderDisplayStyle,
   getOrderDisplayYarn,
-  purchaseOrderTableColumns,
 } from "@/lib/purchase-order-table-columns"
 import { ModuleSettingsPage } from "@/pages/shared/ModuleSettingsPage"
 import { ModuleFormPage } from "@/pages/shared/ModuleFormPage"
@@ -76,52 +78,65 @@ export function DesignDashboardPage() {
   const purchaseOrders = useAppSelector(
     (state) => state.merchandise.purchaseOrders
   )
-  const styleCount = purchaseOrders.length
-  const uniqueDesigns = new Set(
-    purchaseOrders.map((po) => po.design.trim()).filter(Boolean)
-  ).size
-  const missingSpecs = purchaseOrders.filter(
-    (po) => !po.design || !po.gg || !po.color
-  ).length
+  const requestedConsumptionOrders = purchaseOrders.filter(
+    (po) =>
+      po.status === "Consumption Requested" || hasSubmittedConsumption(po)
+  )
+  const pendingConsumptionOrders = purchaseOrders.filter(
+    (po) => po.status === "Consumption Requested"
+  )
+  const completedConsumptionOrders = purchaseOrders
+    .filter(hasSubmittedConsumption)
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+  const submittedColumns = getDesignRequestWorkflowColumns({
+    yarnInspectionDateByPo: {},
+    yarnInspectionStatusByPo: {},
+    yarnIssuedQtyByPo: {},
+    yarnReceivedQtyByPo: {},
+    storeInspectionDateByPo: {},
+    storeInspectionStatusByPo: {},
+    storeReceivedQtyByPo: {},
+    storeStockBalanceByPo: {},
+    storeSupplierByPo: {},
+  })
+  const submittedHeaderRows = getDesignSubmittedHeaderRows()
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Design Dashboard"
       />
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         <MetricCard
-          label="Style / PO"
-          value={String(styleCount).padStart(2, "0")}
+          label="Consumption Request"
+          value={String(requestedConsumptionOrders.length).padStart(2, "0")}
           tone="default"
         />
         <MetricCard
-          label="Design Variants"
-          value={String(uniqueDesigns).padStart(2, "0")}
-          tone="success"
-        />
-        <MetricCard
-          label="Missing Specs"
-          value={String(missingSpecs).padStart(2, "0")}
+          label="Pending Consumption Request"
+          value={String(pendingConsumptionOrders.length).padStart(2, "0")}
           tone="warning"
         />
         <MetricCard
-          label="Ready Records"
-          value={String(styleCount - missingSpecs).padStart(2, "0")}
+          label="Complete Consumption Request"
+          value={String(completedConsumptionOrders.length).padStart(2, "0")}
           tone="success"
         />
       </section>
-      <DataTable
-        columns={[
-          { key: "poNumber", header: "PO Number" },
-          { key: "buyer", header: "Buyer" },
-          { key: "style", header: "Style" },
-          { key: "design", header: "Design" },
-          { key: "gg", header: "GG" },
-          { key: "color", header: "Color" },
-        ]}
-        data={purchaseOrders}
-      />
+      <p className="text-lg font-semibold">Complete Request Table</p>
+      {completedConsumptionOrders.length === 0 ? (
+        <EmptyState
+          title="No completed consumption requests yet"
+          description="Completed Design consumption requests will appear here after totals are submitted."
+        />
+      ) : (
+        <DataTable
+          columns={submittedColumns}
+          data={completedConsumptionOrders}
+          headerRows={submittedHeaderRows}
+          compact
+        />
+      )}
     </div>
   )
 }
@@ -157,7 +172,7 @@ export function DesignConsumptionPage() {
   return (
     <ModuleFormPage
       title="Design Consumption"
-      description="Track design-side consumption assumptions for yarn, color, and sample requirement planning."
+      description="Track the Design Controller totals that feed the PO workflow and yarn-check handoff."
       storageKey="form-design-consumption"
       fields={[
         { name: "poNumber", label: "PO Number", placeholder: "LK-2005" },
@@ -165,7 +180,24 @@ export function DesignConsumptionPage() {
         { name: "design", label: "Design", placeholder: "Plain Jersey" },
         { name: "yarnType", label: "Yarn Type", placeholder: "60% Cotton / 40% Acrylic" },
         { name: "color", label: "Color", placeholder: "Olive Green" },
-        { name: "estimatedConsumption", label: "Estimated Consumption", placeholder: "1.20 kg / doz" },
+        {
+          name: "totalYarnKg",
+          label: "Total Yarn (kg)",
+          type: "number",
+          placeholder: "1200",
+        },
+        {
+          name: "totalFabricKg",
+          label: "Total Fabric (kg)",
+          type: "number",
+          placeholder: "980",
+        },
+        {
+          name: "totalAccessoriesQty",
+          label: "Total Accessories Qty",
+          type: "number",
+          placeholder: "10000",
+        },
         {
           name: "remarks",
           label: "Remarks",
@@ -203,13 +235,28 @@ export function DesignStylePoPage() {
       totalAccessoriesQty: 0,
     },
   })
+  const designRequestColumns = getDesignRequestWorkflowColumns({
+    yarnInspectionDateByPo: {},
+    yarnInspectionStatusByPo: {},
+    yarnIssuedQtyByPo: {},
+    yarnReceivedQtyByPo: {},
+    storeInspectionDateByPo: {},
+    storeInspectionStatusByPo: {},
+    storeReceivedQtyByPo: {},
+    storeStockBalanceByPo: {},
+    storeSupplierByPo: {},
+  })
+  const designRequestHeaderRows = getDesignRequestHeaderRows()
 
   const openConsumptionModal = (poId: string) => {
+    const selectedPo =
+      visiblePurchaseOrders.find((po) => po.id === poId) ?? null
+
     setActivePoId(poId)
     reset({
-      totalYarnKg: 0,
-      totalFabricKg: 0,
-      totalAccessoriesQty: 0,
+      totalYarnKg: selectedPo?.totalYarnKg ?? 0,
+      totalFabricKg: selectedPo?.totalFabricKg ?? 0,
+      totalAccessoriesQty: selectedPo?.totalAccessoriesQty ?? 0,
     })
   }
 
@@ -301,16 +348,19 @@ export function DesignStylePoPage() {
       ) : (
         <DataTable
           columns={[
-            ...purchaseOrderTableColumns,
+            ...designRequestColumns,
             {
               key: "action",
               header: "Actions",
+              className: "w-[7.5rem] min-w-[7.5rem]",
+              stickyClassName:
+                "sticky right-0 border-l-2 border-border bg-card shadow-[-6px_0_10px_-8px_rgba(15,23,42,0.35)]",
               render: (row) => (
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-xl"
+                  className="h-7 rounded-lg px-2 text-[11px]"
                   onClick={() => openConsumptionModal(String(row.id))}
                 >
                   Add Consumption
@@ -319,6 +369,8 @@ export function DesignStylePoPage() {
             },
           ]}
           data={visiblePurchaseOrders}
+          headerRows={designRequestHeaderRows}
+          compact
         />
       )}
 
@@ -358,6 +410,18 @@ export function DesignSubmittedPoListPage() {
   const submittedPurchaseOrders = purchaseOrders
     .filter(hasSubmittedConsumption)
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+  const submittedColumns = getDesignRequestWorkflowColumns({
+    yarnInspectionDateByPo: {},
+    yarnInspectionStatusByPo: {},
+    yarnIssuedQtyByPo: {},
+    yarnReceivedQtyByPo: {},
+    storeInspectionDateByPo: {},
+    storeInspectionStatusByPo: {},
+    storeReceivedQtyByPo: {},
+    storeStockBalanceByPo: {},
+    storeSupplierByPo: {},
+  })
+  const submittedHeaderRows = getDesignSubmittedHeaderRows()
 
   return (
     <div className="space-y-6">
@@ -372,8 +436,10 @@ export function DesignSubmittedPoListPage() {
         />
       ) : (
         <DataTable
-          columns={purchaseOrderTableColumns}
+          columns={submittedColumns}
           data={submittedPurchaseOrders}
+          headerRows={submittedHeaderRows}
+          compact
         />
       )}
     </div>

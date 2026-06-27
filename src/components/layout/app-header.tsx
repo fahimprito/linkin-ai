@@ -1,4 +1,4 @@
-import { Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun } from "lucide-react"
+import { Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react"
 
 import { NotificationDropdown } from "@/components/shared/notification-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
@@ -46,14 +46,6 @@ export function AppHeader() {
         </Button>
         <div className="min-w-0 flex-1">
           
-        </div>
-        <div className="hidden items-center gap-2 rounded-full border border-border/70 bg-card px-3 py-2 shadow-sm md:flex">
-          <Search className="size-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search PO, buyer, shipment, status"
-            className="w-64 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
         </div>
         <Button
           type="button"

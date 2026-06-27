@@ -92,7 +92,7 @@ export function ExecutiveDashboardPage() {
     return (
       <div className="space-y-6">
         <PageHeader title={dashboard.title} />
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
           {roleMetrics.map((metric) => (
             <MetricCard key={metric.id} {...metric} />
           ))}
@@ -249,7 +249,7 @@ export function ExecutiveDashboardPage() {
           </div>
         </div>
       </section>
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         {executiveMetrics.map((metric) => (
           <MetricCard key={metric.id} {...metric} />
         ))}

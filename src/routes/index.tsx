@@ -33,7 +33,6 @@ import {
   MerchandiseSettingsPage,
   MerchandiseShipmentPage,
 } from "@/pages/merchandise/MerchandiseModulePages"
-import { MerchandisePoDetailPage } from "@/pages/merchandise/MerchandisePoDetailPage"
 import { UserProfilePage } from "@/pages/profile/UserProfilePage"
 import { ReportsPage } from "@/pages/reports/ReportsPage"
 import { DefaultRedirect } from "@/routes/default-redirect"
@@ -131,10 +130,6 @@ export const router = createBrowserRouter([
               {
                 path: "/merchandise/master-excel",
                 element: <MerchandiseMasterExcelPage />,
-              },
-              {
-                path: "/merchandise/:poId",
-                element: <MerchandisePoDetailPage />,
               },
             ],
           },
