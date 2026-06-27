@@ -1,16 +1,19 @@
-import { Menu, Moon, Search, Sun } from "lucide-react"
+import { Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun } from "lucide-react"
 
 import { NotificationDropdown } from "@/components/shared/notification-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
 import { useAuth } from "@/hooks/use-auth"
-import { useAppDispatch } from "@/store/hooks"
-import { toggleSidebar } from "@/store/slices/ui-slice"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { toggleSidebar, toggleSidebarCollapsed } from "@/store/slices/ui-slice"
 
 export function AppHeader() {
   const dispatch = useAppDispatch()
   const { user } = useAuth()
+  const isSidebarCollapsed = useAppSelector(
+    (state) => state.ui.isSidebarCollapsed
+  )
   const { theme, setTheme } = useTheme()
   const isDark = theme === "dark"
 
@@ -25,6 +28,21 @@ export function AppHeader() {
           onClick={() => dispatch(toggleSidebar())}
         >
           <Menu className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="hidden lg:inline-flex"
+          onClick={() => dispatch(toggleSidebarCollapsed())}
+          aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isSidebarCollapsed ? (
+            <PanelLeftOpen className="size-4" />
+          ) : (
+            <PanelLeftClose className="size-4" />
+          )}
         </Button>
         <div className="min-w-0 flex-1">
           

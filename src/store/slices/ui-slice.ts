@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 
 type UiState = {
   isSidebarOpen: boolean
+  isSidebarCollapsed: boolean
   confirmationDialog: {
     open: boolean
     title: string
@@ -11,6 +12,7 @@ type UiState = {
 
 const initialState: UiState = {
   isSidebarOpen: false,
+  isSidebarCollapsed: false,
   confirmationDialog: {
     open: false,
     title: "",
@@ -30,6 +32,9 @@ const uiSlice = createSlice({
     },
     toggleSidebar: (state) => {
       state.isSidebarOpen = !state.isSidebarOpen
+    },
+    toggleSidebarCollapsed: (state) => {
+      state.isSidebarCollapsed = !state.isSidebarCollapsed
     },
     openConfirmationDialog: (
       state,
@@ -57,6 +62,7 @@ export const {
   openConfirmationDialog,
   openSidebar,
   toggleSidebar,
+  toggleSidebarCollapsed,
 } = uiSlice.actions
 
 export default uiSlice.reducer

@@ -9,7 +9,9 @@ import { closeSidebar } from "@/store/slices/ui-slice"
 
 export function DashboardLayout() {
   const dispatch = useAppDispatch()
-  const isSidebarOpen = useAppSelector((state) => state.ui.isSidebarOpen)
+  const { isSidebarCollapsed, isSidebarOpen } = useAppSelector(
+    (state) => state.ui
+  )
   const { navigation } = useAuth()
 
   return (
@@ -24,11 +26,13 @@ export function DashboardLayout() {
           onClick={() => dispatch(closeSidebar())}
         />
         <div
-          className={`fixed inset-y-0 left-0 z-50 w-72 shrink-0 transition-transform lg:static lg:z-auto lg:h-full lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-50 w-72 shrink-0 transform-gpu transition-transform duration-300 ease-out will-change-transform lg:static lg:z-auto lg:h-full lg:translate-x-0 lg:transition-[width] lg:duration-200 ${
+            isSidebarCollapsed ? "lg:w-20" : "lg:w-72"
+          } ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <SidebarNav items={navigation} />
+          <SidebarNav items={navigation} collapsed={isSidebarCollapsed} />
         </div>
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <AppHeader />
