@@ -1,5 +1,6 @@
-import { Bot } from "lucide-react"
-import { NavLink } from "react-router"
+import { Bot, ChevronDown } from "lucide-react"
+import { useEffect, useState } from "react"
+import { NavLink, useLocation } from "react-router"
 
 import { UserMenu } from "@/components/shared/user-menu"
 import { cn } from "@/lib/utils"
@@ -13,6 +14,37 @@ type SidebarNavProps = {
 
 export function SidebarNav({ items, collapsed = false }: SidebarNavProps) {
   const { roleLabel, user } = useAuth()
+  const location = useLocation()
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    const nextExpandedSections = items.reduce<Record<string, boolean>>(
+      (accumulator, item) => {
+        if (!item.children?.length) {
+          return accumulator
+        }
+
+        accumulator[item.to] = item.children.some((child) =>
+          location.pathname.startsWith(child.to)
+        )
+
+        return accumulator
+      },
+      {}
+    )
+
+    setExpandedSections((current) => ({
+      ...nextExpandedSections,
+      ...current,
+    }))
+  }, [items, location.pathname])
+
+  const toggleSection = (key: string) => {
+    setExpandedSections((current) => ({
+      ...current,
+      [key]: !current[key],
+    }))
+  }
 
   return (
     <aside className="flex h-full flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
@@ -47,30 +79,61 @@ export function SidebarNav({ items, collapsed = false }: SidebarNavProps) {
       >
         {items.map((item) => {
           const Icon = item.icon
+          const hasChildren = Boolean(item.children?.length)
+          const isSectionExpanded = expandedSections[item.to] ?? false
 
           return (
             <div key={item.to} className="space-y-1">
-              <NavLink
-                to={item.to}
-                end={!item.children?.length}
-                title={item.label}
-                className={({ isActive }) =>
-                  cn(
-                    "flex rounded-2xl text-sm font-medium transition-colors",
-                    collapsed
-                      ? "justify-center px-2 py-3"
-                      : "items-center gap-3 px-3 py-3",
-                    isActive
+              {hasChildren && !collapsed ? (
+                <button
+                  type="button"
+                  onClick={() => toggleSection(item.to)}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium transition-colors",
+                    isSectionExpanded
                       ? "bg-sidebar-primary text-sidebar-primary-foreground"
                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  )
-                }
-              >
-                <Icon className="size-4" />
-                <span className={cn(collapsed && "hidden")}>{item.label}</span>
-              </NavLink>
-              {item.children?.length && !collapsed ? (
-                <div className="ml-4 border-l border-sidebar-border pl-3">
+                  )}
+                >
+                  <Icon className="size-4" />
+                  <span className="flex-1">{item.label}</span>
+                  <ChevronDown
+                    className={cn(
+                      "size-4 transition-transform",
+                      isSectionExpanded && "rotate-180"
+                    )}
+                  />
+                </button>
+              ) : (
+                <NavLink
+                  to={item.to}
+                  end={!item.children?.length}
+                  title={item.label}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex rounded-2xl text-sm font-medium transition-colors",
+                      collapsed
+                        ? "justify-center px-2 py-3"
+                        : "items-center gap-3 px-3 py-3",
+                      isActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                        : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    )
+                  }
+                >
+                  <Icon className="size-4" />
+                  <span className={cn(collapsed && "hidden")}>{item.label}</span>
+                </NavLink>
+              )}
+              {hasChildren && !collapsed ? (
+                <div
+                  className={cn(
+                    "ml-4 overflow-hidden border-l border-sidebar-border pl-3 transition-all duration-300 ease-out",
+                    isSectionExpanded
+                      ? "max-h-96 opacity-100"
+                      : "max-h-0 opacity-0"
+                  )}
+                >
                   {item.children.map((child) => (
                     <NavLink
                       key={child.to}
@@ -78,7 +141,7 @@ export function SidebarNav({ items, collapsed = false }: SidebarNavProps) {
                       end
                       className={({ isActive }) =>
                         cn(
-                          "flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-colors",
+                          "flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-all duration-200",
                           isActive
                             ? "bg-sidebar-accent text-sidebar-accent-foreground"
                             : "text-sidebar-foreground/70 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground"

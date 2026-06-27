@@ -1,10 +1,9 @@
-﻿import { ArrowRight, ClipboardList, FileText, Layers3, PackageSearch } from "lucide-react"
+﻿import { ArrowRight, ClipboardList, Layers3, PackageSearch } from "lucide-react"
 
 import { DataTable } from "@/components/shared/data-table"
 import { LoadingState } from "@/components/shared/loading-state"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
-import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/use-auth"
@@ -186,69 +185,6 @@ export function ExecutiveDashboardPage() {
       <PageHeader
         title="Executive operations dashboard"
       />
-      <SearchFilterBar
-        filters={[
-          "Search by PO Number",
-          "Search by Buyer",
-          "Search by Module",
-          "Search by Status",
-        ]}
-      />
-      <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[2rem] border border-border/70 bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold">Active system flow</h2>
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
-            <div className="rounded-[1.5rem] bg-secondary/60 p-4">
-              <p className="text-sm font-semibold">Merchandising</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Capture buyer POs, manage the editable master sheet, and prepare complete order data.
-              </p>
-            </div>
-            <div className="rounded-[1.5rem] bg-secondary/60 p-4">
-              <p className="text-sm font-semibold">Design</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Review styles, design names, GG, color, and yarn details from the live PO set.
-              </p>
-            </div>
-            <div className="rounded-[1.5rem] bg-secondary/60 p-4">
-              <p className="text-sm font-semibold">Yarn & Store</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Handle yarn availability, supplier receipts, inspections, and reusable service issuance logs.
-              </p>
-            </div>
-            <div className="rounded-[1.5rem] bg-secondary/60 p-4">
-              <p className="text-sm font-semibold">Management Reporting</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Track PO visibility, yarn information, stock calculation, and active workspace metrics.
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-[2rem] border border-border/70 bg-card p-6 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-              <FileText className="size-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold">Current reporting scope</h2>
-              <p className="text-sm text-muted-foreground">
-                The visible reports are aligned with the modules currently in rollout.
-              </p>
-            </div>
-          </div>
-          <div className="mt-5 space-y-3 text-sm text-muted-foreground">
-            <div className="rounded-[1.5rem] border border-border/70 p-4">
-              PO tracker: buyer, style, design, status, delivery milestone, and stage ownership.
-            </div>
-            <div className="rounded-[1.5rem] border border-border/70 p-4">
-              Yarn information: buyer, style, color, lot, composition, supplier, received date, and remarks.
-            </div>
-            <div className="rounded-[1.5rem] border border-border/70 p-4">
-              Yarn stock calculation: delivery quantities, balance quantities, and controller sign-off visibility.
-            </div>
-          </div>
-        </div>
-      </section>
       <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         {executiveMetrics.map((metric) => (
           <MetricCard key={metric.id} {...metric} />
