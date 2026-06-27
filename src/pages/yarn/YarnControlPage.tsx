@@ -1,18 +1,44 @@
-﻿import { Cable, ClipboardCheck, Package, Send, Truck } from "lucide-react"
+import {
+  AlertTriangle,
+  Cable,
+  ClipboardCheck,
+  Package,
+  Send,
+  Truck,
+} from "lucide-react"
 import { Link } from "react-router"
 
 import { Button } from "@/components/ui/button"
-import {
-  getKnittingWorkflowGuidance,
-  getKnittingWorkflowStageForPo,
-  KNITTING_STAGE_2_STEPS,
-} from "@/lib/knitting-workflow"
+import { DataTable } from "@/components/shared/data-table"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
-import { DataTable } from "@/components/shared/data-table"
-import { WorkflowTrackerCard } from "@/components/shared/workflow-tracker-card"
 import { useAppSelector } from "@/store/hooks"
+import type { YarnBatchInspectionStatus } from "@/types/modules"
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("en-US").format(Math.round(value))
+}
+
+function getLatestInspectionStatusByPo(
+  poId: string,
+  deliveryBatches: Array<{
+    poId: string
+    deliveryDate: string
+    inspectedAt?: string
+    inspectionStatus: YarnBatchInspectionStatus
+  }>
+): YarnBatchInspectionStatus | "Pending" {
+  const latestBatch = deliveryBatches
+    .filter((batch) => batch.poId === poId)
+    .sort((left, right) => {
+      const leftDate = left.inspectedAt ?? left.deliveryDate
+      const rightDate = right.inspectedAt ?? right.deliveryDate
+      return new Date(rightDate).getTime() - new Date(leftDate).getTime()
+    })[0]
+
+  return latestBatch?.inspectionStatus ?? "Pending"
+}
 
 export function YarnControlPage() {
   const purchaseOrders = useAppSelector(
@@ -26,140 +52,193 @@ export function YarnControlPage() {
   const deliveryBatches = useAppSelector((state) => state.yarnCheck.deliveryBatches)
   const stockMovements = useAppSelector((state) => state.yarnCheck.stockMovements)
   const requisitions = useAppSelector((state) => state.knitting.requisitions)
-  const issueLogs = useAppSelector((state) => state.knitting.issueLogs)
-  const plans = useAppSelector((state) => state.knitting.productionPlans)
-  const progressEntries = useAppSelector((state) => state.knitting.dailyProgress)
-
-  const pendingChecks = checkRequests.filter((r) => r.status === "Pending").length
+  const pendingChecks = checkRequests.filter((request) => request.status === "Pending")
   const activeOrders = yarnSupplierOrders.filter(
-    (o) => o.status !== "Fully Received"
+    (order) => order.status !== "Fully Received"
   ).length
-  const pendingInspections = deliveryBatches.filter(
-    (b) =>
-      b.inspectionStatus === "Pending" || b.inspectionStatus === "Received"
-  ).length
-  const availableStock = stockMovements
-    .reduce(
-      (sum, movement) =>
-        movement.movementType === "Issued to Knitting"
-          ? sum - movement.quantity
-          : sum + movement.quantity,
-      0
+
+  const availableStock = stockMovements.reduce(
+    (sum, movement) =>
+      movement.movementType === "Issued to Knitting"
+        ? sum - movement.quantity
+        : sum + movement.quantity,
+    0
+  )
+  const uniqueYarnTypes = new Set(
+    purchaseOrders
+      .map((po) => po.yarnComposition?.trim() ?? po.yarn?.trim() ?? "")
+      .filter(Boolean)
+  )
+  const pendingRequisitionQty = requisitions
+    .filter((requisition) => requisition.status !== "Issued")
+    .reduce((sum, requisition) => sum + requisition.requiredQty, 0)
+  const today = new Date()
+  const sevenDaysAgo = new Date(today)
+  sevenDaysAgo.setDate(today.getDate() - 6)
+  const weeklyReceivedQty = deliveryBatches
+    .filter((batch) => {
+      const deliveryDate = new Date(batch.deliveryDate)
+      return deliveryDate >= sevenDaysAgo && deliveryDate <= today
+    })
+    .reduce((sum, batch) => sum + batch.quantity, 0)
+  const inspectedQty = deliveryBatches
+    .filter((batch) =>
+      ["Inspected", "Accepted"].includes(batch.inspectionStatus)
     )
-  const stage2FocusPo =
-    purchaseOrders.find((po) => po.status === "Ready for Production") ??
-    purchaseOrders.find((po) => po.status === "Knitting") ??
-    purchaseOrders.find((po) => po.status === "Linking")
-  const stage2CurrentStage = stage2FocusPo
-    ? getKnittingWorkflowStageForPo({
-        po: stage2FocusPo,
-        requisitions,
-        issueLogs,
-        plans,
-        progressEntries,
-      })
-    : "Queue"
-  const stage2Guidance = getKnittingWorkflowGuidance(stage2CurrentStage)
+    .reduce((sum, batch) => sum + batch.quantity, 0)
+  const stockByYarnType = stockMovements.reduce<Record<string, number>>(
+    (accumulator, movement) => {
+      const yarnType = movement.yarnType?.trim() || "Unknown"
+      const quantity =
+        movement.movementType === "Issued to Knitting"
+          ? -movement.quantity
+          : movement.quantity
+
+      accumulator[yarnType] = (accumulator[yarnType] ?? 0) + quantity
+      return accumulator
+    },
+    {}
+  )
+  const lowStockTypes = Object.values(stockByYarnType).filter(
+    (quantity) => quantity > 0 && quantity < 500
+  ).length
+  const topYarnTypes = Object.entries(stockByYarnType)
+    .map(([yarnType, quantity]) => ({
+      id: yarnType,
+      yarnType,
+      quantity,
+    }))
+    .filter((entry) => entry.quantity > 0)
+    .sort((left, right) => right.quantity - left.quantity)
+    .slice(0, 10)
+  const totalTopYarnQty = topYarnTypes.reduce(
+    (sum, entry) => sum + entry.quantity,
+    0
+  )
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Yarn Control Dashboard"
-      />
+      <PageHeader title="Yarn Control Dashboard" />
 
-      {/* Metrics */}
-      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
-        <MetricCard
-          label="Pending Checks"
-          value={String(pendingChecks).padStart(2, "0")}
-          tone="warning"
-        />
-        <MetricCard
-          label="Active Orders"
-          value={String(activeOrders).padStart(2, "0")}
-          tone="default"
-        />
-        <MetricCard
-          label="Awaiting Inspection"
-          value={String(pendingInspections).padStart(2, "0")}
-          tone="warning"
-        />
-        <MetricCard
-          label="Available Stock"
-          value={`${Math.round(availableStock)} kg`}
-          tone="success"
-        />
-      </section>
+      <section className="grid gap-4 xl:grid-cols-[1.35fr_0.9fr]">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <MetricCard
+            label="Yarn Types"
+            value={String(uniqueYarnTypes.size).padStart(2, "0")}
+            tone="default"
+            icon={Cable}
+          />
+          <MetricCard
+            label="Pending Requisition"
+            value={`${formatNumber(pendingRequisitionQty)} kg`}
+            tone="warning"
+            icon={Package}
+          />
+          <MetricCard
+            label="Low Stock Types"
+            value={String(lowStockTypes).padStart(2, "0")}
+            tone={lowStockTypes > 0 ? "danger" : "success"}
+            icon={AlertTriangle}
+          />
+          <MetricCard
+            label="Weekly Received"
+            value={`${formatNumber(weeklyReceivedQty)} kg`}
+            tone="success"
+            icon={Truck}
+          />
+          <MetricCard
+            label="Inspection Done"
+            value={`${formatNumber(inspectedQty)} kg`}
+            tone="default"
+            icon={ClipboardCheck}
+          />
+          <MetricCard
+            label="Pending Checks"
+            value={String(pendingChecks.length).padStart(2, "0")}
+            tone="warning"
+            icon={ClipboardCheck}
+          />
+          <MetricCard
+            label="Active Orders"
+            value={String(activeOrders).padStart(2, "0")}
+            tone="default"
+            icon={Send}
+          />
+          <MetricCard
+            label="Available Stock"
+            value={`${formatNumber(availableStock)} kg`}
+            tone="success"
+            icon={Package}
+          />
+        </div>
 
-      <WorkflowTrackerCard
-        trackerLabel="Stage 2 Handoff Tracker"
-        title="Yarn Control to Knitting flow"
-        summary={
-          stage2FocusPo
-            ? `Current focus PO: ${stage2FocusPo.poNumber}. ${stage2Guidance.summary}`
-            : "Knitting handoff steps will appear here once a PO enters Stage 2."
-        }
-        nextAction={stage2Guidance.nextAction}
-        stages={KNITTING_STAGE_2_STEPS}
-        currentStage={stage2CurrentStage}
-        badgeValue={stage2FocusPo?.status}
-      />
-
-      {/* Quick Links */}
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {[
-          {
-            to: "/yarn/check-requests",
-            icon: Cable,
-            label: "Check Requests",
-            desc: "Review yarn availability",
-          },
-          {
-            to: "/yarn/supplier-orders",
-            icon: Package,
-            label: "Supplier Orders",
-            desc: "Manage yarn orders",
-          },
-          {
-            to: "/yarn/delivery-log",
-            icon: Truck,
-            label: "Delivery Log",
-            desc: "Track batch deliveries",
-          },
-          {
-            to: "/yarn/batch-inspection",
-            icon: ClipboardCheck,
-            label: "Batch Inspection",
-            desc: "Inspect & accept/reject",
-          },
-          {
-            to: "/yarn/issue-to-knitting",
-            icon: Send,
-            label: "Issue to Knitting",
-            desc: "Release yarn to requisitions",
-          },
-        ].map((item) => (
-          <Link
-            key={item.to}
-            to={item.to}
-            className="group flex items-start gap-4 rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md"
-          >
-            <div className="rounded-xl bg-primary/10 p-2.5">
-              <item.icon className="size-5 text-primary" />
-            </div>
+        <div className="rounded-[1.75rem] border border-border/80 bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="font-semibold group-hover:text-primary">
-                {item.label}
-              </p>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {item.desc}
+              <p className="text-sm font-semibold">Top 10 Qty with Yarn Types</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Ranked by current available stock
               </p>
             </div>
-          </Link>
-        ))}
+            <div className="rounded-xl bg-primary/10 px-3 py-2 text-right">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                Total
+              </p>
+              <p className="text-sm font-semibold text-primary">
+                {formatNumber(totalTopYarnQty)} kg
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 overflow-hidden rounded-2xl border border-border/80">
+            <table className="min-w-full border-separate border-spacing-0 text-left text-xs">
+              <thead className="bg-slate-100 text-muted-foreground dark:bg-slate-800/90">
+                <tr>
+                  <th className="border-b border-r border-border/80 px-3 py-2 font-semibold">
+                    #
+                  </th>
+                  <th className="border-b border-r border-border/80 px-3 py-2 font-semibold">
+                    Yarn Type
+                  </th>
+                  <th className="border-b border-border/80 px-3 py-2 text-right font-semibold">
+                    Count (kg)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {topYarnTypes.length > 0 ? (
+                  topYarnTypes.map((entry, index) => (
+                    <tr
+                      key={entry.id}
+                      className={index % 2 === 0 ? "bg-background/80" : "bg-card"}
+                    >
+                      <td className="border-r border-b border-border/70 px-3 py-2">
+                        {index + 1}
+                      </td>
+                      <td className="border-r border-b border-border/70 px-3 py-2">
+                        {entry.yarnType}
+                      </td>
+                      <td className="border-b border-border/70 px-3 py-2 text-right font-medium">
+                        {formatNumber(entry.quantity)}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-3 py-6 text-center text-muted-foreground"
+                    >
+                      No yarn stock data yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
-      {/* Recent Yarn Check Requests */}
       {checkRequests.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-center justify-between">
@@ -190,7 +269,6 @@ export function YarnControlPage() {
         </section>
       )}
 
-      {/* Recent Delivery Batches */}
       {deliveryBatches.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-center justify-between">
@@ -216,6 +294,18 @@ export function YarnControlPage() {
                   <StatusBadge value={String(row.inspectionStatus)} />
                 ),
               },
+              {
+                key: "poStatus",
+                header: "PO Status",
+                render: (row) => {
+                  const relatedPo = purchaseOrders.find((po) => po.id === row.poId)
+                  return (
+                    <StatusBadge
+                      value={relatedPo?.status ?? getLatestInspectionStatusByPo(String(row.poId), deliveryBatches)}
+                    />
+                  )
+                },
+              },
             ]}
             data={deliveryBatches.slice(0, 5)}
           />
@@ -224,4 +314,3 @@ export function YarnControlPage() {
     </div>
   )
 }
-

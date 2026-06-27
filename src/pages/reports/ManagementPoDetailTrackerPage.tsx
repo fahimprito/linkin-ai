@@ -6,9 +6,13 @@ import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { poStatusToStage } from "@/components/shared/stage-tracker"
-import { getOrderDisplayNo, getOrderDisplayStyle } from "@/lib/purchase-order-table-columns"
+import {
+  getOrderDisplayNo,
+  getOrderDisplayStyle,
+} from "@/lib/purchase-order-table-columns"
+import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
 import { useAppSelector } from "@/store/hooks"
-import type { PurchaseOrder, YarnBatchInspectionStatus } from "@/types/modules"
+import type { PurchaseOrder } from "@/types/modules"
 
 type ReportPageProps = {
   title: string
@@ -22,7 +26,8 @@ type ManagementReportRow = PurchaseOrder & {
     accessoriesQty: number
   }
   eta: string
-  inspectionStatus: YarnBatchInspectionStatus | "Pending"
+  inventoryStatus: string
+  inspectionStatus: string
   progress: number
   currentStage: string
 }
@@ -58,35 +63,37 @@ function getProgress(status: string) {
   return progressByStatus[status] ?? 0
 }
 
-function getLatestInspectionStatusByPo(
-  poId: string,
-  deliveryBatches: Array<{
-    poId: string
-    deliveryDate: string
-    inspectedAt?: string
-    inspectionStatus: YarnBatchInspectionStatus
-  }>
-): YarnBatchInspectionStatus | "Pending" {
-  const latestBatch = deliveryBatches
-    .filter((batch) => batch.poId === poId)
-    .sort((left, right) => {
-      const leftDate = left.inspectedAt ?? left.deliveryDate
-      const rightDate = right.inspectedAt ?? right.deliveryDate
-      return new Date(rightDate).getTime() - new Date(leftDate).getTime()
-    })[0]
-
-  return latestBatch?.inspectionStatus ?? "Pending"
-}
-
 function selectOptions(values: string[], label: string) {
-  return [label, ...Array.from(new Set(values.filter(Boolean))).sort((a, b) => a.localeCompare(b))]
+  return [
+    label,
+    ...Array.from(new Set(values.filter(Boolean))).sort((a, b) =>
+      a.localeCompare(b)
+    ),
+  ]
 }
 
 function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
-  const purchaseOrders = useAppSelector((state) => state.merchandise.purchaseOrders)
-  const deliveryBatches = useAppSelector((state) => state.yarnCheck.deliveryBatches)
+  const purchaseOrders = useAppSelector(
+    (state) => state.merchandise.purchaseOrders
+  )
+  const deliveryBatches = useAppSelector(
+    (state) => state.yarnCheck.deliveryBatches
+  )
+  const stockMovements = useAppSelector((state) => state.yarnCheck.stockMovements)
+  const supplierOrders = useAppSelector((state) => state.yarnCheck.supplierOrders)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeStatusFilter, setActiveStatusFilter] = useState("All Status")
+
+  const workflowMetrics = useMemo(
+    () =>
+      createPurchaseOrderWorkflowMetrics({
+        purchaseOrders,
+        deliveryBatches,
+        stockMovements,
+        supplierOrders,
+      }),
+    [deliveryBatches, purchaseOrders, stockMovements, supplierOrders]
+  )
 
   const reportRows = useMemo<ManagementReportRow[]>(
     () =>
@@ -97,12 +104,15 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
           fabricKg: order.totalFabricKg ?? 0,
           accessoriesQty: order.totalAccessoriesQty ?? 0,
         },
-        eta: order.yarnEta ?? "",
-        inspectionStatus: getLatestInspectionStatusByPo(order.id, deliveryBatches),
+        eta: workflowMetrics.yarnEtaByPo[order.id] ?? order.yarnEta ?? "",
+        inventoryStatus:
+          workflowMetrics.inventoryStatusByPo[order.id] ?? "Pending Receipt",
+        inspectionStatus:
+          workflowMetrics.yarnInspectionStatusByPo[order.id] ?? "Pending",
         progress: getProgress(order.status),
         currentStage: buildCurrentStage(order.status),
       })),
-    [deliveryBatches, purchaseOrders]
+    [purchaseOrders, workflowMetrics]
   )
 
   const filterOptions = useMemo(
@@ -123,7 +133,9 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
           row.color,
           row.itemNameCode,
           row.callNumber,
-        ].some((value) => normalizeText(String(value ?? "")).includes(normalizedSearch))
+        ].some((value) =>
+          normalizeText(String(value ?? "")).includes(normalizedSearch)
+        )
 
       if (!matchesSearch) {
         return false
@@ -198,6 +210,12 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         header: "ETA",
         className: "min-w-[5.75rem]",
         render: (row) => row.eta || "—",
+      },
+      {
+        key: "inventoryStatus",
+        header: "Inventory Status",
+        className: "min-w-[6.5rem]",
+        render: (row) => <StatusBadge value={row.inventoryStatus} />,
       },
       {
         key: "inspectionStatus",

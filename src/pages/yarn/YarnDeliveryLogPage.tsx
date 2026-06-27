@@ -1,35 +1,36 @@
-﻿import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/shared/data-table"
+import { EmptyState } from "@/components/shared/empty-state"
 import { PageHeader } from "@/components/shared/page-header"
 import {
   RecordFormModal,
   type ModalFormField,
 } from "@/components/shared/record-form-modal"
+import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
+import { upsertInventoryFromReceipt } from "@/lib/yarn-inventory"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { updatePoStatus } from "@/store/slices/merchandise-slice"
+import { updatePurchaseOrder } from "@/store/slices/merchandise-slice"
 import {
   addDeliveryBatch,
+  addStockMovement,
   updateCheckRequestStatus,
   updateSupplierOrderStatus,
 } from "@/store/slices/yarn-check-slice"
+import type { PurchaseOrder } from "@/types/modules"
 
 type DeliveryFormValues = {
-  supplierOrderId: string
   poId: string
   poNumber: string
+  supplier: string
   batchNumber: string
   quantity: string
   deliveryDate: string
   remarks: string
-}
-
-function createDeliveryBatchId() {
-  return `ydb-${Date.now()}`
 }
 
 const deliveryFields: ModalFormField[] = [
@@ -39,17 +40,22 @@ const deliveryFields: ModalFormField[] = [
     placeholder: "LK-2006",
   },
   {
+    name: "supplier",
+    label: "Supplier",
+    placeholder: "Everest Fibers",
+  },
+  {
     name: "batchNumber",
-    label: "Batch Number",
-    placeholder: "BATCH-003",
+    label: "Batch / Lot Number",
+    placeholder: "LOT-003",
   },
   {
     name: "quantity",
-    label: "Quantity (kg)",
+    label: "Received Qty (kg)",
     type: "number",
     placeholder: "300",
   },
-  { name: "deliveryDate", label: "Delivery Date", type: "date" },
+  { name: "deliveryDate", label: "Receive Date", type: "date" },
   {
     name: "remarks",
     label: "Remarks",
@@ -58,24 +64,40 @@ const deliveryFields: ModalFormField[] = [
   },
 ]
 
+function createDeliveryBatchId() {
+  return `ydb-${Date.now()}`
+}
+
+function createStockMovementId() {
+  return `ysm-${Date.now()}`
+}
+
+function hasSubmittedConsumption(order: PurchaseOrder) {
+  return (
+    order.totalYarnKg !== undefined ||
+    order.totalFabricKg !== undefined ||
+    order.totalAccessoriesQty !== undefined
+  )
+}
+
 export function YarnDeliveryLogPage() {
   const dispatch = useAppDispatch()
+  const purchaseOrders = useAppSelector(
+    (state) => state.merchandise.purchaseOrders
+  )
   const deliveryBatches = useAppSelector(
     (state) => state.yarnCheck.deliveryBatches
   )
-  const supplierOrders = useAppSelector(
-    (state) => state.yarnCheck.supplierOrders
-  )
-  const yarnSupplierOrders = supplierOrders.filter(
-    (order) => (order.itemCategory ?? "Yarn") === "Yarn"
-  )
+  const stockMovements = useAppSelector((state) => state.yarnCheck.stockMovements)
+  const supplierOrders = useAppSelector((state) => state.yarnCheck.supplierOrders)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [selectedOrderId, setSelectedOrderId] = useState("")
+  const [selectedPoId, setSelectedPoId] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
   const { register, handleSubmit, reset } = useForm<DeliveryFormValues>({
     defaultValues: {
-      supplierOrderId: "",
       poId: "",
       poNumber: "",
+      supplier: "",
       batchNumber: "",
       quantity: "",
       deliveryDate: "",
@@ -83,27 +105,54 @@ export function YarnDeliveryLogPage() {
     },
   })
 
-  // Only active supplier orders
-  const activeOrders = yarnSupplierOrders.filter(
-    (o) => o.status !== "Fully Received"
+  const visiblePurchaseOrders = useMemo(
+    () =>
+      purchaseOrders
+        .filter(hasSubmittedConsumption)
+        .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
+    [purchaseOrders]
   )
 
-  const openCreateForOrder = (orderId: string) => {
-    const order = yarnSupplierOrders.find((o) => o.id === orderId)
+  const filteredOrders = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase()
+
+    if (!normalizedSearch) {
+      return visiblePurchaseOrders
+    }
+
+    return visiblePurchaseOrders.filter((po) =>
+      [
+        po.poNumber,
+        po.orderNo,
+        po.styleName,
+        po.style,
+        po.styleNo,
+        po.color,
+        po.supplier,
+      ].some((value) =>
+        String(value ?? "").toLowerCase().includes(normalizedSearch)
+      )
+    )
+  }, [searchQuery, visiblePurchaseOrders])
+
+  const openCreateForOrder = (poId: string) => {
+    const order = visiblePurchaseOrders.find((po) => po.id === poId)
     if (!order) return
 
-    // Calculate next batch number
-    const existingBatches = deliveryBatches.filter(
-      (b) => b.supplierOrderId === orderId
-    )
+    const existingBatches = deliveryBatches.filter((batch) => batch.poId === poId)
     const nextBatchNum = existingBatches.length + 1
+    const linkedSupplierOrder = supplierOrders.find(
+      (supplierOrder) =>
+        (supplierOrder.itemCategory ?? "Yarn") === "Yarn" &&
+        supplierOrder.poId === poId
+    )
 
-    setSelectedOrderId(orderId)
+    setSelectedPoId(poId)
     reset({
-      supplierOrderId: orderId,
-      poId: order.poId,
-      poNumber: order.poNumber,
-      batchNumber: `BATCH-${String(nextBatchNum).padStart(3, "0")}`,
+      poId: order.id,
+      poNumber: order.poNumber || order.orderNo || "",
+      supplier: order.supplier || linkedSupplierOrder?.supplier || "",
+      batchNumber: `LOT-${String(nextBatchNum).padStart(3, "0")}`,
       quantity: "",
       deliveryDate: new Date().toISOString().split("T")[0],
       remarks: "",
@@ -112,15 +161,39 @@ export function YarnDeliveryLogPage() {
   }
 
   const onSubmit = (values: DeliveryFormValues) => {
+    const selectedPo = visiblePurchaseOrders.find((po) => po.id === values.poId)
+    if (!selectedPo) {
+      toast.error("Selected PO not found.")
+      return
+    }
+
+    const linkedSupplierOrder = supplierOrders.find(
+      (order) =>
+        (order.itemCategory ?? "Yarn") === "Yarn" &&
+        order.poId === values.poId &&
+        order.status !== "Fully Received"
+    )
+    const receivedQty = Number(values.quantity)
     const batchId = createDeliveryBatchId()
+    const stockMovementId = createStockMovementId()
+    const totalReceivedForPo =
+      deliveryBatches
+        .filter((batch) => batch.poId === values.poId)
+        .reduce((sum, batch) => sum + batch.quantity, 0) + receivedQty
+    const requiredQty = selectedPo.totalYarnKg ?? selectedPo.requiredYarnQty ?? 0
+    const nextPoStatus =
+      requiredQty > 0 && totalReceivedForPo >= requiredQty
+        ? "Yarn Available"
+        : "Yarn Receiving"
+
     dispatch(
       addDeliveryBatch({
         id: batchId,
-        supplierOrderId: values.supplierOrderId,
+        supplierOrderId: linkedSupplierOrder?.id ?? `manual-${values.poId}`,
         poId: values.poId,
         poNumber: values.poNumber,
         batchNumber: values.batchNumber,
-        quantity: Number(values.quantity),
+        quantity: receivedQty,
         deliveryDate: values.deliveryDate,
         inspectionStatus: "Received",
         remarks: values.remarks,
@@ -129,114 +202,162 @@ export function YarnDeliveryLogPage() {
       })
     )
 
-    // Update supplier order status
     dispatch(
-      updateSupplierOrderStatus({
-        id: values.supplierOrderId,
-        status: "Partially Received",
+      addStockMovement({
+        id: stockMovementId,
+        poId: values.poId,
+        poNumber: values.poNumber,
+        yarnType:
+          selectedPo.yarnComposition || selectedPo.yarn || selectedPo.quality || "",
+        color: selectedPo.color ?? "",
+        quantity: receivedQty,
+        movementType: "Accepted Receipt",
+        movementDate: values.deliveryDate,
+        referenceId: batchId,
+        referenceLabel: values.batchNumber,
+        createdBy: "Yarn Controller",
+        remarks: values.remarks,
       })
     )
 
-    // Update PO status to Yarn Receiving
-    dispatch(updatePoStatus({ id: values.poId, status: "Yarn Receiving" }))
+    upsertInventoryFromReceipt({
+      yarnName:
+        selectedPo.yarnComposition || selectedPo.yarn || selectedPo.quality || "",
+      quality: selectedPo.quality || selectedPo.yarnComposition || selectedPo.yarn || "",
+      lotNo: values.batchNumber,
+      supplier: values.supplier.trim(),
+      quantity: receivedQty,
+      actionDate: values.deliveryDate,
+      notes: values.remarks,
+      poId: values.poId,
+      poNumber: values.poNumber,
+    })
 
-    // Update check request status
-    const order = yarnSupplierOrders.find(
-      (o) => o.id === values.supplierOrderId
+    dispatch(
+      updatePurchaseOrder({
+        id: values.poId,
+        updates: {
+          ...selectedPo,
+          supplier: values.supplier.trim(),
+          status: nextPoStatus,
+        },
+      })
     )
-    if (order) {
+
+    if (linkedSupplierOrder) {
+      const totalReceivedForSupplierOrder =
+        deliveryBatches
+          .filter((batch) => batch.supplierOrderId === linkedSupplierOrder.id)
+          .reduce((sum, batch) => sum + batch.quantity, 0) + receivedQty
+
       dispatch(
-        updateCheckRequestStatus({
-          id: order.yarnCheckRequestId,
-          status: "Receiving",
+        updateSupplierOrderStatus({
+          id: linkedSupplierOrder.id,
+          status:
+            totalReceivedForSupplierOrder >= linkedSupplierOrder.orderedQty
+              ? "Fully Received"
+              : "Partially Received",
         })
       )
     }
 
-    toast.success(
-      `Batch ${values.batchNumber} logged for PO ${values.poNumber}. Ready for inspection.`
-    )
+    if (selectedPo.yarnCheckRequestId) {
+      dispatch(
+        updateCheckRequestStatus({
+          id: selectedPo.yarnCheckRequestId,
+          status: nextPoStatus === "Yarn Available" ? "Available" : "Receiving",
+        })
+      )
+    }
+
+    toast.success(`Yarn received for PO ${values.poNumber}. Stock updated.`)
     setIsCreateModalOpen(false)
-    setSelectedOrderId("")
+    setSelectedPoId("")
   }
 
-  // Status flow description
-  const statusFlow = ["Pending", "Received", "Inspected", "Accepted / Rejected"]
+  const statusFlow = ["Assigned PO", "Received", "Stock Updated"]
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Yarn Delivery Log"
-      />
+      <PageHeader title="Receive Yarn" />
 
-      {/* Status Flow Reference */}
       <section className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm">
         <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Batch Status Flow
+          Receiving Flow
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {statusFlow.map((status, index) => (
             <div key={status} className="flex items-center gap-2">
               <StatusBadge value={status} />
-              {index < statusFlow.length - 1 && (
-                <span className="text-muted-foreground">â†’</span>
-              )}
+              {index < statusFlow.length - 1 ? (
+                <span className="text-muted-foreground">→</span>
+              ) : null}
             </div>
           ))}
         </div>
       </section>
 
-      {/* Log delivery per active order */}
-      {activeOrders.length > 0 && (
+      <SearchFilterBar
+        filters={["Assigned POs"]}
+        activeFilter="Assigned POs"
+        searchPlaceholder="Search PO, style, style number, color, supplier"
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        compact
+      />
+
+      {filteredOrders.length === 0 ? (
+        <EmptyState
+          title="No assigned POs yet"
+          description="After the Design Controller submits a PO, it will appear here for receiving."
+        />
+      ) : (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">
-            Active Supplier Orders (Receive Delivery)
-          </h2>
+          <h2 className="text-lg font-semibold">Assigned PO List</h2>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {activeOrders.map((order) => {
+            {filteredOrders.map((order) => {
               const orderBatches = deliveryBatches.filter(
-                (b) => b.supplierOrderId === order.id
+                (batch) => batch.poId === order.id
               )
               const receivedQty = orderBatches.reduce(
-                (sum, b) => sum + b.quantity,
+                (sum, batch) => sum + batch.quantity,
                 0
               )
+              const issuedQty = stockMovements
+                .filter(
+                  (movement) =>
+                    movement.poId === order.id &&
+                    movement.movementType === "Issued to Knitting"
+                )
+                .reduce((sum, movement) => sum + movement.quantity, 0)
+              const stockBalance = receivedQty - issuedQty
+              const requiredQty = order.totalYarnKg ?? order.requiredYarnQty ?? 0
+
               return (
                 <div
                   key={order.id}
                   className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold">{order.poNumber}</p>
+                      <p className="font-semibold">
+                        {order.poNumber || order.orderNo}
+                      </p>
                       <p className="text-sm text-muted-foreground">
-                        {order.supplier}
+                        {order.styleName || order.style}
                       </p>
                     </div>
                     <StatusBadge value={order.status} />
                   </div>
-                  <div className="mt-3 space-y-1 text-sm">
-                    <p className="text-muted-foreground">
-                      Ordered: {order.orderedQty} kg
+                  <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                    <p>Supplier: {order.supplier || "—"}</p>
+                    <p>Required: {requiredQty || 0} kg</p>
+                    <p>Received: {receivedQty} kg</p>
+                    <p>Stock Balance: {stockBalance} kg</p>
+                    <p>
+                      Receive History: {orderBatches.length} delivery
+                      {orderBatches.length === 1 ? "" : "ies"}
                     </p>
-                    <p className="text-muted-foreground">
-                      Received: {receivedQty} kg
-                    </p>
-                    <p className="text-muted-foreground">
-                      Remaining: {order.orderedQty - receivedQty} kg
-                    </p>
-                    <p className="text-muted-foreground">
-                      Batches: {orderBatches.length}
-                    </p>
-                  </div>
-                  {/* Progress bar */}
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
-                    <div
-                      className="h-full rounded-full bg-emerald-500 transition-all"
-                      style={{
-                        width: `${Math.min(100, (receivedQty / order.orderedQty) * 100)}%`,
-                      }}
-                    />
                   </div>
                   <Button
                     type="button"
@@ -244,7 +365,7 @@ export function YarnDeliveryLogPage() {
                     className="mt-4 w-full rounded-xl"
                     onClick={() => openCreateForOrder(order.id)}
                   >
-                    Log Delivery Batch
+                    Receive Yarn
                   </Button>
                 </div>
               )
@@ -253,43 +374,48 @@ export function YarnDeliveryLogPage() {
         </section>
       )}
 
-      {/* All Delivery Batches Table */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">All Delivery Batches</h2>
+        <h2 className="text-lg font-semibold">Receiving History</h2>
         {deliveryBatches.length > 0 ? (
           <DataTable
             columns={[
-              { key: "batchNumber", header: "Batch No" },
-              { key: "poNumber", header: "PO" },
+              { key: "poNumber", header: "PO Number" },
+              { key: "batchNumber", header: "Batch / Lot" },
+              {
+                key: "supplier",
+                header: "Supplier",
+                render: (row) =>
+                  String(
+                    purchaseOrders.find((po) => po.id === row.poId)?.supplier ?? "—"
+                  ),
+              },
+              { key: "deliveryDate", header: "Receive Date" },
               {
                 key: "quantity",
-                header: "Qty (kg)",
+                header: "Received Qty (kg)",
                 render: (row) => String(row.quantity),
               },
-              { key: "deliveryDate", header: "Delivery Date" },
               {
-                key: "inspectionStatus",
-                header: "Inspection",
-                render: (row) => (
-                  <StatusBadge value={String(row.inspectionStatus)} />
-                ),
-              },
-              {
-                key: "testReportName",
-                header: "Test Report",
+                key: "stockBalance",
+                header: "Stock Balance (kg)",
                 render: (row) =>
-                  row.testReportName ? (
-                    <span className="text-sm text-sky-600 dark:text-sky-400">
-                      {String(row.testReportName)}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">â€“</span>
+                  String(
+                    deliveryBatches
+                      .filter((batch) => batch.poId === row.poId)
+                      .reduce((sum, batch) => sum + batch.quantity, 0) -
+                      stockMovements
+                        .filter(
+                          (movement) =>
+                            movement.poId === row.poId &&
+                            movement.movementType === "Issued to Knitting"
+                        )
+                        .reduce((sum, movement) => sum + movement.quantity, 0)
                   ),
               },
               {
                 key: "remarks",
                 header: "Remarks",
-                render: (row) => String(row.remarks ?? "â€“"),
+                render: (row) => String(row.remarks ?? "—"),
               },
             ]}
             data={deliveryBatches}
@@ -297,8 +423,7 @@ export function YarnDeliveryLogPage() {
         ) : (
           <div className="rounded-[1.75rem] border border-border/70 bg-card p-8 text-center shadow-sm">
             <p className="text-muted-foreground">
-              No deliveries logged yet. Log a delivery from an active supplier
-              order above.
+              No receiving history yet. Receive yarn from an assigned PO above.
             </p>
           </div>
         )}
@@ -306,25 +431,25 @@ export function YarnDeliveryLogPage() {
 
       <RecordFormModal
         open={isCreateModalOpen}
-        title="Log Delivery Batch"
-        description="Record an incoming yarn delivery batch. The batch will be queued for inspection after logging."
+        title="Receive Yarn"
+        description="Record an incoming yarn delivery. Inventory and stock balance update automatically after saving."
         fields={deliveryFields}
         register={register}
         onClose={() => {
           setIsCreateModalOpen(false)
-          setSelectedOrderId("")
+          setSelectedPoId("")
         }}
         onReset={() => {
-          const order = yarnSupplierOrders.find((o) => o.id === selectedOrderId)
+          const order = visiblePurchaseOrders.find((po) => po.id === selectedPoId)
           if (order) {
             const existingBatches = deliveryBatches.filter(
-              (b) => b.supplierOrderId === selectedOrderId
+              (batch) => batch.poId === selectedPoId
             )
             reset({
-              supplierOrderId: selectedOrderId,
-              poId: order.poId,
-              poNumber: order.poNumber,
-              batchNumber: `BATCH-${String(existingBatches.length + 1).padStart(3, "0")}`,
+              poId: selectedPoId,
+              poNumber: order.poNumber || order.orderNo || "",
+              supplier: order.supplier ?? "",
+              batchNumber: `LOT-${String(existingBatches.length + 1).padStart(3, "0")}`,
               quantity: "",
               deliveryDate: new Date().toISOString().split("T")[0],
               remarks: "",
@@ -332,9 +457,8 @@ export function YarnDeliveryLogPage() {
           }
         }}
         onSubmit={handleSubmit(onSubmit)}
-        submitLabel="Log Batch"
+        submitLabel="Save Receive"
       />
     </div>
   )
 }
-

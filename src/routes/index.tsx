@@ -11,7 +11,6 @@ import { ExecutiveDashboardPage } from "@/pages/dashboard/ExecutiveDashboardPage
 import {
   MerchandiseProductionUpdatesPage,
   MerchandiseSupplierFollowUpPage,
-  YarnManagementReportPage,
   YarnInformationReportPage,
   YarnStockCalculationReportPage,
 } from "@/pages/forms/OperationsFormPages"
@@ -47,7 +46,12 @@ import { YarnSupplierOrderPage } from "@/pages/yarn/YarnSupplierOrderPage"
 import { YarnDeliveryLogPage } from "@/pages/yarn/YarnDeliveryLogPage"
 import { YarnBatchInspectionPage } from "@/pages/yarn/YarnBatchInspectionPage"
 import { YarnIssueToKnittingPage } from "@/pages/yarn/YarnIssueToKnittingPage"
-import { YarnInventoryPage, YarnTypePage } from "@/pages/yarn/YarnModulePages"
+import { YarnPoListPage, YarnSwatchCardPage } from "@/pages/yarn/YarnAdditionalPages"
+import {
+  YarnSwatchPhysicalTestReportPage,
+  YarnTestReportPage,
+} from "@/pages/yarn/YarnReportPages"
+import { YarnInventoryPage } from "@/pages/yarn/YarnModulePages"
 import { ProtectedRoute } from "@/routes/protected-route"
 
 export const router = createBrowserRouter([
@@ -188,8 +192,8 @@ export const router = createBrowserRouter([
                 element: <YarnControlPage />,
               },
               {
-                path: "/yarn/type",
-                element: <YarnTypePage />,
+                path: "/yarn/po-list",
+                element: <YarnPoListPage />,
               },
               {
                 path: "/yarn/requisition",
@@ -205,11 +209,19 @@ export const router = createBrowserRouter([
               },
               {
                 path: "/yarn/report",
-                element: <YarnManagementReportPage />,
+                element: <YarnTestReportPage />,
+              },
+              {
+                path: "/yarn/report/swatch-physical",
+                element: <YarnSwatchPhysicalTestReportPage />,
               },
               {
                 path: "/yarn/inventory",
                 element: <YarnInventoryPage />,
+              },
+              {
+                path: "/yarn/swatch-card",
+                element: <YarnSwatchCardPage />,
               },
               {
                 path: "/yarn/check-requests",

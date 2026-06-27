@@ -3,6 +3,7 @@ import type {
   DataTableColumn,
   DataTableHeaderRow,
 } from "@/components/shared/data-table"
+import type { PurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
 import type { PurchaseOrder } from "@/types/modules"
 
 export function getTextValue(value: string | number | undefined | null) {
@@ -51,18 +52,6 @@ function buildMerchandiserRemarks(order: PurchaseOrder) {
   }
 
   return parts.join(" / ")
-}
-
-export type PurchaseOrderWorkflowMetrics = {
-  yarnInspectionDateByPo: Record<string, string | undefined>
-  yarnInspectionStatusByPo: Record<string, string | undefined>
-  yarnIssuedQtyByPo: Record<string, number>
-  yarnReceivedQtyByPo: Record<string, number>
-  storeInspectionDateByPo: Record<string, string | undefined>
-  storeInspectionStatusByPo: Record<string, string | undefined>
-  storeReceivedQtyByPo: Record<string, number>
-  storeStockBalanceByPo: Record<string, number>
-  storeSupplierByPo: Record<string, string | undefined>
 }
 
 export const merchandiserWorkflowColumnKeys = [
@@ -237,9 +226,109 @@ export function getDesignSubmittedHeaderRows() {
   ] satisfies DataTableHeaderRow[]
 }
 
+const yarnPoListMerchandiserColumnKeys = [
+  "styleName",
+  "styleNo",
+  "gauge",
+  "quality",
+  "poNumber",
+  "quantity",
+  "ccd",
+  "colors",
+  "itemNameCode",
+] as const
+
+const yarnPoListDesignColumnKeys = [
+  "totalYarnKg",
+  "totalFabricKg",
+  "totalAccessoriesQty",
+] as const
+
+const yarnPoListYarnColumnKeys = [
+  "yarnSupplier",
+  "yarnEta",
+  "yarnInspectionStatus",
+  "yarnInspectionDate",
+  "yarnReceivedQty",
+  "yarnIssuedQty",
+  "yarnStockBalance",
+] as const
+
+export function getYarnPoListHeaderRows() {
+  return [
+    {
+      key: "department-groups",
+      cells: [
+        {
+          key: "merchandiser",
+          label: "Merchandiser",
+          colSpan: 9,
+          className:
+            "border-r-2 border-border/90 bg-sky-100 text-center dark:bg-sky-500/20",
+          labelClassName: "text-slate-900 dark:text-slate-100",
+        },
+        {
+          key: "design-controller",
+          label: "Design Controller",
+          colSpan: 3,
+          className:
+            "border-r-2 border-border/90 bg-violet-100 text-center dark:bg-violet-500/20",
+          labelClassName: "text-slate-900 dark:text-slate-100",
+        },
+        {
+          key: "yarn-controller",
+          label: "Yarn Controller",
+          colSpan: 7,
+          className:
+            "border-r-2 border-border/90 bg-emerald-100 text-center dark:bg-emerald-500/20",
+          labelClassName: "text-slate-900 dark:text-slate-100",
+        },
+        {
+          key: "remarks",
+          label: "Remarks",
+          rowSpan: 2,
+          className: "bg-amber-100 dark:bg-amber-500/20",
+          labelClassName: "text-slate-900 dark:text-slate-100",
+        },
+      ],
+    },
+    {
+      key: "field-columns",
+      cells: purchaseOrderWorkflowHeaderRows[1].cells.filter((cell) =>
+        [
+          ...yarnPoListMerchandiserColumnKeys,
+          ...yarnPoListDesignColumnKeys,
+          ...yarnPoListYarnColumnKeys,
+        ].includes(
+          cell.key as
+            | (typeof yarnPoListMerchandiserColumnKeys)[number]
+            | (typeof yarnPoListDesignColumnKeys)[number]
+            | (typeof yarnPoListYarnColumnKeys)[number]
+        )
+      ),
+    },
+  ] satisfies DataTableHeaderRow[]
+}
+
 export function getPurchaseOrderWorkflowColumns(
-  metrics: PurchaseOrderWorkflowMetrics
+  metrics: Partial<PurchaseOrderWorkflowMetrics>
 ): DataTableColumn<PurchaseOrder>[] {
+  const normalizedMetrics: PurchaseOrderWorkflowMetrics = {
+    yarnSupplierByPo: metrics.yarnSupplierByPo ?? {},
+    yarnEtaByPo: metrics.yarnEtaByPo ?? {},
+    yarnInspectionDateByPo: metrics.yarnInspectionDateByPo ?? {},
+    yarnInspectionStatusByPo: metrics.yarnInspectionStatusByPo ?? {},
+    yarnIssuedQtyByPo: metrics.yarnIssuedQtyByPo ?? {},
+    yarnReceivedQtyByPo: metrics.yarnReceivedQtyByPo ?? {},
+    yarnStockBalanceByPo: metrics.yarnStockBalanceByPo ?? {},
+    inventoryStatusByPo: metrics.inventoryStatusByPo ?? {},
+    storeInspectionDateByPo: metrics.storeInspectionDateByPo ?? {},
+    storeInspectionStatusByPo: metrics.storeInspectionStatusByPo ?? {},
+    storeReceivedQtyByPo: metrics.storeReceivedQtyByPo ?? {},
+    storeStockBalanceByPo: metrics.storeStockBalanceByPo ?? {},
+    storeSupplierByPo: metrics.storeSupplierByPo ?? {},
+  }
+
   return [
     {
       key: "sl",
@@ -337,72 +426,75 @@ export function getPurchaseOrderWorkflowColumns(
     {
       key: "yarnSupplier",
       header: "Supplier",
-      render: (row) => getTextValue(row.supplier),
+      render: (row) =>
+        getTextValue(normalizedMetrics.yarnSupplierByPo[row.id] ?? row.supplier),
     },
     {
       key: "yarnEta",
       header: "ETA",
-      render: (row) => getTextValue(row.yarnEta),
+      render: (row) =>
+        getTextValue(normalizedMetrics.yarnEtaByPo[row.id] ?? row.yarnEta),
     },
     {
       key: "yarnInspectionStatus",
       header: "Inspection Status",
       render: (row) =>
-        getTextValue(metrics.yarnInspectionStatusByPo[row.id]),
+        getTextValue(normalizedMetrics.yarnInspectionStatusByPo[row.id]),
     },
     {
       key: "yarnInspectionDate",
       header: "Inspection Date",
-      render: (row) => getTextValue(metrics.yarnInspectionDateByPo[row.id]),
+      render: (row) =>
+        getTextValue(normalizedMetrics.yarnInspectionDateByPo[row.id]),
     },
     {
       key: "yarnReceivedQty",
       header: "Received Qty (kg)",
       render: (row) =>
-        formatOptionalNumber(metrics.yarnReceivedQtyByPo[row.id]),
+        formatOptionalNumber(normalizedMetrics.yarnReceivedQtyByPo[row.id]),
     },
     {
       key: "yarnIssuedQty",
       header: "Issued Qty (kg)",
-      render: (row) => formatOptionalNumber(metrics.yarnIssuedQtyByPo[row.id]),
+      render: (row) =>
+        formatOptionalNumber(normalizedMetrics.yarnIssuedQtyByPo[row.id]),
     },
     {
       key: "yarnStockBalance",
       header: "Stock Balance (kg)",
       className: "border-r-2 border-border/90",
       render: (row) =>
-        formatOptionalNumber(
-          metrics.yarnReceivedQtyByPo[row.id] - metrics.yarnIssuedQtyByPo[row.id]
-        ),
+        formatOptionalNumber(normalizedMetrics.yarnStockBalanceByPo[row.id]),
     },
     {
       key: "storeSupplier",
       header: "Supplier",
-      render: (row) => getTextValue(metrics.storeSupplierByPo[row.id]),
+      render: (row) => getTextValue(normalizedMetrics.storeSupplierByPo[row.id]),
     },
     {
       key: "storeReceivedQty",
       header: "Received Qty",
       render: (row) =>
-        formatOptionalNumber(metrics.storeReceivedQtyByPo[row.id]),
+        formatOptionalNumber(normalizedMetrics.storeReceivedQtyByPo[row.id]),
     },
     {
       key: "storeInspectionStatus",
       header: "Inspection Status",
       render: (row) =>
-        getTextValue(metrics.storeInspectionStatusByPo[row.id]),
+        getTextValue(normalizedMetrics.storeInspectionStatusByPo[row.id]),
     },
     {
       key: "storeInspectionDate",
       header: "Inspection Date",
-      render: (row) => getTextValue(metrics.storeInspectionDateByPo[row.id]),
+      render: (row) =>
+        getTextValue(normalizedMetrics.storeInspectionDateByPo[row.id]),
     },
     {
       key: "storeStockBalance",
       header: "Stock Balance",
       className: "border-r-2 border-border/90",
       render: (row) =>
-        formatOptionalNumber(metrics.storeStockBalanceByPo[row.id]),
+        formatOptionalNumber(normalizedMetrics.storeStockBalanceByPo[row.id]),
     },
     {
       key: "status",
@@ -414,7 +506,7 @@ export function getPurchaseOrderWorkflowColumns(
 }
 
 export function getDesignRequestWorkflowColumns(
-  metrics: PurchaseOrderWorkflowMetrics
+  metrics: Partial<PurchaseOrderWorkflowMetrics>
 ) {
   const baseColumns = getPurchaseOrderWorkflowColumns(metrics)
 
@@ -423,6 +515,27 @@ export function getDesignRequestWorkflowColumns(
       column.key as string
     )
   )
+}
+
+export function getYarnPoListWorkflowColumns(
+  metrics: Partial<PurchaseOrderWorkflowMetrics>
+) {
+  const baseColumns = getPurchaseOrderWorkflowColumns(metrics)
+
+  return [
+    ...baseColumns.filter((column) =>
+      [
+        ...yarnPoListMerchandiserColumnKeys,
+        ...yarnPoListDesignColumnKeys,
+        ...yarnPoListYarnColumnKeys,
+      ].includes(column.key as string)
+    ),
+    {
+      key: "remarks",
+      header: "Remarks",
+      render: (row: PurchaseOrder) => getTextValue(buildMerchandiserRemarks(row)),
+    } satisfies DataTableColumn<PurchaseOrder>,
+  ]
 }
 
 export const purchaseOrderTableColumns: DataTableColumn<PurchaseOrder>[] = [

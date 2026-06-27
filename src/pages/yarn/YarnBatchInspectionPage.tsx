@@ -1,407 +1,539 @@
-﻿import { CheckCircle, ShieldAlert, XCircle } from "lucide-react"
-import { useState } from "react"
+import { Eye, Pencil } from "lucide-react"
+import { useMemo, useState } from "react"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/shared/data-table"
+import { EmptyState } from "@/components/shared/empty-state"
 import { FileUploadField } from "@/components/shared/file-upload-field"
 import { PageHeader } from "@/components/shared/page-header"
+import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { updatePoStatus } from "@/store/slices/merchandise-slice"
-import {
-  addStockMovement,
-  updateBatchInspectionStatus,
-  updateCheckRequestStatus,
-  updateSupplierOrderStatus,
-} from "@/store/slices/yarn-check-slice"
-import type { YarnDeliveryBatch } from "@/types/modules"
+import { updateBatchInspectionStatus } from "@/store/slices/yarn-check-slice"
+
+type InspectionReport = {
+  id: string
+  poId: string
+  poNumber: string
+  batchId?: string
+  batchNumber: string
+  quality: string
+  elasticity: string
+  moisture: string
+  quantityVerification: string
+  shadeMatch: string
+  result: "Pass" | "Fail"
+  inspectionDate: string
+  inspector: string
+  remarks: string
+  testReportName?: string
+  createdAt: string
+}
+
+type InspectionFormValues = Omit<
+  InspectionReport,
+  "id" | "createdAt" | "testReportName"
+> & {
+  testReportName?: string
+}
+
+const INSPECTION_STORAGE_KEY = "linkin-yarn-inspection-reports"
+
+function loadInspectionReports() {
+  if (typeof window === "undefined") {
+    return [] as InspectionReport[]
+  }
+
+  try {
+    const raw = window.localStorage.getItem(INSPECTION_STORAGE_KEY)
+    return raw ? (JSON.parse(raw) as InspectionReport[]) : []
+  } catch {
+    window.localStorage.removeItem(INSPECTION_STORAGE_KEY)
+    return []
+  }
+}
+
+function saveInspectionReports(records: InspectionReport[]) {
+  if (typeof window === "undefined") {
+    return
+  }
+
+  window.localStorage.setItem(INSPECTION_STORAGE_KEY, JSON.stringify(records))
+}
+
+function createInspectionReportId() {
+  return `inspection-${Date.now()}`
+}
 
 export function YarnBatchInspectionPage() {
   const dispatch = useAppDispatch()
   const deliveryBatches = useAppSelector(
     (state) => state.yarnCheck.deliveryBatches
   )
-  const supplierOrders = useAppSelector(
-    (state) => state.yarnCheck.supplierOrders
+  const [reports, setReports] = useState<InspectionReport[]>(() =>
+    loadInspectionReports()
   )
-  const purchaseOrders = useAppSelector(
-    (state) => state.merchandise.purchaseOrders
-  )
-  const [inspectingBatch, setInspectingBatch] =
-    useState<YarnDeliveryBatch | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activeFilter, setActiveFilter] = useState("All Reports")
+  const [editingReport, setEditingReport] = useState<InspectionReport | null>(null)
+  const [viewingReport, setViewingReport] = useState<InspectionReport | null>(null)
+  const [isFormOpen, setIsFormOpen] = useState(false)
   const [testReportName, setTestReportName] = useState("")
-  const [rejectionReason, setRejectionReason] = useState("")
-  const [remarks, setRemarks] = useState("")
 
-  const pendingBatches = deliveryBatches.filter(
-    (b) =>
-      b.inspectionStatus === "Received" || b.inspectionStatus === "Pending"
-  )
-  const inspectedBatches = deliveryBatches.filter(
-    (b) =>
-      b.inspectionStatus === "Accepted" || b.inspectionStatus === "Rejected"
+  const { register, handleSubmit, reset, setValue, watch } =
+    useForm<InspectionFormValues>({
+      defaultValues: {
+        poId: "",
+        poNumber: "",
+        batchId: "",
+        batchNumber: "",
+        quality: "",
+        elasticity: "",
+        moisture: "",
+        quantityVerification: "",
+        shadeMatch: "",
+        result: "Pass",
+        inspectionDate: new Date().toISOString().split("T")[0],
+        inspector: "",
+        remarks: "",
+      },
+    })
+
+  const poNumberValue = watch("poNumber")
+  const availableBatches = useMemo(
+    () =>
+      deliveryBatches.filter((batch) =>
+        poNumberValue
+          ? batch.poNumber.toLowerCase().includes(poNumberValue.toLowerCase())
+          : true
+      ),
+    [deliveryBatches, poNumberValue]
   )
 
-  const openInspection = (batch: YarnDeliveryBatch) => {
-    setInspectingBatch(batch)
-    setTestReportName(batch.testReportName ?? "")
-    setRejectionReason("")
-    setRemarks(batch.remarks ?? "")
+  const filteredReports = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase()
+
+    return reports.filter((report) => {
+      const matchesFilter =
+        activeFilter === "All Reports" ||
+        (activeFilter === "Pass" && report.result === "Pass") ||
+        (activeFilter === "Fail" && report.result === "Fail")
+
+      if (!matchesFilter) {
+        return false
+      }
+
+      if (!normalizedSearch) {
+        return true
+      }
+
+      return [
+        report.poNumber,
+        report.batchNumber,
+        report.inspector,
+        report.quality,
+        report.result,
+      ].some((value) =>
+        String(value ?? "").toLowerCase().includes(normalizedSearch)
+      )
+    })
+  }, [activeFilter, reports, searchQuery])
+
+  const openCreateForm = () => {
+    setEditingReport(null)
+    setTestReportName("")
+    reset({
+      poId: "",
+      poNumber: "",
+      batchId: "",
+      batchNumber: "",
+      quality: "",
+      elasticity: "",
+      moisture: "",
+      quantityVerification: "",
+      shadeMatch: "",
+      result: "Pass",
+      inspectionDate: new Date().toISOString().split("T")[0],
+      inspector: "",
+      remarks: "",
+    })
+    setIsFormOpen(true)
   }
 
-  const handleAccept = () => {
-    if (!inspectingBatch) return
+  const openEditForm = (report: InspectionReport) => {
+    setEditingReport(report)
+    setTestReportName(report.testReportName ?? "")
+    reset({
+      poId: report.poId,
+      poNumber: report.poNumber,
+      batchId: report.batchId ?? "",
+      batchNumber: report.batchNumber,
+      quality: report.quality,
+      elasticity: report.elasticity,
+      moisture: report.moisture,
+      quantityVerification: report.quantityVerification,
+      shadeMatch: report.shadeMatch,
+      result: report.result,
+      inspectionDate: report.inspectionDate,
+      inspector: report.inspector,
+      remarks: report.remarks,
+    })
+    setIsFormOpen(true)
+  }
 
-    dispatch(
-      updateBatchInspectionStatus({
-        id: inspectingBatch.id,
-        inspectionStatus: "Accepted",
-        inspectedBy: "Yarn Controller",
-        inspectedAt: new Date().toISOString(),
-        testReportName: testReportName || undefined,
-        remarks,
-      })
+  const onSubmit = (values: InspectionFormValues) => {
+    const nextRecord: InspectionReport = editingReport
+      ? {
+          ...editingReport,
+          ...values,
+          testReportName: testReportName || undefined,
+        }
+      : {
+          id: createInspectionReportId(),
+          ...values,
+          testReportName: testReportName || undefined,
+          createdAt: new Date().toISOString(),
+        }
+
+    const nextReports = editingReport
+      ? reports.map((report) => (report.id === editingReport.id ? nextRecord : report))
+      : [nextRecord, ...reports]
+
+    setReports(nextReports)
+    saveInspectionReports(nextReports)
+
+    const matchedBatch = deliveryBatches.find(
+      (batch) =>
+        (values.batchId && batch.id === values.batchId) ||
+        (batch.poNumber === values.poNumber && batch.batchNumber === values.batchNumber)
     )
 
-    // Check if all required quantity is now accepted
-    const order = supplierOrders.find(
-      (o) => o.id === inspectingBatch.supplierOrderId
-    )
-    if (order) {
-      const purchaseOrder = purchaseOrders.find((po) => po.id === order.poId)
-      const requiredQty = purchaseOrder?.requiredYarnQty ?? order.orderedQty
-      const poBatches = deliveryBatches.filter((b) => b.poId === order.poId)
-      const totalAccepted = poBatches
-        .filter((b) =>
-          b.id === inspectingBatch.id
-            ? true // this batch is being accepted now
-            : b.inspectionStatus === "Accepted"
-        )
-        .reduce((sum, b) => sum + b.quantity, 0)
-      const totalReceivedForOrder = deliveryBatches
-        .filter((batch) => batch.supplierOrderId === order.id)
-        .reduce((sum, batch) => sum + batch.quantity, 0)
-
+    if (matchedBatch) {
       dispatch(
-        addStockMovement({
-          id: `ysm-${Date.now()}`,
-          poId: order.poId,
-          poNumber: order.poNumber,
-          yarnType: order.yarnType,
-          color: order.color,
-          quantity: inspectingBatch.quantity,
-          movementType: "Accepted Receipt",
-          movementDate: new Date().toISOString(),
-          referenceId: inspectingBatch.id,
-          referenceLabel: inspectingBatch.batchNumber,
-          createdBy: "Yarn Controller",
-          remarks: remarks || "Accepted yarn inspection batch.",
+        updateBatchInspectionStatus({
+          id: matchedBatch.id,
+          inspectionStatus: values.result === "Pass" ? "Accepted" : "Rejected",
+          inspectedBy: values.inspector,
+          inspectedAt: values.inspectionDate,
+          testReportName: testReportName || undefined,
+          rejectionReason: values.result === "Fail" ? values.remarks : undefined,
+          remarks: values.remarks,
         })
       )
-
-      if (totalReceivedForOrder >= order.orderedQty) {
-        dispatch(
-          updateSupplierOrderStatus({
-            id: order.id,
-            status: "Fully Received",
-          })
-        )
-      }
-
-      if (totalAccepted >= requiredQty) {
-        dispatch(
-          updateCheckRequestStatus({
-            id: order.yarnCheckRequestId,
-            status: "Fulfilled",
-          })
-        )
-        dispatch(
-          updatePoStatus({ id: order.poId, status: "Ready for Production" })
-        )
-        toast.success(
-          `PO ${order.poNumber}: All required yarn accepted! Routed to production.`
-        )
-      } else {
-        toast.success(
-          `Batch ${inspectingBatch.batchNumber} accepted. ${totalAccepted}/${requiredQty} kg approved for release.`
-        )
-      }
-    } else {
-      toast.success(
-        `Batch ${inspectingBatch.batchNumber} accepted and stock updated.`
-      )
     }
 
-    setInspectingBatch(null)
-  }
-
-  const handleReject = () => {
-    if (!inspectingBatch) return
-    if (!rejectionReason.trim()) {
-      toast.error("Please provide a rejection reason for audit trail.")
-      return
-    }
-
-    dispatch(
-      updateBatchInspectionStatus({
-        id: inspectingBatch.id,
-        inspectionStatus: "Rejected",
-        inspectedBy: "Yarn Controller",
-        inspectedAt: new Date().toISOString(),
-        testReportName: testReportName || undefined,
-        rejectionReason,
-        remarks,
-      })
+    setIsFormOpen(false)
+    setEditingReport(null)
+    setTestReportName("")
+    toast.success(
+      editingReport ? "Inspection report updated." : "Inspection report created."
     )
-
-    toast.warning(
-      `Batch ${inspectingBatch.batchNumber} rejected. Supplier notified. Reason logged permanently.`
-    )
-    setInspectingBatch(null)
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Batch Inspection"
+        title="Inspection"
+        actions={
+          <Button type="button" className="rounded-2xl" onClick={openCreateForm}>
+            New Inspection Report
+          </Button>
+        }
       />
 
-      {/* Audit Trail Notice */}
-      <div className="flex items-start gap-3 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-500/30 dark:bg-amber-500/10">
-        <ShieldAlert className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
-        <div>
-          <p className="font-semibold text-amber-700 dark:text-amber-300">
-            Permanent Audit Trail
-          </p>
-          <p className="mt-1 text-amber-600 dark:text-amber-400">
-            Inspection records cannot be edited after submission. All batch
-            numbers, quantities, test reports, rejection reasons, timestamps,
-            and user information are retained permanently for compliance.
-          </p>
-        </div>
-      </div>
+      <SearchFilterBar
+        filters={["All Reports", "Pass", "Fail"]}
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        searchPlaceholder="Search PO, batch, inspector, quality"
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        compact
+      />
 
-      {/* Pending Inspections */}
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">
-          Awaiting Inspection ({pendingBatches.length})
-        </h2>
-        {pendingBatches.length > 0 ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {pendingBatches.map((batch) => (
-              <div
-                key={batch.id}
-                className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold">{batch.batchNumber}</p>
-                    <p className="text-sm text-muted-foreground">
-                      PO: {batch.poNumber}
-                    </p>
-                  </div>
-                  <StatusBadge value={batch.inspectionStatus} />
+      {filteredReports.length === 0 ? (
+        <EmptyState
+          title="No inspection reports yet"
+          description="Create a new inspection report to start building the inspection log."
+        />
+      ) : (
+        <DataTable
+          compact
+          columns={[
+            { key: "poNumber", header: "PO Number", className: "min-w-[5.5rem]" },
+            { key: "batchNumber", header: "Batch No.", className: "min-w-[5rem]" },
+            { key: "quality", header: "Quality", className: "min-w-[5rem]" },
+            { key: "elasticity", header: "Elasticity", className: "min-w-[5rem]" },
+            { key: "moisture", header: "Moisture", className: "min-w-[4.75rem]" },
+            {
+              key: "quantityVerification",
+              header: "Quantity Verification",
+              className: "min-w-[6rem]",
+            },
+            { key: "shadeMatch", header: "Shade Match", className: "min-w-[5rem]" },
+            {
+              key: "result",
+              header: "Pass / Fail",
+              className: "min-w-[5.25rem]",
+              render: (row) => <StatusBadge value={String(row.result)} />,
+            },
+            { key: "inspectionDate", header: "Inspection Date", className: "min-w-[5.75rem]" },
+            { key: "inspector", header: "Inspector", className: "min-w-[5rem]" },
+            { key: "remarks", header: "Remarks", className: "min-w-[6rem]" },
+            {
+              key: "testReportName",
+              header: "Test Report",
+              className: "min-w-[6rem]",
+              render: (row) => String(row.testReportName ?? "—"),
+            },
+            {
+              key: "action",
+              header: "Action",
+              className: "min-w-[5.5rem]",
+              render: (row) => (
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl"
+                    onClick={() => setViewingReport(row as InspectionReport)}
+                  >
+                    <Eye className="size-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl"
+                    onClick={() => openEditForm(row as InspectionReport)}
+                  >
+                    <Pencil className="size-3.5" />
+                  </Button>
                 </div>
-                <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-                  <p>Quantity: {batch.quantity} kg</p>
-                  <p>Delivered: {batch.deliveryDate}</p>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  className="mt-4 w-full rounded-xl"
-                  onClick={() => openInspection(batch)}
-                >
-                  Inspect Batch
-                </Button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-[1.75rem] border border-border/70 bg-card p-8 text-center shadow-sm">
-            <p className="text-muted-foreground">
-              No batches awaiting inspection.
-            </p>
-          </div>
-        )}
-      </section>
+              ),
+            },
+          ]}
+          data={filteredReports}
+        />
+      )}
 
-      {/* Inspection History (Immutable) */}
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">
-          Inspection History (Audit Log)
-        </h2>
-        {inspectedBatches.length > 0 ? (
-          <DataTable
-            columns={[
-              { key: "batchNumber", header: "Batch No" },
-              { key: "poNumber", header: "PO" },
-              {
-                key: "quantity",
-                header: "Qty (kg)",
-                render: (row) => String(row.quantity),
-              },
-              { key: "deliveryDate", header: "Delivery Date" },
-              {
-                key: "inspectionStatus",
-                header: "Result",
-                render: (row) => (
-                  <StatusBadge value={String(row.inspectionStatus)} />
-                ),
-              },
-              {
-                key: "testReportName",
-                header: "Test Report",
-                render: (row) =>
-                  row.testReportName ? (
-                    <span className="text-sm text-sky-600 dark:text-sky-400">
-                      {String(row.testReportName)}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">â€“</span>
-                  ),
-              },
-              {
-                key: "rejectionReason",
-                header: "Rejection Reason",
-                render: (row) =>
-                  row.rejectionReason ? (
-                    <span className="text-sm text-rose-600 dark:text-rose-400">
-                      {String(row.rejectionReason)}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">â€“</span>
-                  ),
-              },
-              {
-                key: "inspectedBy",
-                header: "Inspector",
-                render: (row) => String(row.inspectedBy ?? "â€“"),
-              },
-              {
-                key: "inspectedAt",
-                header: "Inspected At",
-                render: (row) =>
-                  row.inspectedAt
-                    ? new Date(String(row.inspectedAt)).toLocaleString()
-                    : "â€“",
-              },
-            ]}
-            data={inspectedBatches}
-          />
-        ) : (
-          <div className="rounded-[1.75rem] border border-border/70 bg-card p-8 text-center shadow-sm">
-            <p className="text-muted-foreground">
-              No inspection records yet. Inspect a batch above to begin.
-            </p>
-          </div>
-        )}
-      </section>
-
-      {/* Inspection Modal */}
-      {inspectingBatch && (
+      {isFormOpen ? (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 px-4 py-6">
-          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[2rem] border border-border/70 bg-card p-6 shadow-2xl">
+          <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-[2rem] border border-border/70 bg-card p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold">
-                  Inspect {inspectingBatch.batchNumber}
+                  {editingReport ? "Edit Inspection Report" : "New Inspection Report"}
                 </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  PO: {inspectingBatch.poNumber} Â· Qty:{" "}
-                  {inspectingBatch.quantity} kg Â· Delivered:{" "}
-                  {inspectingBatch.deliveryDate}
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Capture yarn inspection results using the shared project form pattern.
                 </p>
               </div>
               <Button
                 type="button"
                 variant="outline"
                 className="rounded-2xl"
-                onClick={() => setInspectingBatch(null)}
+                onClick={() => {
+                  setIsFormOpen(false)
+                  setEditingReport(null)
+                  setTestReportName("")
+                }}
               >
                 Close
               </Button>
             </div>
 
-            <div className="mt-6 space-y-5">
-              {/* Test Report Upload */}
-              <FileUploadField
-                label="Test Report Attachment"
-                value={testReportName}
-                onChange={setTestReportName}
-                onClear={() => setTestReportName("")}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-              />
-
-              {/* Remarks */}
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="mt-6 grid gap-4 md:grid-cols-2"
+            >
               <div className="space-y-2">
-                <label
-                  htmlFor="inspection-remarks"
-                  className="text-sm font-medium"
+                <label htmlFor="inspection-po-number" className="text-sm font-medium">
+                  PO Number
+                </label>
+                <input
+                  id="inspection-po-number"
+                  {...register("poNumber", { required: true })}
+                  placeholder="LK-2005"
+                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="inspection-batch-id" className="text-sm font-medium">
+                  Batch No.
+                </label>
+                <select
+                  id="inspection-batch-id"
+                  {...register("batchId")}
+                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+                  onChange={(event) => {
+                    const matchedBatch = deliveryBatches.find(
+                      (batch) => batch.id === event.target.value
+                    )
+                    setValue("batchId", event.target.value)
+                    if (matchedBatch) {
+                      setValue("poId", matchedBatch.poId)
+                      setValue("poNumber", matchedBatch.poNumber)
+                      setValue("batchNumber", matchedBatch.batchNumber)
+                    }
+                  }}
+                  defaultValue={editingReport?.batchId ?? ""}
                 >
-                  Inspection Remarks
+                  <option value="">Select batch</option>
+                  {availableBatches.map((batch) => (
+                    <option key={batch.id} value={batch.id}>
+                      {batch.batchNumber} ({batch.poNumber})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <input type="hidden" {...register("poId")} />
+              <input type="hidden" {...register("batchNumber")} />
+
+              {[
+                ["quality", "Quality", "A Grade"],
+                ["elasticity", "Elasticity", "Stable"],
+                ["moisture", "Moisture", "6.2%"],
+                ["quantityVerification", "Quantity Verification", "Matched"],
+                ["shadeMatch", "Shade Match", "Matched"],
+                ["inspector", "Inspector", "Nusrat Jahan"],
+              ].map(([name, label, placeholder]) => (
+                <div key={name} className="space-y-2">
+                  <label htmlFor={name} className="text-sm font-medium">
+                    {label}
+                  </label>
+                  <input
+                    id={name}
+                    {...register(name as keyof InspectionFormValues, { required: true })}
+                    placeholder={placeholder}
+                    className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+                  />
+                </div>
+              ))}
+
+              <div className="space-y-2">
+                <label htmlFor="inspection-result" className="text-sm font-medium">
+                  Pass / Fail
+                </label>
+                <select
+                  id="inspection-result"
+                  {...register("result", { required: true })}
+                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+                >
+                  <option value="Pass">Pass</option>
+                  <option value="Fail">Fail</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="inspection-date" className="text-sm font-medium">
+                  Inspection Date
+                </label>
+                <input
+                  id="inspection-date"
+                  type="date"
+                  {...register("inspectionDate", { required: true })}
+                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <FileUploadField
+                  label="Upload Test Report"
+                  value={testReportName}
+                  onChange={setTestReportName}
+                  onClear={() => setTestReportName("")}
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <label htmlFor="inspection-remarks" className="text-sm font-medium">
+                  Remarks
                 </label>
                 <textarea
                   id="inspection-remarks"
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Quality observations, test results summary..."
+                  {...register("remarks", { required: true })}
+                  placeholder="Inspection remarks"
+                  rows={4}
                   className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                  rows={3}
                 />
               </div>
 
-              {/* Rejection Reason (only shown when needed) */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="rejection-reason"
-                  className="text-sm font-medium"
-                >
-                  Rejection Reason (required if rejecting)
-                </label>
-                <textarea
-                  id="rejection-reason"
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Describe why this batch is being rejected..."
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                  rows={2}
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 border-t border-border/60 pt-5">
+              <div className="flex items-center justify-end gap-3 md:col-span-2">
                 <Button
                   type="button"
                   variant="outline"
                   className="rounded-2xl"
-                  onClick={() => setInspectingBatch(null)}
+                  onClick={() => {
+                    setIsFormOpen(false)
+                    setEditingReport(null)
+                    setTestReportName("")
+                  }}
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="button"
-                  className="rounded-2xl bg-rose-600 text-white hover:bg-rose-700"
-                  onClick={handleReject}
-                >
-                  <XCircle className="mr-1.5 size-4" />
-                  Reject Batch
-                </Button>
-                <Button
-                  type="button"
-                  className="rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700"
-                  onClick={handleAccept}
-                >
-                  <CheckCircle className="mr-1.5 size-4" />
-                  Accept Batch
+                <Button type="submit" className="rounded-2xl">
+                  {editingReport ? "Update Report" : "Create Report"}
                 </Button>
               </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {viewingReport ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 px-4 py-6">
+          <div className="w-full max-w-3xl rounded-[2rem] border border-border/70 bg-card p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold">Inspection Report</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {viewingReport.poNumber} · {viewingReport.batchNumber}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => setViewingReport(null)}
+              >
+                Close
+              </Button>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {[
+                ["Quality", viewingReport.quality],
+                ["Elasticity", viewingReport.elasticity],
+                ["Moisture", viewingReport.moisture],
+                ["Quantity Verification", viewingReport.quantityVerification],
+                ["Shade Match", viewingReport.shadeMatch],
+                ["Result", viewingReport.result],
+                ["Inspection Date", viewingReport.inspectionDate],
+                ["Inspector", viewingReport.inspector],
+                ["Test Report", viewingReport.testReportName ?? "—"],
+                ["Remarks", viewingReport.remarks],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className={label === "Remarks" ? "space-y-1 md:col-span-2" : "space-y-1"}
+                >
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {label}
+                  </p>
+                  <p className="text-sm">{value}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }
-

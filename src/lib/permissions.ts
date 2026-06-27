@@ -92,12 +92,13 @@ export const dashboardNavigation: NavigationItem[] = [
     allowedRoles: ["super_admin", "yarn_user"],
     children: [
       { label: "Dashboard", to: "/yarn/dashboard", icon: Gauge },
-      { label: "Yarn Type", to: "/yarn/type", icon: Cable },
-      { label: "Requisition", to: "/yarn/requisition", icon: CheckCircle },
-      { label: "Receipt", to: "/yarn/receipt", icon: Truck },
+      { label: "PO List", to: "/yarn/po-list", icon: List },
       { label: "Inspection", to: "/yarn/inspection", icon: FileSearch },
+      { label: "Swatch Card", to: "/yarn/swatch-card", icon: CheckCircle },
       { label: "Report", to: "/yarn/report", icon: BarChart3 },
       { label: "Inventory", to: "/yarn/inventory", icon: Boxes },
+      { label: "Requisition", to: "/yarn/requisition", icon: CheckCircle },
+      { label: "Receive Yarn", to: "/yarn/receipt", icon: Truck },
     ],
   },
   {

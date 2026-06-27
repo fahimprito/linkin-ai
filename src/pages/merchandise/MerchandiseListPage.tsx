@@ -19,6 +19,7 @@ import {
   getOrderDisplayNo,
   purchaseOrderWorkflowHeaderRows,
 } from "@/lib/purchase-order-table-columns"
+import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
   addPurchaseOrder,
@@ -74,13 +75,6 @@ const purchaseOrderFields: ModalFormField[] = [
     label: "Remarks",
     type: "textarea",
     placeholder: "Urgent order, buyer comments, or merch notes.",
-  },
-  { name: "supplier", label: "Supplier", placeholder: "Delta Yarn" },
-  {
-    name: "requiredYarnQty",
-    label: "Required Yarn (kg)",
-    type: "number",
-    placeholder: "1500",
   },
 ]
 
@@ -140,6 +134,7 @@ export function MerchandiseListPage() {
   )
   const deliveryBatches = useAppSelector((state) => state.yarnCheck.deliveryBatches)
   const stockMovements = useAppSelector((state) => state.yarnCheck.stockMovements)
+  const supplierOrders = useAppSelector((state) => state.yarnCheck.supplierOrders)
   const [activeFilter, setActiveFilter] = useState("All POs")
   const [searchQuery, setSearchQuery] = useState("")
   const { register, handleSubmit, reset } = useForm<CreatePurchaseOrderPayload>(
@@ -253,10 +248,12 @@ export function MerchandiseListPage() {
         values.productionUnit?.trim() || values.polyCartonBooking?.trim() || "",
       remarks: values.remarks?.trim() || "",
       gauge,
-      requiredYarnQty: toNumber(values.requiredYarnQty),
-      totalYarnKg: toNumber(values.totalYarnKg),
-      totalFabricKg: toNumber(values.totalFabricKg),
-      totalAccessoriesQty: toNumber(values.totalAccessoriesQty),
+      supplier: editingOrder?.supplier ?? "",
+      yarnEta: editingOrder?.yarnEta ?? "",
+      requiredYarnQty: editingOrder?.requiredYarnQty ?? 0,
+      totalYarnKg: editingOrder?.totalYarnKg ?? 0,
+      totalFabricKg: editingOrder?.totalFabricKg ?? 0,
+      totalAccessoriesQty: editingOrder?.totalAccessoriesQty ?? 0,
       status: editingOrder?.status ?? "Draft",
     }
 
@@ -318,47 +315,13 @@ export function MerchandiseListPage() {
     (p) => p.status === "Ready for Production"
   ).length
   const purchaseOrderWorkflowMetrics = useMemo(() => {
-    const yarnReceivedQtyByPo: Record<string, number> = {}
-    const yarnIssuedQtyByPo: Record<string, number> = {}
-    const yarnInspectionStatusByPo: Record<string, string | undefined> = {}
-    const yarnInspectionDateByPo: Record<string, string | undefined> = {}
-
-    deliveryBatches.forEach((batch) => {
-      yarnReceivedQtyByPo[batch.poId] =
-        (yarnReceivedQtyByPo[batch.poId] ?? 0) + batch.quantity
-
-      const currentInspectionDate = yarnInspectionDateByPo[batch.poId]
-      const nextInspectionDate = batch.inspectedAt ?? batch.deliveryDate
-
-      if (
-        !currentInspectionDate ||
-        new Date(nextInspectionDate).getTime() >=
-          new Date(currentInspectionDate).getTime()
-      ) {
-        yarnInspectionDateByPo[batch.poId] = nextInspectionDate
-        yarnInspectionStatusByPo[batch.poId] = batch.inspectionStatus
-      }
+    return createPurchaseOrderWorkflowMetrics({
+      purchaseOrders,
+      deliveryBatches,
+      stockMovements,
+      supplierOrders,
     })
-
-    stockMovements
-      .filter((movement) => movement.movementType === "Issued to Knitting")
-      .forEach((movement) => {
-        yarnIssuedQtyByPo[movement.poId] =
-          (yarnIssuedQtyByPo[movement.poId] ?? 0) + movement.quantity
-      })
-
-    return {
-      yarnInspectionDateByPo,
-      yarnInspectionStatusByPo,
-      yarnIssuedQtyByPo,
-      yarnReceivedQtyByPo,
-      storeInspectionDateByPo: {},
-      storeInspectionStatusByPo: {},
-      storeReceivedQtyByPo: {},
-      storeStockBalanceByPo: {},
-      storeSupplierByPo: {},
-    }
-  }, [deliveryBatches, stockMovements])
+  }, [deliveryBatches, purchaseOrders, stockMovements, supplierOrders])
   const purchaseOrderWorkflowColumns = useMemo(
     () => getPurchaseOrderWorkflowColumns(purchaseOrderWorkflowMetrics),
     [purchaseOrderWorkflowMetrics]

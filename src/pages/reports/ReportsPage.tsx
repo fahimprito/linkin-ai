@@ -5,8 +5,8 @@ import { DataTable } from "@/components/shared/data-table"
 import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { poStatusToStage } from "@/components/shared/stage-tracker"
+import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
 import { useAppSelector } from "@/store/hooks"
-import type { YarnBatchInspectionStatus } from "@/types/modules"
 
 const quickLinks = [
   {
@@ -44,29 +44,17 @@ function formatNumber(value: number | undefined) {
   return new Intl.NumberFormat("en-US").format(value ?? 0)
 }
 
-function getLatestInspectionStatusByPo(
-  poId: string,
-  deliveryBatches: Array<{
-    poId: string
-    deliveryDate: string
-    inspectedAt?: string
-    inspectionStatus: YarnBatchInspectionStatus
-  }>
-): YarnBatchInspectionStatus | "Pending" {
-  const latestBatch = deliveryBatches
-    .filter((batch) => batch.poId === poId)
-    .sort((left, right) => {
-      const leftDate = left.inspectedAt ?? left.deliveryDate
-      const rightDate = right.inspectedAt ?? right.deliveryDate
-      return new Date(rightDate).getTime() - new Date(leftDate).getTime()
-    })[0]
-
-  return latestBatch?.inspectionStatus ?? "Pending"
-}
-
 export function ReportsPage() {
   const purchaseOrders = useAppSelector((state) => state.merchandise.purchaseOrders)
   const deliveryBatches = useAppSelector((state) => state.yarnCheck.deliveryBatches)
+  const stockMovements = useAppSelector((state) => state.yarnCheck.stockMovements)
+  const supplierOrders = useAppSelector((state) => state.yarnCheck.supplierOrders)
+  const workflowMetrics = createPurchaseOrderWorkflowMetrics({
+    purchaseOrders,
+    deliveryBatches,
+    stockMovements,
+    supplierOrders,
+  })
   const readyForProduction = purchaseOrders.filter(
     (order) => order.status === "Ready for Production"
   ).length
@@ -74,7 +62,13 @@ export function ReportsPage() {
     ["Knitting", "Linking", "Finishing"].includes(order.status)
   ).length
   const pendingReview = purchaseOrders.filter((order) =>
-    ["Draft", "Consumption Requested", "Pending Yarn Check", "Yarn Ordered", "Yarn Receiving"].includes(order.status)
+    [
+      "Draft",
+      "Consumption Requested",
+      "Pending Yarn Check",
+      "Yarn Ordered",
+      "Yarn Receiving",
+    ].includes(order.status)
   ).length
   const recentOrders = [...purchaseOrders]
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
@@ -191,13 +185,23 @@ export function ReportsPage() {
               key: "supplier",
               header: "Supplier",
               className: "min-w-[6rem]",
-              render: (row) => String(row.supplier || "—"),
+              render: (row) =>
+                String(
+                  workflowMetrics.yarnSupplierByPo[String(row.id)] ||
+                    row.supplier ||
+                    "—"
+                ),
             },
             {
               key: "yarnEta",
               header: "ETA",
               className: "min-w-[5.75rem]",
-              render: (row) => String(row.yarnEta || "—"),
+              render: (row) =>
+                String(
+                  workflowMetrics.yarnEtaByPo[String(row.id)] ||
+                    row.yarnEta ||
+                    "—"
+                ),
             },
             {
               key: "inspectionStatus",
@@ -205,7 +209,10 @@ export function ReportsPage() {
               className: "min-w-[6.25rem]",
               render: (row) => (
                 <StatusBadge
-                  value={getLatestInspectionStatusByPo(String(row.id), deliveryBatches)}
+                  value={
+                    workflowMetrics.yarnInspectionStatusByPo[String(row.id)] ||
+                    "Pending"
+                  }
                 />
               ),
             },
@@ -219,7 +226,8 @@ export function ReportsPage() {
               key: "shipmentSample",
               header: "Shipment Sample",
               className: "min-w-[6.25rem]",
-              render: (row) => String(row.shipmentSample || row.shipMode || "—"),
+              render: (row) =>
+                String(row.shipmentSample || row.shipMode || "—"),
             },
             {
               key: "progress",

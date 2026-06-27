@@ -93,7 +93,7 @@ export function MerchandiseDashboardPage() {
       if (
         !currentInspectionDate ||
         new Date(nextInspectionDate).getTime() >=
-          new Date(currentInspectionDate).getTime()
+        new Date(currentInspectionDate).getTime()
       ) {
         yarnInspectionDateByPo[batch.poId] = nextInspectionDate
         yarnInspectionStatusByPo[batch.poId] = batch.inspectionStatus
