@@ -66,7 +66,11 @@ export function KnittingPlanningPage() {
   const plannableOrders = purchaseOrders.filter((po) => {
     const issuedQty = sumIssueLogQtyForPo(issueLogs, po.id)
     return (
-      (po.status === "Ready for Production" || po.status === "Knitting") &&
+      (
+        po.status === "Sent to Knitting" ||
+        po.status === "Knitting In Progress" ||
+        po.status === "Knitting Completed"
+      ) &&
       issuedQty > 0
     )
   })

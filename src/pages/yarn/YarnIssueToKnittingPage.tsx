@@ -223,7 +223,13 @@ export function YarnIssueToKnittingPage() {
             : "Partially Issued",
       })
     )
-    dispatch(updatePoStatus({ id: values.poId, status: "Knitting" }))
+    dispatch(
+      updatePoStatus({
+        id: values.poId,
+        status: "Sent to Knitting",
+        changedBy: "Yarn Controller",
+      })
+    )
 
     toast.success(
       `Issued ${issueQty} kg to knitting for PO ${values.poNumber}.`

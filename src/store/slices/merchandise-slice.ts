@@ -11,6 +11,27 @@ import type {
   PurchaseOrder,
 } from "@/types/modules"
 
+function appendWorkflowHistory(
+  order: PurchaseOrder,
+  status: POStatus,
+  changedBy = "System"
+) {
+  const previousStatus = order.workflowHistory?.[order.workflowHistory.length - 1]?.status
+
+  if (previousStatus === status) {
+    return order.workflowHistory ?? []
+  }
+
+  return [
+    ...(order.workflowHistory ?? []),
+    {
+      status,
+      changedAt: new Date().toISOString(),
+      changedBy,
+    },
+  ]
+}
+
 type MerchandiseState = {
   purchaseOrders: PurchaseOrder[]
 }
@@ -45,6 +66,10 @@ const merchandiseSlice = createSlice({
               ...action.payload.updates,
               id: order.id,
               createdAt: order.createdAt,
+              workflowHistory: appendWorkflowHistory(
+                order,
+                (action.payload.updates.status ?? order.status) as POStatus
+              ),
             }
           : order
       )
@@ -52,11 +77,19 @@ const merchandiseSlice = createSlice({
     },
     updatePoStatus: (
       state,
-      action: PayloadAction<{ id: string; status: POStatus }>
+      action: PayloadAction<{ id: string; status: POStatus; changedBy?: string }>
     ) => {
       state.purchaseOrders = state.purchaseOrders.map((order) =>
         order.id === action.payload.id
-          ? { ...order, status: action.payload.status }
+          ? {
+              ...order,
+              status: action.payload.status,
+              workflowHistory: appendWorkflowHistory(
+                order,
+                action.payload.status,
+                action.payload.changedBy
+              ),
+            }
           : order
       )
       savePurchaseOrders(state.purchaseOrders)
@@ -70,7 +103,12 @@ const merchandiseSlice = createSlice({
           ? {
               ...order,
               yarnCheckRequestId: action.payload.yarnCheckRequestId,
-              status: "Pending Yarn Check" as POStatus,
+              status: "Sent to Yarn" as POStatus,
+              workflowHistory: appendWorkflowHistory(
+                order,
+                "Sent to Yarn",
+                "Design Controller"
+              ),
             }
           : order
       )
@@ -87,9 +125,14 @@ const merchandiseSlice = createSlice({
         order.id === action.payload.id
           ? {
               ...order,
-              status: "Consumption Requested" as POStatus,
+              status: "Sent to Design" as POStatus,
               consumptionRequestedAt:
                 order.consumptionRequestedAt ?? new Date().toISOString(),
+              workflowHistory: appendWorkflowHistory(
+                order,
+                "Sent to Design",
+                "Merchandiser"
+              ),
             }
           : order
       )
@@ -114,6 +157,12 @@ const merchandiseSlice = createSlice({
               requiredYarnQty: action.payload.totalYarnKg,
               consumptionRequestedAt:
                 order.consumptionRequestedAt ?? new Date().toISOString(),
+              status: "Design Completed" as POStatus,
+              workflowHistory: appendWorkflowHistory(
+                order,
+                "Design Completed",
+                "Design Controller"
+              ),
             }
           : order
       )

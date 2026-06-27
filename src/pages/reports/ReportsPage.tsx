@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { poStatusToStage } from "@/components/shared/stage-tracker"
 import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
+import { workflowProgressByStatus } from "@/lib/workflow-status"
 import { useAppSelector } from "@/store/hooks"
 
 const quickLinks = [
@@ -26,24 +27,6 @@ const quickLinks = [
   },
 ]
 
-const progressByStatus: Record<string, number> = {
-  Draft: 10,
-  "Consumption Requested": 20,
-  "Pending Yarn Check": 35,
-  "Yarn Ordered": 50,
-  "Yarn Receiving": 65,
-  "Yarn Available": 75,
-  "Ready for Production": 85,
-  Knitting: 90,
-  Linking: 94,
-  Finishing: 97,
-  "Finished â€“ Ready to Ship": 100,
-}
-
-function formatNumber(value: number | undefined) {
-  return new Intl.NumberFormat("en-US").format(value ?? 0)
-}
-
 export function ReportsPage() {
   const purchaseOrders = useAppSelector((state) => state.merchandise.purchaseOrders)
   const deliveryBatches = useAppSelector((state) => state.yarnCheck.deliveryBatches)
@@ -55,19 +38,25 @@ export function ReportsPage() {
     stockMovements,
     supplierOrders,
   })
-  const readyForProduction = purchaseOrders.filter(
-    (order) => order.status === "Ready for Production"
+  const sentToKnittingCount = purchaseOrders.filter(
+    (order) => order.status === "Sent to Knitting"
   ).length
   const inProgress = purchaseOrders.filter((order) =>
-    ["Knitting", "Linking", "Finishing"].includes(order.status)
+    [
+      "Knitting In Progress",
+      "Linking In Progress",
+      "Finishing In Progress",
+    ].includes(order.status)
   ).length
   const pendingReview = purchaseOrders.filter((order) =>
     [
-      "Draft",
-      "Consumption Requested",
-      "Pending Yarn Check",
-      "Yarn Ordered",
-      "Yarn Receiving",
+      "Created",
+      "Sent to Design",
+      "Design Completed",
+      "Sent to Yarn",
+      "Yarn Processing",
+      "Sent to Store",
+      "Store Processing",
     ].includes(order.status)
   ).length
   const recentOrders = [...purchaseOrders]
@@ -84,8 +73,8 @@ export function ReportsPage() {
           <p className="mt-1 text-2xl font-semibold">{purchaseOrders.length}</p>
         </div>
         <div className="rounded-[1.5rem] border border-border/80 bg-card p-4 shadow-sm">
-          <p className="text-xs text-muted-foreground">Ready for Production</p>
-          <p className="mt-1 text-2xl font-semibold">{readyForProduction}</p>
+          <p className="text-xs text-muted-foreground">Sent to Knitting</p>
+          <p className="mt-1 text-2xl font-semibold">{sentToKnittingCount}</p>
         </div>
         <div className="rounded-[1.5rem] border border-border/80 bg-card p-4 shadow-sm">
           <p className="text-xs text-muted-foreground">In Progress</p>
@@ -130,7 +119,7 @@ export function ReportsPage() {
               key: "sl",
               header: "SL",
               className: "min-w-[3rem]",
-              render: (row) => String(row.sl || "—"),
+              render: (_row, rowIndex) => String(rowIndex + 1).padStart(2, "0"),
             },
             {
               key: "poNumber",
@@ -175,9 +164,9 @@ export function ReportsPage() {
               className: "min-w-[8rem]",
               render: (row) => (
                 <div className="space-y-0.5 text-[10px] leading-4">
-                  <p>Yarn: {formatNumber(row.totalYarnKg)} kg</p>
-                  <p>Fabric: {formatNumber(row.totalFabricKg)} kg</p>
-                  <p>Accessories: {formatNumber(row.totalAccessoriesQty)} pcs</p>
+                  <p>Yarn: {(row.totalYarnKg ?? 0).toLocaleString()} kg</p>
+                  <p>Fabric: {(row.totalFabricKg ?? 0).toLocaleString()} kg</p>
+                  <p>Accessories: {(row.totalAccessoriesQty ?? 0).toLocaleString()} pcs</p>
                 </div>
               ),
             },
@@ -217,24 +206,14 @@ export function ReportsPage() {
               ),
             },
             {
-              key: "ppStatus",
-              header: "PP Status",
-              className: "min-w-[5.75rem]",
-              render: (row) => String(row.ppStatus || row.sampleStatus || "—"),
-            },
-            {
-              key: "shipmentSample",
-              header: "Shipment Sample",
-              className: "min-w-[6.25rem]",
-              render: (row) =>
-                String(row.shipmentSample || row.shipMode || "—"),
-            },
-            {
               key: "progress",
               header: "Progress (%)",
               className: "min-w-[6.5rem]",
               render: (row) => {
-                const progress = progressByStatus[String(row.status)] ?? 0
+                const progress =
+                  workflowProgressByStatus[
+                    String(row.status) as keyof typeof workflowProgressByStatus
+                  ] ?? 0
 
                 return (
                   <div className="space-y-1">

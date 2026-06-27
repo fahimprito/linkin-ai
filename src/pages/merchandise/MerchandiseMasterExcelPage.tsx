@@ -1,4 +1,4 @@
-﻿import { DataTable } from "@/components/shared/data-table"
+import { DataTable } from "@/components/shared/data-table"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
@@ -9,48 +9,50 @@ export function MerchandiseMasterExcelPage() {
   const purchaseOrders = useAppSelector(
     (state) => state.merchandise.purchaseOrders
   )
-  const pendingYarnCheckCount = purchaseOrders.filter((po) =>
-    ["Pending Yarn Check", "Yarn Ordered", "Yarn Receiving"].includes(po.status)
+  const pendingYarnCount = purchaseOrders.filter((po) =>
+    ["Sent to Yarn", "Yarn Processing"].includes(po.status)
   ).length
-  const readyForProductionCount = purchaseOrders.filter(
-    (po) => po.status === "Ready for Production"
+  const sentToKnittingCount = purchaseOrders.filter(
+    (po) => po.status === "Sent to Knitting"
   ).length
-  const yarnAvailableCount = purchaseOrders.filter((po) =>
-    po.status === "Yarn Available"
+  const yarnReadyCount = purchaseOrders.filter(
+    (po) => po.status === "Yarn Ready"
   ).length
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Master Excel"
-      />
+      <PageHeader title="Master Excel" />
 
       <SearchFilterBar
         filters={[
           "All POs",
-          "Pending Yarn Check",
-          "Yarn Available",
-          "Ready for Production",
-          "Yarn Ordered",
+          "Sent to Yarn",
+          "Yarn Ready",
+          "Sent to Knitting",
+          "Yarn Processing",
         ]}
       />
 
       <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         <MetricCard
           label="Total POs"
-          value={String(purchaseOrders.length).padStart(2, "0")}          tone="default"
+          value={String(purchaseOrders.length).padStart(2, "0")}
+          tone="default"
         />
         <MetricCard
-          label="Yarn Check"
-          value={String(pendingYarnCheckCount).padStart(2, "0")}          tone="warning"
+          label="Yarn Queue"
+          value={String(pendingYarnCount).padStart(2, "0")}
+          tone="warning"
         />
         <MetricCard
-          label="Ready for Production"
-          value={String(readyForProductionCount).padStart(2, "0")}          tone="success"
+          label="Sent to Knitting"
+          value={String(sentToKnittingCount).padStart(2, "0")}
+          tone="success"
         />
         <MetricCard
-          label="Yarn Available"
-          value={String(yarnAvailableCount).padStart(2, "0")}          tone="success"
+          label="Yarn Ready"
+          value={String(yarnReadyCount).padStart(2, "0")}
+          tone="success"
         />
       </section>
 
@@ -93,4 +95,3 @@ export function MerchandiseMasterExcelPage() {
     </div>
   )
 }
-

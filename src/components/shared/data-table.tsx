@@ -8,7 +8,7 @@ export type DataTableColumn<T> = {
   className?: string
   stickyClassName?: string
   stickyShadowClassName?: string
-  render?: (row: T) => React.ReactNode
+  render?: (row: T, rowIndex: number) => React.ReactNode
 }
 
 export type DataTableHeaderCell = {
@@ -157,7 +157,7 @@ export function DataTable<T extends Record<string, unknown>>({
                     )}
                   >
                     {column.render
-                      ? column.render(row)
+                      ? column.render(row, rowIndex)
                       : String(row[column.key as keyof T] ?? "")}
                   </td>
                 ))}

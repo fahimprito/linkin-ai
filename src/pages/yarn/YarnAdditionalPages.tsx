@@ -18,6 +18,7 @@ import {
   getYarnPoListWorkflowColumns,
 } from "@/lib/purchase-order-table-columns"
 import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
+import { isStatusAtOrAfterSentToYarn } from "@/lib/workflow-status"
 import { useAppSelector } from "@/store/hooks"
 import type { PurchaseOrder } from "@/types/modules"
 
@@ -86,11 +87,7 @@ function createSwatchCardId() {
 }
 
 function hasSubmittedConsumption(order: PurchaseOrder) {
-  return (
-    order.totalYarnKg !== undefined ||
-    order.totalFabricKg !== undefined ||
-    order.totalAccessoriesQty !== undefined
-  )
+  return isStatusAtOrAfterSentToYarn(order.status)
 }
 
 export function YarnPoListPage() {

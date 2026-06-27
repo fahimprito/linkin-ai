@@ -1,6 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Check } from "lucide-react"
 
+import {
+  PO_WORKFLOW_STAGES,
+  poStatusToWorkflowStage,
+} from "@/lib/workflow-status"
 import { cn } from "@/lib/utils"
 
 type StageTrackerProps = {
@@ -10,19 +14,18 @@ type StageTrackerProps = {
 
 export function StageTracker({ stages, currentStage }: StageTrackerProps) {
   const currentIndex = stages.findIndex(
-    (s) => s.toLowerCase() === currentStage.toLowerCase()
+    (stage) => stage.toLowerCase() === currentStage.toLowerCase()
   )
 
   return (
     <div className="flex w-full items-center gap-0 overflow-x-auto py-2">
       {stages.map((stage, index) => {
-        const isCompleted = index < currentIndex
+        const isCompleted = currentIndex >= 0 && index < currentIndex
         const isCurrent = index === currentIndex
-        const isUpcoming = index > currentIndex
+        const isUpcoming = currentIndex < 0 || index > currentIndex
 
         return (
           <div key={stage} className="flex flex-1 items-center">
-            {/* Node */}
             <div className="flex flex-col items-center gap-1.5">
               <div
                 className={cn(
@@ -35,11 +38,7 @@ export function StageTracker({ stages, currentStage }: StageTrackerProps) {
                     "border-border/80 bg-secondary/60 text-muted-foreground"
                 )}
               >
-                {isCompleted ? (
-                  <Check className="size-4" strokeWidth={3} />
-                ) : (
-                  index + 1
-                )}
+                {isCompleted ? <Check className="size-4" strokeWidth={3} /> : index + 1}
               </div>
               <span
                 className={cn(
@@ -53,14 +52,11 @@ export function StageTracker({ stages, currentStage }: StageTrackerProps) {
               </span>
             </div>
 
-            {/* Connector line */}
             {index < stages.length - 1 && (
               <div
                 className={cn(
                   "mx-1 h-0.5 flex-1 rounded-full transition-all duration-300",
-                  index < currentIndex
-                    ? "bg-emerald-500"
-                    : "bg-border/60"
+                  index < currentIndex ? "bg-emerald-500" : "bg-border/60"
                 )}
               />
             )}
@@ -71,30 +67,8 @@ export function StageTracker({ stages, currentStage }: StageTrackerProps) {
   )
 }
 
-// Preset stages for easy reuse
-export const PO_LIFECYCLE_STAGES = [
-  "Draft",
-  "Yarn Check",
-  "Yarn Ordered",
-  "Receiving",
-  "Ready for Production",
-]
+export const PO_LIFECYCLE_STAGES = [...PO_WORKFLOW_STAGES]
 
-// Map PO status to the stage name used in the tracker
 export function poStatusToStage(status: string): string {
-  const mapping: Record<string, string> = {
-    "Draft": "Draft",
-    "Consumption Requested": "Draft",
-    "Pending Yarn Check": "Yarn Check",
-    "Yarn Available": "Ready for Production",
-    "Yarn Ordered": "Yarn Ordered",
-    "Yarn Receiving": "Receiving",
-    "Ready for Production": "Ready for Production",
-    "Knitting": "Ready for Production",
-    "Linking": "Ready for Production",
-    "Finishing": "Ready for Production",
-    "Finished – Ready to Ship": "Shipped",
-  }
-
-  return mapping[status] ?? status
+  return poStatusToWorkflowStage(status)
 }

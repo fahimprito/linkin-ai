@@ -64,7 +64,10 @@ export function KnittingDailyProgressPage() {
 
   const activeOrders = purchaseOrders.filter(
     (po) =>
-      (po.status === "Ready for Production" || po.status === "Knitting") &&
+      (
+        po.status === "Sent to Knitting" ||
+        po.status === "Knitting In Progress"
+      ) &&
       plans.some((plan) => plan.poId === po.id)
   )
   const todayIso = new Date().toISOString().split("T")[0]
@@ -148,7 +151,11 @@ export function KnittingDailyProgressPage() {
     dispatch(
       updatePoStatus({
         id: values.poId,
-        status: totalProduced >= selectedPo.quantity ? "Linking" : "Knitting",
+        status:
+          totalProduced >= selectedPo.quantity
+            ? "Sent to Linking"
+            : "Knitting In Progress",
+        changedBy: "Knitting Team",
       })
     )
     if (totalProduced >= selectedPo.quantity) {

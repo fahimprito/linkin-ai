@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { updatePoStatus } from "@/store/slices/merchandise-slice"
 import { updateBatchInspectionStatus } from "@/store/slices/yarn-check-slice"
 
 type InspectionReport = {
@@ -222,6 +223,23 @@ export function YarnBatchInspectionPage() {
           remarks: values.remarks,
         })
       )
+      if (values.result === "Pass") {
+        dispatch(
+          updatePoStatus({
+            id: matchedBatch.poId,
+            status: "Yarn Ready",
+            changedBy: "Yarn Controller",
+          })
+        )
+      } else {
+        dispatch(
+          updatePoStatus({
+            id: matchedBatch.poId,
+            status: "Yarn Processing",
+            changedBy: "Yarn Controller",
+          })
+        )
+      }
     }
 
     setIsFormOpen(false)

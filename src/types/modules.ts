@@ -1,16 +1,25 @@
 // ── PO Status Lifecycle ──────────────────────────────────────────────
 export type POStatus =
   | "Draft"
-  | "Consumption Requested"
-  | "Pending Yarn Check"
-  | "Yarn Available"
-  | "Yarn Ordered"
-  | "Yarn Receiving"
-  | "Ready for Production"
-  | "Knitting"
-  | "Linking"
-  | "Finishing"
-  | "Finished – Ready to Ship"
+  | "Created"
+  | "Sent to Design"
+  | "Design Completed"
+  | "Sent to Yarn"
+  | "Yarn Processing"
+  | "Yarn Ready"
+  | "Sent to Store"
+  | "Store Processing"
+  | "Store Ready"
+  | "Sent to Knitting"
+  | "Knitting In Progress"
+  | "Knitting Completed"
+  | "Sent to Linking"
+  | "Linking In Progress"
+  | "Linking Completed"
+  | "Sent to Finishing"
+  | "Finishing In Progress"
+  | "Ready to Ship"
+  | "Completed"
 
 // ── Purchase Order ───────────────────────────────────────────────────
 export type ConsumptionStatus =
@@ -18,37 +27,22 @@ export type ConsumptionStatus =
   | "Requested"
   | "Submitted"
 
-export type PurchaseOrder = {
+export type PurchaseOrderWorkflowHistoryEntry = {
+  status: POStatus
+  changedAt: string
+  changedBy: string
+}
+
+export type PurchaseOrderCanonicalFields = {
   id: string
   poNumber: string
-  buyer: string
-  style: string
-  design: string
-  quantity: number
   status: POStatus
   supplier: string
-  deliveryDate: string
-  sl?: string
+  createdAt: string
   styleName?: string
   styleNo?: string
-  callNumber?: string
-  orderNo?: string
   productionUnit?: string
-  mainSizeHangTagBooking?: string
-  careLabelBooking?: string
-  priceStickerBooking?: string
-  tissue?: string
-  polyCartonBooking?: string
-  buttonZip?: string
-  doneInspection?: string
-  sampleStatus?: string
-  shipMode?: string
   ccd?: string
-  excessQty?: number
-  newCcd?: string
-  inspectionStyle?: string
-  stylePhoto?: string
-  sizeRange?: string
   quality?: string
   itemNameCode?: string
   accessories?: string
@@ -58,27 +52,54 @@ export type PurchaseOrder = {
   poQty?: number
   yarn?: string
   gauge?: string
-  price?: number
-  amount?: number
-  factoryCosting?: string
-  labTest?: string
   yarnEta?: string
   totalYarnKg?: number
   totalFabricKg?: number
   totalAccessoriesQty?: number
+  color?: string
+  yarnCheckRequestId?: string
+  requiredYarnQty?: number
+  workflowHistory?: PurchaseOrderWorkflowHistoryEntry[]
+}
+
+export type PurchaseOrderLegacyFields = {
+  buyer: string
+  style: string
+  design: string
+  quantity: number
+  deliveryDate: string
+  sl?: string
+  callNumber?: string
+  orderNo?: string
+  mainSizeHangTagBooking?: string
+  careLabelBooking?: string
+  priceStickerBooking?: string
+  tissue?: string
+  polyCartonBooking?: string
+  buttonZip?: string
+  doneInspection?: string
+  sampleStatus?: string
+  shipMode?: string
+  excessQty?: number
+  newCcd?: string
+  inspectionStyle?: string
+  stylePhoto?: string
+  sizeRange?: string
+  price?: number
+  amount?: number
+  factoryCosting?: string
+  labTest?: string
   consumptionStatus?: ConsumptionStatus
   consumptionRequestedAt?: string
-  // Stage 1 additions
   gg?: string
   yarnComposition?: string
-  color?: string
   techPack?: string
   designLayout?: string
   approval?: string
-  createdAt: string
-  yarnCheckRequestId?: string
-  requiredYarnQty?: number
 }
+
+export type PurchaseOrder = PurchaseOrderCanonicalFields &
+  PurchaseOrderLegacyFields
 
 export type CreatePurchaseOrderPayload = Omit<PurchaseOrder, "id" | "createdAt">
 

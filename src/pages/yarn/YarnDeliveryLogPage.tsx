@@ -13,6 +13,7 @@ import {
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { upsertInventoryFromReceipt } from "@/lib/yarn-inventory"
+import { isStatusAtOrAfterSentToYarn } from "@/lib/workflow-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePurchaseOrder } from "@/store/slices/merchandise-slice"
 import {
@@ -73,11 +74,7 @@ function createStockMovementId() {
 }
 
 function hasSubmittedConsumption(order: PurchaseOrder) {
-  return (
-    order.totalYarnKg !== undefined ||
-    order.totalFabricKg !== undefined ||
-    order.totalAccessoriesQty !== undefined
-  )
+  return isStatusAtOrAfterSentToYarn(order.status)
 }
 
 export function YarnDeliveryLogPage() {
@@ -181,10 +178,7 @@ export function YarnDeliveryLogPage() {
         .filter((batch) => batch.poId === values.poId)
         .reduce((sum, batch) => sum + batch.quantity, 0) + receivedQty
     const requiredQty = selectedPo.totalYarnKg ?? selectedPo.requiredYarnQty ?? 0
-    const nextPoStatus =
-      requiredQty > 0 && totalReceivedForPo >= requiredQty
-        ? "Yarn Available"
-        : "Yarn Receiving"
+    const nextPoStatus = "Yarn Processing"
 
     dispatch(
       addDeliveryBatch({
@@ -265,7 +259,7 @@ export function YarnDeliveryLogPage() {
       dispatch(
         updateCheckRequestStatus({
           id: selectedPo.yarnCheckRequestId,
-          status: nextPoStatus === "Yarn Available" ? "Available" : "Receiving",
+          status: "Receiving",
         })
       )
     }

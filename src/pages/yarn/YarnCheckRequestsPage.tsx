@@ -44,10 +44,14 @@ export function YarnCheckRequestsPage() {
       })
     )
     dispatch(
-      updatePoStatus({ id: request.poId, status: "Ready for Production" })
+      updatePoStatus({
+        id: request.poId,
+        status: "Yarn Ready",
+        changedBy: "Yarn Controller",
+      })
     )
     toast.success(
-      `PO ${request.poNumber} marked as yarn available. Routed to production.`
+      `PO ${request.poNumber} marked as yarn ready.`
     )
   }
 
@@ -55,7 +59,13 @@ export function YarnCheckRequestsPage() {
     dispatch(
       updateCheckRequestStatus({ id: request.id, status: "Not Available" })
     )
-    dispatch(updatePoStatus({ id: request.poId, status: "Yarn Ordered" }))
+    dispatch(
+      updatePoStatus({
+        id: request.poId,
+        status: "Yarn Processing",
+        changedBy: "Yarn Controller",
+      })
+    )
     toast.info(
       `PO ${request.poNumber} marked as not available. Place a supplier order.`
     )

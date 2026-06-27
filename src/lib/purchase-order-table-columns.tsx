@@ -3,6 +3,19 @@ import type {
   DataTableColumn,
   DataTableHeaderRow,
 } from "@/components/shared/data-table"
+import {
+  getPurchaseOrderDisplayAccessories,
+  getPurchaseOrderDisplayCcd,
+  getPurchaseOrderDisplayGauge,
+  getPurchaseOrderDisplayItemNameCode,
+  getPurchaseOrderDisplayNo,
+  getPurchaseOrderDisplayPpStatus,
+  getPurchaseOrderDisplayProductionUnit,
+  getPurchaseOrderDisplayQty,
+  getPurchaseOrderDisplayShipmentSample,
+  getPurchaseOrderDisplayStyle,
+  getPurchaseOrderDisplayYarn,
+} from "@/lib/purchase-orders"
 import type { PurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
 import type { PurchaseOrder } from "@/types/modules"
 
@@ -15,23 +28,23 @@ export function getTextValue(value: string | number | undefined | null) {
 }
 
 export function getOrderDisplayNo(order: PurchaseOrder) {
-  return order.orderNo || order.poNumber
+  return getPurchaseOrderDisplayNo(order)
 }
 
 export function getOrderDisplayStyle(order: PurchaseOrder) {
-  return order.styleName || order.style
+  return getPurchaseOrderDisplayStyle(order)
 }
 
 export function getOrderDisplayGauge(order: PurchaseOrder) {
-  return order.gauge || order.gg || ""
+  return getPurchaseOrderDisplayGauge(order)
 }
 
 export function getOrderDisplayYarn(order: PurchaseOrder) {
-  return order.yarn || order.yarnComposition || ""
+  return getPurchaseOrderDisplayYarn(order)
 }
 
 export function getOrderDisplayQty(order: PurchaseOrder) {
-  return order.poQty ?? order.quantity
+  return getPurchaseOrderDisplayQty(order)
 }
 
 export function formatOptionalNumber(value: number | undefined) {
@@ -369,7 +382,7 @@ export function getPurchaseOrderWorkflowColumns(
     {
       key: "ccd",
       header: "CCD",
-      render: (row) => getTextValue(row.ccd || row.deliveryDate),
+      render: (row) => getTextValue(getPurchaseOrderDisplayCcd(row)),
     },
     {
       key: "colors",
@@ -379,27 +392,28 @@ export function getPurchaseOrderWorkflowColumns(
     {
       key: "itemNameCode",
       header: "Item Name & Code",
-      render: (row) => getTextValue(row.itemNameCode || row.callNumber),
+      render: (row) => getTextValue(getPurchaseOrderDisplayItemNameCode(row)),
     },
     {
       key: "accessories",
       header: "Accessories",
-      render: (row) => getTextValue(row.accessories || row.buttonZip),
+      render: (row) => getTextValue(getPurchaseOrderDisplayAccessories(row)),
     },
     {
       key: "polyCarton",
       header: "Poly/CTN",
-      render: (row) => getTextValue(row.polyCartonBooking),
+      render: (row) => getTextValue(getPurchaseOrderDisplayProductionUnit(row)),
     },
     {
       key: "ppStatus",
       header: "PP Status",
-      render: (row) => getTextValue(row.ppStatus || row.sampleStatus),
+      render: (row) => getTextValue(getPurchaseOrderDisplayPpStatus(row)),
     },
     {
       key: "shipmentSample",
       header: "Shipment Sample",
-      render: (row) => getTextValue(row.shipmentSample || row.shipMode),
+      render: (row) =>
+        getTextValue(getPurchaseOrderDisplayShipmentSample(row)),
     },
     {
       key: "remarks",
@@ -620,10 +634,10 @@ export const purchaseOrderTableColumns: DataTableColumn<PurchaseOrder>[] = [
     render: (row) => getTextValue(row.shipMode),
   },
   {
-    key: "ccd",
-    header: "CCD",
-    render: (row) => getTextValue(row.ccd || row.deliveryDate),
-  },
+      key: "ccd",
+      header: "CCD",
+      render: (row) => getTextValue(getPurchaseOrderDisplayCcd(row)),
+    },
   {
     key: "excessQty",
     header: "EXCESS QTY",

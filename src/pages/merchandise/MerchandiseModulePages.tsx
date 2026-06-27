@@ -18,6 +18,7 @@ import {
   getPurchaseOrderWorkflowColumns,
   purchaseOrderWorkflowHeaderRows,
 } from "@/lib/purchase-order-table-columns"
+import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
 import { ModuleSettingsPage } from "@/pages/shared/ModuleSettingsPage"
 import { useAppSelector } from "@/store/hooks"
 
@@ -46,7 +47,7 @@ export function MerchandiseDashboardPage() {
     purchaseOrders.map((po) => po.style.trim()).filter(Boolean)
   ).size
   const yarnSupplyPendingCount = purchaseOrders.filter((po) =>
-    ["Pending Yarn Check", "Yarn Ordered", "Yarn Receiving"].includes(po.status)
+    ["Sent to Yarn", "Yarn Processing"].includes(po.status)
   ).length
   const accessoriesSupplyPendingCount = new Set(
     storeRequisitions
@@ -55,14 +56,16 @@ export function MerchandiseDashboardPage() {
   ).size
   const productionPoCount = purchaseOrders.filter((po) =>
     [
-      "Ready for Production",
-      "Knitting",
-      "Linking",
-      "Finishing",
+      "Sent to Knitting",
+      "Knitting In Progress",
+      "Sent to Linking",
+      "Linking In Progress",
+      "Sent to Finishing",
+      "Finishing In Progress",
     ].includes(po.status)
   ).length
   const finishingPoCount = purchaseOrders.filter(
-    (po) => po.status === "Finishing"
+    (po) => po.status === "Finishing In Progress"
   ).length
   const shipmentPoCount = purchaseOrders.filter(
     (po) => isReadyToShipStatus(po.status)
@@ -76,49 +79,15 @@ export function MerchandiseDashboardPage() {
       deliveryDate.getMonth() === today.getMonth()
     )
   }).length
-  const draftPoList = purchaseOrders.filter((po) => po.status === "Draft")
+  const draftPoList = purchaseOrders.filter((po) => po.status === "Created")
   const purchaseOrderWorkflowMetrics = useMemo(() => {
-    const yarnReceivedQtyByPo: Record<string, number> = {}
-    const yarnIssuedQtyByPo: Record<string, number> = {}
-    const yarnInspectionStatusByPo: Record<string, string | undefined> = {}
-    const yarnInspectionDateByPo: Record<string, string | undefined> = {}
-
-    deliveryBatches.forEach((batch) => {
-      yarnReceivedQtyByPo[batch.poId] =
-        (yarnReceivedQtyByPo[batch.poId] ?? 0) + batch.quantity
-
-      const currentInspectionDate = yarnInspectionDateByPo[batch.poId]
-      const nextInspectionDate = batch.inspectedAt ?? batch.deliveryDate
-
-      if (
-        !currentInspectionDate ||
-        new Date(nextInspectionDate).getTime() >=
-        new Date(currentInspectionDate).getTime()
-      ) {
-        yarnInspectionDateByPo[batch.poId] = nextInspectionDate
-        yarnInspectionStatusByPo[batch.poId] = batch.inspectionStatus
-      }
+    return createPurchaseOrderWorkflowMetrics({
+      purchaseOrders,
+      deliveryBatches,
+      stockMovements,
+      supplierOrders: [],
     })
-
-    stockMovements
-      .filter((movement) => movement.movementType === "Issued to Knitting")
-      .forEach((movement) => {
-        yarnIssuedQtyByPo[movement.poId] =
-          (yarnIssuedQtyByPo[movement.poId] ?? 0) + movement.quantity
-      })
-
-    return {
-      yarnInspectionDateByPo,
-      yarnInspectionStatusByPo,
-      yarnIssuedQtyByPo,
-      yarnReceivedQtyByPo,
-      storeInspectionDateByPo: {},
-      storeInspectionStatusByPo: {},
-      storeReceivedQtyByPo: {},
-      storeStockBalanceByPo: {},
-      storeSupplierByPo: {},
-    }
-  }, [deliveryBatches, stockMovements])
+  }, [deliveryBatches, purchaseOrders, stockMovements])
   const workflowColumns = useMemo(
     () => getPurchaseOrderWorkflowColumns(purchaseOrderWorkflowMetrics),
     [purchaseOrderWorkflowMetrics]

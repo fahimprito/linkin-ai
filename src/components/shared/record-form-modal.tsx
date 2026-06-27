@@ -8,6 +8,8 @@ export type ModalFormField = {
   type?: "text" | "number" | "date" | "textarea" | "select"
   placeholder?: string
   options?: string[]
+  disabled?: boolean
+  readOnly?: boolean
 }
 
 type RecordFormModalProps<T extends FieldValues> = {
@@ -78,15 +80,26 @@ export function RecordFormModal<T extends FieldValues>({
                     id={field.name}
                     {...register(field.name as Path<T>, { required: true })}
                     placeholder={field.placeholder}
-                    className={commonClassName}
+                    className={`${commonClassName} ${
+                      field.disabled || field.readOnly
+                        ? "cursor-not-allowed bg-muted text-muted-foreground"
+                        : ""
+                    }`}
                     rows={4}
+                    disabled={field.disabled}
+                    readOnly={field.readOnly}
                   />
                 ) : field.type === "select" ? (
                   <select
                     id={field.name}
                     {...register(field.name as Path<T>, { required: true })}
-                    className={commonClassName}
+                    className={`${commonClassName} ${
+                      field.disabled || field.readOnly
+                        ? "cursor-not-allowed bg-muted text-muted-foreground"
+                        : ""
+                    }`}
                     defaultValue=""
+                    disabled={field.disabled}
                   >
                     <option value="" disabled>
                       Select an option
@@ -103,7 +116,13 @@ export function RecordFormModal<T extends FieldValues>({
                     type={field.type ?? "text"}
                     {...register(field.name as Path<T>, { required: true })}
                     placeholder={field.placeholder}
-                    className={commonClassName}
+                    className={`${commonClassName} ${
+                      field.disabled || field.readOnly
+                        ? "cursor-not-allowed bg-muted text-muted-foreground"
+                        : ""
+                    }`}
+                    disabled={field.disabled}
+                    readOnly={field.readOnly}
                   />
                 )}
               </div>

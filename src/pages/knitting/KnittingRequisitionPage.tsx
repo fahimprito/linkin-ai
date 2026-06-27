@@ -69,7 +69,10 @@ export function KnittingRequisitionPage() {
   })
 
   const queueOrders = purchaseOrders.filter(
-    (po) => po.status === "Ready for Production" || po.status === "Knitting"
+    (po) =>
+      po.status === "Sent to Knitting" ||
+      po.status === "Knitting In Progress" ||
+      po.status === "Knitting Completed"
   )
 
   const openCreateModal = (po: PurchaseOrder) => {

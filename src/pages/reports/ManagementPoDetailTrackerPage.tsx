@@ -10,13 +10,20 @@ import {
   getOrderDisplayNo,
   getOrderDisplayStyle,
 } from "@/lib/purchase-order-table-columns"
+import {
+  getPurchaseOrderDisplayCcd,
+  getPurchaseOrderDisplayItemNameCode,
+  getPurchaseOrderDisplayPpStatus,
+  getPurchaseOrderDisplayQty,
+  getPurchaseOrderDisplayShipmentSample,
+} from "@/lib/purchase-orders"
 import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
+import { workflowProgressByStatus } from "@/lib/workflow-status"
 import { useAppSelector } from "@/store/hooks"
 import type { PurchaseOrder } from "@/types/modules"
 
 type ReportPageProps = {
   title: string
-  description?: string
 }
 
 type ManagementReportRow = PurchaseOrder & {
@@ -32,20 +39,6 @@ type ManagementReportRow = PurchaseOrder & {
   currentStage: string
 }
 
-const progressByStatus: Record<string, number> = {
-  Draft: 10,
-  "Consumption Requested": 20,
-  "Pending Yarn Check": 35,
-  "Yarn Ordered": 50,
-  "Yarn Receiving": 65,
-  "Yarn Available": 75,
-  "Ready for Production": 85,
-  Knitting: 90,
-  Linking: 94,
-  Finishing: 97,
-  "Finished â€“ Ready to Ship": 100,
-}
-
 function normalizeText(value: string | undefined) {
   return value?.trim().toLowerCase() ?? ""
 }
@@ -55,12 +48,11 @@ function formatNumber(value: number | undefined) {
 }
 
 function buildCurrentStage(status: string) {
-  const stage = poStatusToStage(status)
-  return stage === "Shipped" ? "Shipped" : stage
+  return poStatusToStage(status)
 }
 
 function getProgress(status: string) {
-  return progressByStatus[status] ?? 0
+  return workflowProgressByStatus[status as keyof typeof workflowProgressByStatus] ?? 0
 }
 
 function selectOptions(values: string[], label: string) {
@@ -131,8 +123,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
           getOrderDisplayStyle(row),
           row.styleNo,
           row.color,
-          row.itemNameCode,
-          row.callNumber,
+          getPurchaseOrderDisplayItemNameCode(row),
         ].some((value) =>
           normalizeText(String(value ?? "")).includes(normalizedSearch)
         )
@@ -155,7 +146,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         key: "sl",
         header: "SL",
         className: "min-w-[2.75rem] whitespace-nowrap",
-        render: (row) => row.sl || "—",
+        render: (_row, rowIndex) => String(rowIndex + 1).padStart(2, "0"),
       },
       {
         key: "poNumber",
@@ -179,7 +170,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         key: "quantity",
         header: "Quantity",
         className: "min-w-[5rem]",
-        render: (row) => formatNumber(row.poQty ?? row.quantity),
+        render: (row) => formatNumber(getPurchaseOrderDisplayQty(row)),
       },
       {
         key: "colors",
@@ -191,7 +182,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         key: "ccd",
         header: "CCD",
         className: "min-w-[5.75rem]",
-        render: (row) => row.ccd ?? row.deliveryDate ?? "—",
+        render: (row) => getPurchaseOrderDisplayCcd(row) || "—",
       },
       {
         key: "materialSummary",
@@ -227,13 +218,13 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         key: "ppStatus",
         header: "PP Status",
         className: "min-w-[5.75rem]",
-        render: (row) => row.ppStatus ?? row.sampleStatus ?? "—",
+        render: (row) => getPurchaseOrderDisplayPpStatus(row) || "—",
       },
       {
         key: "shipmentSample",
         header: "Shipment Sample",
         className: "min-w-[6.25rem]",
-        render: (row) => row.shipmentSample ?? row.shipMode ?? "—",
+        render: (row) => getPurchaseOrderDisplayShipmentSample(row) || "—",
       },
       {
         key: "progress",

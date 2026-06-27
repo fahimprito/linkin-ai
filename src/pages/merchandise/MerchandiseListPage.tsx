@@ -1,4 +1,4 @@
-import { FileUp, Pencil, Trash2 } from "lucide-react"
+import { Copy, FileUp, Pencil, Trash2 } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router"
@@ -30,9 +30,6 @@ import {
 import type { CreatePurchaseOrderPayload, PurchaseOrder } from "@/types/modules"
 
 const purchaseOrderFields: ModalFormField[] = [
-  { name: "sl", label: "SL", placeholder: "01" },
-  { name: "buyer", label: "Buyer", placeholder: "H&M" },
-  { name: "design", label: "Design", placeholder: "Striped Jacquard" },
   { name: "styleName", label: "Style Name", placeholder: "Premium Knit Polo" },
   { name: "styleNo", label: "Style Number", placeholder: "ST-2201" },
   { name: "gauge", label: "Gauge", placeholder: "12" },
@@ -78,6 +75,26 @@ const purchaseOrderFields: ModalFormField[] = [
   },
 ]
 
+const copyPoReadOnlyFieldNames = new Set([
+  "styleName",
+  "styleNo",
+  "gauge",
+  "quality",
+  "accessories",
+  "productionUnit",
+  "ppStatus",
+  "shipmentSample",
+])
+
+const copyPoBlankFieldNames = new Set([
+  "poNumber",
+  "poQty",
+  "ccd",
+  "color",
+  "itemNameCode",
+  "remarks",
+])
+
 function toNumber(value: unknown) {
   const normalized = Number(value)
   return Number.isFinite(normalized) ? normalized : 0
@@ -86,37 +103,98 @@ function toNumber(value: unknown) {
 function getOrderFormValues(
   order?: PurchaseOrder
 ): CreatePurchaseOrderPayload {
+  const styleName = order?.styleName ?? order?.style ?? ""
+  const poNumber = order?.poNumber ?? order?.orderNo ?? ""
+  const poQty = order?.poQty ?? order?.quantity ?? 0
+  const ccd = order?.ccd ?? order?.deliveryDate ?? ""
+  const quality = order?.quality ?? order?.yarn ?? order?.yarnComposition ?? ""
+  const gauge = order?.gauge ?? order?.gg ?? ""
+  const itemNameCode = order?.itemNameCode ?? order?.callNumber ?? ""
+  const accessories = order?.accessories ?? order?.buttonZip ?? ""
+  const productionUnit =
+    order?.productionUnit ?? order?.polyCartonBooking ?? ""
+  const ppStatus = order?.ppStatus ?? order?.sampleStatus ?? ""
+  const shipmentSample = order?.shipmentSample ?? order?.shipMode ?? ""
+
   return {
     buyer: order?.buyer ?? "",
-    style: order?.style ?? "",
+    style: styleName,
     design: order?.design ?? "",
-    quantity: order?.quantity ?? 0,
-    status: order?.status ?? "Draft",
+    quantity: poQty,
+    status: order?.status ?? "Created",
     supplier: order?.supplier ?? "",
-    deliveryDate: order?.deliveryDate ?? "",
-    gg: order?.gg ?? "",
+    deliveryDate: ccd,
+    gg: gauge,
     color: order?.color ?? "",
-    yarnComposition: order?.yarnComposition ?? "",
+    yarnComposition: quality,
     requiredYarnQty: order?.requiredYarnQty ?? 0,
-    sl: order?.sl ?? "",
-    styleName: order?.styleName ?? order?.style ?? "",
+    sl: "",
+    styleName,
     styleNo: order?.styleNo ?? "",
-    poNumber: order?.poNumber ?? order?.orderNo ?? "",
-    productionUnit: order?.productionUnit ?? "",
-    polyCartonBooking: order?.polyCartonBooking ?? order?.productionUnit ?? "",
-    ppStatus: order?.ppStatus ?? order?.sampleStatus ?? "",
-    shipmentSample: order?.shipmentSample ?? order?.shipMode ?? "",
-    ccd: order?.ccd ?? order?.deliveryDate ?? "",
-    poQty: order?.poQty ?? order?.quantity ?? 0,
-    quality: order?.quality ?? order?.yarn ?? order?.yarnComposition ?? "",
-    gauge: order?.gauge ?? order?.gg ?? "",
-    itemNameCode: order?.itemNameCode ?? order?.callNumber ?? "",
-    accessories: order?.accessories ?? order?.buttonZip ?? "",
+    poNumber,
+    productionUnit,
+    polyCartonBooking: productionUnit,
+    ppStatus,
+    shipmentSample,
+    ccd,
+    poQty,
+    quality,
+    gauge,
+    itemNameCode,
+    accessories,
     remarks: order?.remarks ?? "",
     totalYarnKg: order?.totalYarnKg ?? 0,
     totalFabricKg: order?.totalFabricKg ?? 0,
     totalAccessoriesQty: order?.totalAccessoriesQty ?? 0,
   }
+}
+
+function getCopyPoFormValues(order: PurchaseOrder): CreatePurchaseOrderPayload {
+  const values = getOrderFormValues(order)
+
+  return {
+    ...values,
+    poNumber: "",
+    poQty: 0,
+    quantity: 0,
+    ccd: "",
+    color: "",
+    itemNameCode: "",
+    remarks: "",
+    sl: "",
+    status: "Created",
+    yarnCheckRequestId: undefined,
+    consumptionRequestedAt: undefined,
+  }
+}
+
+function getPurchaseOrderFieldsForMode(
+  mode: "create" | "edit" | "copy"
+): ModalFormField[] {
+  if (mode !== "copy") {
+    return purchaseOrderFields
+  }
+
+  return purchaseOrderFields.map((field) => {
+    if (copyPoReadOnlyFieldNames.has(field.name)) {
+      return {
+        ...field,
+        readOnly: true,
+      }
+    }
+
+    if (copyPoBlankFieldNames.has(field.name)) {
+      return {
+        ...field,
+        placeholder:
+          field.name === "poNumber"
+            ? "Enter new PO number"
+            : field.placeholder,
+      }
+    }
+
+    return field
+  })
 }
 
 export function MerchandiseListPage() {
@@ -126,6 +204,7 @@ export function MerchandiseListPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null)
+  const [copySourceOrder, setCopySourceOrder] = useState<PurchaseOrder | null>(null)
   const [orderPendingDelete, setOrderPendingDelete] =
     useState<PurchaseOrder | null>(null)
   const [uploadedPoFileName, setUploadedPoFileName] = useState("")
@@ -144,21 +223,29 @@ export function MerchandiseListPage() {
   )
 
   const defaultFormValues = getOrderFormValues()
+  const isCopyMode = Boolean(copySourceOrder)
+  const modalMode: "create" | "edit" | "copy" = editingOrder
+    ? "edit"
+    : copySourceOrder
+      ? "copy"
+      : "create"
+  const modalFields = useMemo(
+    () => getPurchaseOrderFieldsForMode(modalMode),
+    [modalMode]
+  )
 
   // Filter POs based on active filter
   const filteredOrders = purchaseOrders.filter((po) => {
     if (activeFilter === "All POs") return true
-    if (activeFilter === "Draft") return po.status === "Draft"
-    if (activeFilter === "Consumption Requested")
-      return po.status === "Consumption Requested"
+    if (activeFilter === "Created") return po.status === "Created"
+    if (activeFilter === "Sent to Design")
+      return po.status === "Sent to Design"
     if (activeFilter === "Yarn Check")
-      return ["Pending Yarn Check", "Yarn Available", "Yarn Ordered", "Yarn Receiving"].includes(po.status)
-    if (activeFilter === "Ready for Production")
-      return po.status === "Ready for Production"
-    if (activeFilter === "Yarn Ordered")
-      return po.status === "Yarn Ordered"
-    if (activeFilter === "__hidden_completed__")
-      return po.status === "Finished – Ready to Ship"
+      return ["Sent to Yarn", "Yarn Processing", "Yarn Ready"].includes(po.status)
+    if (activeFilter === "Sent to Knitting")
+      return po.status === "Sent to Knitting"
+    if (activeFilter === "Yarn Processing")
+      return po.status === "Yarn Processing"
     return true
   })
   const displayedOrders = filteredOrders.filter((po) => {
@@ -169,14 +256,11 @@ export function MerchandiseListPage() {
     }
 
     const searchableValues = [
-      po.sl,
       po.poNumber,
       po.orderNo,
-      po.buyer,
       po.styleName,
       po.style,
       po.styleNo,
-      po.design,
       po.color,
       po.supplier,
       po.status,
@@ -189,6 +273,7 @@ export function MerchandiseListPage() {
 
   const openCreateModal = () => {
     setEditingOrder(null)
+    setCopySourceOrder(null)
     reset(defaultFormValues)
     setIsCreateModalOpen(true)
   }
@@ -205,24 +290,76 @@ export function MerchandiseListPage() {
   }
 
   const openEditModal = (order: PurchaseOrder) => {
+    setCopySourceOrder(null)
     reset(getOrderFormValues(order))
     setEditingOrder(order)
     setIsCreateModalOpen(true)
   }
 
+  const openCopyModal = (order: PurchaseOrder) => {
+    setEditingOrder(null)
+    setCopySourceOrder(order)
+    reset(getCopyPoFormValues(order))
+    setIsCreateModalOpen(true)
+  }
+
   const onSubmit = (values: CreatePurchaseOrderPayload) => {
-    const poNumber = values.poNumber?.trim() || values.orderNo?.trim() || ""
-    const styleName = values.styleName?.trim() || values.style?.trim() || ""
-    const gauge = values.gauge?.trim() || values.gg?.trim() || ""
-    const quality = values.quality?.trim() || values.yarn?.trim() || values.yarnComposition?.trim() || ""
-    const ccd = values.ccd?.trim() || values.deliveryDate?.trim() || ""
-    const poQty = toNumber(values.poQty ?? values.quantity)
+    const poNumber = values.poNumber?.trim() || ""
+    const styleName = values.styleName?.trim() || ""
+    const gauge = values.gauge?.trim() || ""
+    const quality = values.quality?.trim() || ""
+    const ccd = values.ccd?.trim() || ""
+    const poQty = toNumber(values.poQty)
+    const color = values.color?.trim() || ""
+    const itemNameCode = values.itemNameCode?.trim() || ""
+    const accessories = values.accessories?.trim() || ""
+    const ppStatus = values.ppStatus?.trim() || ""
+    const shipmentSample = values.shipmentSample?.trim() || ""
+    const productionUnit = values.productionUnit?.trim() || ""
+    const normalizedPoNumber = poNumber.toLowerCase()
+
+    if (!poNumber) {
+      toast.error("PO Number is required.")
+      return
+    }
+
+    const hasDuplicatePoNumber = purchaseOrders.some(
+      (order) =>
+        order.id !== editingOrder?.id &&
+        (order.poNumber || order.orderNo || "").trim().toLowerCase() ===
+          normalizedPoNumber
+    )
+
+    if (hasDuplicatePoNumber) {
+      toast.error("PO Number must be unique.")
+      return
+    }
+
+    if (poQty <= 0) {
+      toast.error("Quantity must be greater than zero.")
+      return
+    }
+
+    if (!ccd) {
+      toast.error("CCD is required.")
+      return
+    }
+
+    if (!color) {
+      toast.error("Colors is required.")
+      return
+    }
+
+    if (!itemNameCode) {
+      toast.error("Item Name & Code is required.")
+      return
+    }
+
     const normalizedValues = {
       ...values,
-      sl:
-        values.sl?.trim() ||
-        editingOrder?.sl ||
-        String(purchaseOrders.length + (editingOrder ? 0 : 1)).padStart(2, "0"),
+      sl: "",
+      buyer: editingOrder?.buyer ?? "",
+      design: editingOrder?.design ?? "",
       poNumber,
       orderNo: poNumber,
       style: styleName,
@@ -233,28 +370,31 @@ export function MerchandiseListPage() {
       yarn: quality,
       quality,
       poQty,
-      itemNameCode: values.itemNameCode?.trim() || values.callNumber?.trim() || "",
-      callNumber: values.itemNameCode?.trim() || values.callNumber?.trim() || "",
-      accessories: values.accessories?.trim() || values.buttonZip?.trim() || "",
-      buttonZip: values.accessories?.trim() || values.buttonZip?.trim() || "",
-      ppStatus: values.ppStatus?.trim() || values.sampleStatus?.trim() || "",
-      sampleStatus: values.ppStatus?.trim() || values.sampleStatus?.trim() || "",
-      shipmentSample:
-        values.shipmentSample?.trim() || values.shipMode?.trim() || "",
-      shipMode: values.shipmentSample?.trim() || values.shipMode?.trim() || "",
-      polyCartonBooking:
-        values.polyCartonBooking?.trim() || values.productionUnit?.trim() || "",
-      productionUnit:
-        values.productionUnit?.trim() || values.polyCartonBooking?.trim() || "",
+      color,
+      itemNameCode,
+      callNumber: itemNameCode,
+      accessories,
+      buttonZip: accessories,
+      ppStatus,
+      sampleStatus: ppStatus,
+      shipmentSample,
+      shipMode: shipmentSample,
+      polyCartonBooking: productionUnit,
+      productionUnit,
       remarks: values.remarks?.trim() || "",
       gauge,
-      supplier: editingOrder?.supplier ?? "",
-      yarnEta: editingOrder?.yarnEta ?? "",
-      requiredYarnQty: editingOrder?.requiredYarnQty ?? 0,
-      totalYarnKg: editingOrder?.totalYarnKg ?? 0,
-      totalFabricKg: editingOrder?.totalFabricKg ?? 0,
-      totalAccessoriesQty: editingOrder?.totalAccessoriesQty ?? 0,
-      status: editingOrder?.status ?? "Draft",
+      supplier: copySourceOrder?.supplier ?? editingOrder?.supplier ?? "",
+      yarnEta: copySourceOrder?.yarnEta ?? editingOrder?.yarnEta ?? "",
+      requiredYarnQty:
+        copySourceOrder?.requiredYarnQty ?? editingOrder?.requiredYarnQty ?? 0,
+      totalYarnKg: copySourceOrder?.totalYarnKg ?? editingOrder?.totalYarnKg ?? 0,
+      totalFabricKg:
+        copySourceOrder?.totalFabricKg ?? editingOrder?.totalFabricKg ?? 0,
+      totalAccessoriesQty:
+        copySourceOrder?.totalAccessoriesQty ??
+        editingOrder?.totalAccessoriesQty ??
+        0,
+      status: editingOrder?.status ?? "Created",
     }
 
     if (editingOrder) {
@@ -265,6 +405,9 @@ export function MerchandiseListPage() {
         })
       )
       toast.success(`Purchase order ${poNumber} updated successfully.`)
+    } else if (copySourceOrder) {
+      dispatch(addPurchaseOrder(normalizedValues))
+      toast.success(`New PO ${poNumber} copied successfully.`)
     } else {
       dispatch(addPurchaseOrder(normalizedValues))
       toast.success(`Purchase order ${poNumber} created successfully.`)
@@ -272,13 +415,14 @@ export function MerchandiseListPage() {
 
     reset(defaultFormValues)
     setEditingOrder(null)
+    setCopySourceOrder(null)
     setIsCreateModalOpen(false)
   }
 
   const handleRequestConsumption = (po: PurchaseOrder) => {
     const currentStatus = po.status
 
-    if (currentStatus === "Draft") {
+    if (currentStatus === "Created") {
       dispatch(requestConsumption({ id: po.id }))
       if (user?.role === "super_admin") {
         toast.success(
@@ -294,25 +438,25 @@ export function MerchandiseListPage() {
       return
     }
 
-    if (currentStatus === "Consumption Requested" && user?.role === "super_admin") {
+    if (currentStatus === "Sent to Design" && user?.role === "super_admin") {
       navigate(`/design/request-consumption?poId=${po.id}`)
       return
     }
 
     toast.success(
-      currentStatus === "Consumption Requested"
+      currentStatus === "Sent to Design"
         ? `${getOrderDisplayNo(po)} is already waiting in the Design module PO list.`
         : `${getOrderDisplayNo(po)} is already in the yarn workflow.`
     )
   }
 
   // Derive quick metric counts
-  const draftCount = purchaseOrders.filter((p) => p.status === "Draft").length
+  const draftCount = purchaseOrders.filter((p) => p.status === "Created").length
   const yarnCheckCount = purchaseOrders.filter((p) =>
-    ["Pending Yarn Check", "Yarn Ordered", "Yarn Receiving"].includes(p.status)
+    ["Sent to Yarn", "Yarn Processing", "Yarn Ready"].includes(p.status)
   ).length
   const productionCount = purchaseOrders.filter(
-    (p) => p.status === "Ready for Production"
+    (p) => p.status === "Sent to Knitting"
   ).length
   const purchaseOrderWorkflowMetrics = useMemo(() => {
     return createPurchaseOrderWorkflowMetrics({
@@ -323,7 +467,15 @@ export function MerchandiseListPage() {
     })
   }, [deliveryBatches, purchaseOrders, stockMovements, supplierOrders])
   const purchaseOrderWorkflowColumns = useMemo(
-    () => getPurchaseOrderWorkflowColumns(purchaseOrderWorkflowMetrics),
+    () =>
+      getPurchaseOrderWorkflowColumns(purchaseOrderWorkflowMetrics).map((column) =>
+        column.key === "sl"
+          ? {
+              ...column,
+              render: (_row, rowIndex) => String(rowIndex + 1).padStart(2, "0"),
+            }
+          : column
+      ),
     [purchaseOrderWorkflowMetrics]
   )
 
@@ -360,7 +512,7 @@ export function MerchandiseListPage() {
           <p className="mt-1 text-2xl font-bold">{purchaseOrders.length}</p>
         </div>
         <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
-          <p className="text-xs text-muted-foreground">Draft</p>
+          <p className="text-xs text-muted-foreground">Created</p>
           <p className="mt-1 text-2xl font-bold text-slate-600 dark:text-slate-300">
             {draftCount}
           </p>
@@ -372,26 +524,26 @@ export function MerchandiseListPage() {
           </p>
         </div>
         <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
-          <p className="text-xs text-muted-foreground">Ready for Production</p>
+          <p className="text-xs text-muted-foreground">Sent to Knitting</p>
           <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-300">
             {productionCount}
           </p>
         </div>
       </section>
 
-      {/* Stage Tracker — shows the overall pipeline for context */}
+      {/* Search and quick filters */}
       <SearchFilterBar
         filters={[
           "All POs",
-          "Draft",
-          "Consumption Requested",
+          "Created",
+          "Sent to Design",
           "Yarn Check",
-          "Ready for Production",
-          "Yarn Ordered",
+          "Sent to Knitting",
+          "Yarn Processing",
         ]}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
-        searchPlaceholder="Search PO, buyer, style, design, color"
+        searchPlaceholder="Search PO, style, style number, color"
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         compact
@@ -410,11 +562,11 @@ export function MerchandiseListPage() {
               const po = row as PurchaseOrder
               const canOpenDesignModule = user?.role === "super_admin"
               const shouldShowConsumptionAction = [
-                "Draft",
-                "Consumption Requested",
+                "Created",
+                "Sent to Design",
               ].includes(po.status)
               const consumptionButtonLabel =
-                po.status === "Consumption Requested"
+                po.status === "Sent to Design"
                   ? canOpenDesignModule
                     ? "Open Design"
                     : "Requested"
@@ -425,12 +577,20 @@ export function MerchandiseListPage() {
                   {shouldShowConsumptionAction ? (
                     <Button
                       type="button"
-                      variant="outline"
+                      variant={
+                        po.status === "Sent to Design"
+                          ? "outline"
+                          : "default"
+                      }
                       size="sm"
-                      className="h-7 rounded-lg px-2 text-[11px]"
+                      className={
+                        po.status === "Sent to Design"
+                          ? "h-7 rounded-lg border-amber-200 bg-amber-50 px-2 text-[11px] text-amber-700 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/15"
+                          : "h-7 rounded-lg border-sky-200 bg-sky-50 px-2 text-[11px] text-sky-700 hover:bg-sky-100 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200 dark:hover:bg-sky-500/15"
+                      }
                       disabled={
                         !canOpenDesignModule &&
-                        po.status === "Consumption Requested"
+                        po.status === "Sent to Design"
                       }
                       onClick={() => handleRequestConsumption(po)}
                     >
@@ -440,6 +600,18 @@ export function MerchandiseListPage() {
                       <span className="sm:hidden">Req</span>
                     </Button>
                   ) : null}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 w-7 cursor-pointer rounded-lg px-0 text-[11px] sm:w-auto sm:px-2"
+                    onClick={() => openCopyModal(po)}
+                    aria-label="Copy purchase order"
+                    title="Copy PO"
+                  >
+                    <Copy className="size-3.5" />
+                    <span className="hidden sm:inline">Copy</span>
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"
@@ -477,13 +649,24 @@ export function MerchandiseListPage() {
       {/* Create / Edit Modal */}
       <RecordFormModal
         open={isCreateModalOpen}
-        title={editingOrder ? "Edit Purchase Order" : "Create PO Request"}
-        description="Fill in PO details. The order will start in Draft status, then move to Design for consumption before Yarn Check begins."
-        fields={purchaseOrderFields}
+        title={
+          editingOrder
+            ? "Edit Purchase Order"
+            : copySourceOrder
+              ? "Create New PO"
+              : "Create PO Request"
+        }
+        description={
+          copySourceOrder
+            ? "This new PO is copied from the selected row. Read-only fields are locked, and the new PO-specific fields must be entered."
+            : "Fill in PO details. The order will start in Created status, then move to Design for consumption before Yarn begins."
+        }
+        fields={modalFields}
         register={register}
         onClose={() => {
           setIsCreateModalOpen(false)
           setEditingOrder(null)
+          setCopySourceOrder(null)
           reset(defaultFormValues)
         }}
         onReset={() => {
@@ -491,11 +674,19 @@ export function MerchandiseListPage() {
             reset(getOrderFormValues(editingOrder))
             return
           }
+          if (copySourceOrder) {
+            reset(getCopyPoFormValues(copySourceOrder))
+            return
+          }
           reset(defaultFormValues)
         }}
         onSubmit={handleSubmit(onSubmit)}
         submitLabel={
-          editingOrder ? "Update Purchase Order" : "Submit Purchase Order"
+          editingOrder
+            ? "Update Purchase Order"
+            : isCopyMode
+              ? "Create PO"
+              : "Submit Purchase Order"
         }
         maxWidthClassName="max-w-6xl"
       />
@@ -552,8 +743,11 @@ export function MerchandiseListPage() {
           <div className="w-full max-w-md rounded-[2rem] border border-border/70 bg-card p-6 shadow-2xl">
             <h3 className="text-lg font-semibold">Delete purchase order?</h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              This action will permanently remove PO `
-              {getOrderDisplayNo(orderPendingDelete)}` from the list.
+              This action will permanently remove PO{" "}
+              <span className="font-medium text-foreground">
+                {getOrderDisplayNo(orderPendingDelete)}
+              </span>{" "}
+              from the list.
             </p>
             <div className="mt-6 flex justify-end gap-2">
               <Button

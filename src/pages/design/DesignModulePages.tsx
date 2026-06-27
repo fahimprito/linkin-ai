@@ -79,11 +79,10 @@ export function DesignDashboardPage() {
     (state) => state.merchandise.purchaseOrders
   )
   const requestedConsumptionOrders = purchaseOrders.filter(
-    (po) =>
-      po.status === "Consumption Requested" || hasSubmittedConsumption(po)
+    (po) => po.status === "Sent to Design" || hasSubmittedConsumption(po)
   )
   const pendingConsumptionOrders = purchaseOrders.filter(
-    (po) => po.status === "Consumption Requested"
+    (po) => po.status === "Sent to Design"
   )
   const completedConsumptionOrders = purchaseOrders
     .filter(hasSubmittedConsumption)
@@ -218,7 +217,7 @@ export function DesignStylePoPage() {
   )
   const focusedPoId = searchParams.get("poId") ?? ""
   const visiblePurchaseOrders = purchaseOrders
-    .filter((po) => po.status === "Consumption Requested")
+    .filter((po) => po.status === "Sent to Design")
     .sort((left, right) => {
       if (left.id === focusedPoId) return -1
       if (right.id === focusedPoId) return 1

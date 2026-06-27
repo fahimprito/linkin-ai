@@ -142,7 +142,13 @@ export function YarnSupplierOrderPage() {
     )
 
     // Update PO status
-    dispatch(updatePoStatus({ id: values.poId, status: "Yarn Ordered" }))
+    dispatch(
+      updatePoStatus({
+        id: values.poId,
+        status: "Yarn Processing",
+        changedBy: "Yarn Controller",
+      })
+    )
     dispatch(
       addNotification({
         id: createEtaNotificationId(),
