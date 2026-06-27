@@ -17,6 +17,10 @@ import {
   getYarnPoListHeaderRows,
   getYarnPoListWorkflowColumns,
 } from "@/lib/purchase-order-table-columns"
+import {
+  getPurchaseOrderDisplayNo,
+  getPurchaseOrderDisplayStyle,
+} from "@/lib/purchase-orders"
 import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
 import { isStatusAtOrAfterSentToYarn } from "@/lib/workflow-status"
 import { useAppSelector } from "@/store/hooks"
@@ -129,10 +133,8 @@ export function YarnPoListPage() {
 
     return visiblePurchaseOrders.filter((po) =>
       [
-        po.poNumber,
-        po.orderNo,
-        po.styleName,
-        po.style,
+        getPurchaseOrderDisplayNo(po),
+        getPurchaseOrderDisplayStyle(po),
         po.styleNo,
         po.color,
         po.supplier,

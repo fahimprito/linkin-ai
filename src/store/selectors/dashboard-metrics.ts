@@ -1,6 +1,10 @@
 import type { UserRole } from "@/types/auth"
 import { moduleFormStorageKeys } from "@/lib/form-registry"
 import type { StoredFormRecord } from "@/lib/form-submissions"
+import {
+  getPurchaseOrderDisplayGauge,
+  getPurchaseOrderDisplayYarn,
+} from "@/lib/purchase-orders"
 import type { RootState } from "@/store"
 import type { DashboardMetric } from "@/types/modules"
 
@@ -111,7 +115,10 @@ export function selectExecutiveDashboardMetrics(
   const activeModules = [
     state.merchandise.purchaseOrders.length > 0,
     state.merchandise.purchaseOrders.some(
-      (po) => Boolean(po.design || po.gg || po.color || po.yarnComposition)
+      (po) =>
+        Boolean(
+          po.design || getPurchaseOrderDisplayGauge(po) || po.color || getPurchaseOrderDisplayYarn(po)
+        )
     ),
     state.yarnCheck.checkRequests.length > 0 ||
       state.yarnCheck.supplierOrders.length > 0 ||
@@ -184,10 +191,19 @@ export function selectDesignDashboardMetrics(state: RootState): DashboardMetric[
       .filter((design) => design.length > 0)
   ).size
   const specReadyCount = state.merchandise.purchaseOrders.filter(
-    (po) => po.gg && po.color && po.yarnComposition
+    (po) =>
+      Boolean(
+        getPurchaseOrderDisplayGauge(po) &&
+        po.color &&
+        getPurchaseOrderDisplayYarn(po)
+      )
   ).length
   const pendingFollowUp = state.merchandise.purchaseOrders.filter(
-    (po) => !po.design || !po.gg || !po.color || !po.yarnComposition
+    (po) =>
+      !po.design ||
+      !getPurchaseOrderDisplayGauge(po) ||
+      !po.color ||
+      !getPurchaseOrderDisplayYarn(po)
   ).length
 
   return [

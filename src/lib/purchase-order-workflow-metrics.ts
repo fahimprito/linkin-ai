@@ -47,12 +47,20 @@ function getLatestYarnSupplierOrderByPo(
 
 function resolveInventoryStatus(input: {
   order: PurchaseOrder
+  supplierOrderStatus?: YarnSupplierOrder["status"]
   inspectionStatus?: string
   receivedQty: number
   issuedQty: number
   stockBalance: number
 }) {
-  const { order, inspectionStatus, receivedQty, issuedQty, stockBalance } = input
+  const {
+    order,
+    supplierOrderStatus,
+    inspectionStatus,
+    receivedQty,
+    issuedQty,
+    stockBalance,
+  } = input
   const requiredQty = order.totalYarnKg ?? order.requiredYarnQty ?? 0
 
   if (inspectionStatus === "Rejected") {
@@ -60,7 +68,12 @@ function resolveInventoryStatus(input: {
   }
 
   if (receivedQty <= 0) {
-    return order.status === "Yarn Ordered" ? "In Transit" : "Pending Receipt"
+    return supplierOrderStatus === "Ordered" ||
+      supplierOrderStatus === "In Transit" ||
+      order.status === "Sent to Yarn" ||
+      order.status === "Yarn Processing"
+      ? "In Transit"
+      : "Pending Receipt"
   }
 
   if (stockBalance <= 0 && issuedQty > 0) {
@@ -164,6 +177,7 @@ export function createPurchaseOrderWorkflowMetrics(input: {
     yarnStockBalanceByPo[order.id] = stockBalance
     inventoryStatusByPo[order.id] = resolveInventoryStatus({
       order,
+      supplierOrderStatus: latestSupplierOrder?.status,
       inspectionStatus: yarnInspectionStatusByPo[order.id],
       receivedQty,
       issuedQty,

@@ -26,7 +26,7 @@ export function MerchandiseFetchPoPage() {
         { name: "buyerName", label: "Buyer Name", placeholder: "H&M" },
         { name: "poNumber", label: "PO Number", placeholder: "LK-3001" },
         { name: "styleNo", label: "Style No", placeholder: "ST-2048" },
-        { name: "gg", label: "GG", placeholder: "12" },
+        { name: "gg", label: "Gauge", placeholder: "12" },
         { name: "orderQty", label: "Order Qty", type: "number", placeholder: "12000" },
         { name: "designLayout", label: "Design Layout", placeholder: "Cable knit mockup" },
         { name: "approval", label: "Approval Info", placeholder: "Approved by buyer" },
@@ -47,7 +47,7 @@ export function MerchandiseYarnRequestPage() {
         { name: "buyerName", label: "Buyer Name", placeholder: "H&M" },
         { name: "styleNo", label: "Style No", placeholder: "ST-2048" },
         { name: "color", label: "Color", placeholder: "Navy" },
-        { name: "yarnComposition", label: "Yarn Composition", placeholder: "80% Wool / 20% Nylon" },
+        { name: "yarnComposition", label: "Yarn Type", placeholder: "80% Wool / 20% Nylon" },
         { name: "requestedQty", label: "Requested Qty", type: "number", placeholder: "950" },
         { name: "requestedBy", label: "Requested By", placeholder: "Merchandiser Name" },
         { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Urgent for first sample and bulk plan." },
@@ -307,7 +307,7 @@ export function KnittingAcceptPoPage() {
       fields={[
         { name: "serialNo", label: "Serial No", placeholder: "01" },
         { name: "buyerName", label: "Buyer Name", placeholder: "H&M" },
-        { name: "gg", label: "GG", placeholder: "12" },
+        { name: "gg", label: "Gauge", placeholder: "12" },
         { name: "styleNo", label: "Style No", placeholder: "KN-1102" },
         { name: "orderQty", label: "Order Qty", type: "number", placeholder: "12000" },
         { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Accepted into knitting production." },
@@ -397,7 +397,7 @@ export function LinkingAcceptPoPage() {
       fields={[
         { name: "serial", label: "Serial", placeholder: "01" },
         { name: "buyerName", label: "Buyer Name", placeholder: "Zara" },
-        { name: "gg", label: "GG", placeholder: "12" },
+        { name: "gg", label: "Gauge", placeholder: "12" },
         { name: "orderQty", label: "Order Qty", placeholder: "8500" },
         { name: "remarks", label: "Remarks", type: "textarea", placeholder: "Accepted into linking queue." },
       ]}
@@ -557,7 +557,7 @@ export function FullSystemProductionReportPage() {
       storageKey="form-report-full-system-production"
       fields={[
         { name: "serialNo", label: "Serial No", placeholder: "01" },
-        { name: "gg", label: "GG", placeholder: "12" },
+        { name: "gg", label: "Gauge", placeholder: "12" },
         { name: "buyerName", label: "Buyer Name", placeholder: "H&M" },
         { name: "styleNo", label: "Style No", placeholder: "ST-2048" },
         { name: "orderQty", label: "Order Qty", placeholder: "12000" },
@@ -595,7 +595,7 @@ export function YarnInformationReportPage() {
         { name: "styleNo", label: "Style No", placeholder: "ST-2048" },
         { name: "color", label: "Color", placeholder: "Navy" },
         { name: "lotNo", label: "Lot No", placeholder: "LOT-1022" },
-        { name: "yarnComposition", label: "Yarn Composition", placeholder: "80% Wool / 20% Nylon" },
+        { name: "yarnComposition", label: "Yarn Type", placeholder: "80% Wool / 20% Nylon" },
         { name: "receivedDate", label: "Received Date", type: "date" },
         { name: "quantity", label: "Quantity", placeholder: "820 kg" },
         { name: "bag", label: "Bag", placeholder: "33" },
@@ -653,7 +653,7 @@ export function LinkingProductionReportPage() {
       fields={[
         { name: "serial", label: "Serial", placeholder: "01" },
         { name: "buyerName", label: "Buyer Name", placeholder: "Zara" },
-        { name: "gg", label: "GG", placeholder: "12" },
+        { name: "gg", label: "Gauge", placeholder: "12" },
         { name: "orderQty", label: "Order Qty", placeholder: "8500" },
         { name: "knittingReceivedToday", label: "Knitting Recvd Today", placeholder: "1200" },
         { name: "knittingReceivedTotal", label: "Knitting Recvd Total", placeholder: "7300" },

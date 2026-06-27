@@ -100,7 +100,7 @@ export function YarnCheckRequestsPage() {
           { key: "poNumber", header: "PO Number" },
           { key: "buyer", header: "Buyer" },
           { key: "style", header: "Style" },
-          { key: "yarnComposition", header: "Yarn Composition" },
+          { key: "yarnComposition", header: "Yarn Type" },
           { key: "color", header: "Color" },
           {
             key: "requiredQty",

@@ -1,21 +1,25 @@
-import { Pencil, Plus } from "lucide-react"
+import { Eye, Pencil, Plus, XCircle } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PageHeader } from "@/components/shared/page-header"
+import {
+  RecordFormModal,
+  type ModalFormField,
+} from "@/components/shared/record-form-modal"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
+import { Button } from "@/components/ui/button"
 import {
-  getOrderDisplayNo,
-  getOrderDisplayStyle,
-} from "@/lib/purchase-order-table-columns"
+  getPurchaseOrderDisplayNo,
+  getPurchaseOrderDisplayStyle,
+  getPurchaseOrderDisplayYarn,
+} from "@/lib/purchase-orders"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
-import { updateCheckRequestStatus } from "@/store/slices/yarn-check-slice"
 import {
   addSupplierOrder,
   updateSupplierOrder,
@@ -24,54 +28,218 @@ import type {
   PurchaseOrder,
   SupplierOrderItemCategory,
   YarnSupplierOrder,
-  YarnSupplierOrderStatus,
 } from "@/types/modules"
 
 type CreateSourcingOrderFormValues = {
   poId: string
-  supplier: string
-  itemName: string
-  color: string
+  poNumber: string
+  styleName: string
+  styleNo: string
+  qualityOrItem: string
   orderedQty: string
+  supplier: string
+  unitPrice: string
+  orderDate: string
   expectedArrival: string
+  remarks: string
 }
 
-type EditSourcingOrderFormValues = {
+type EditExpectedDeliveryFormValues = {
+  orderNo: string
+  poNumber: string
   supplier: string
-  itemName: string
-  color: string
-  orderedQty: string
   expectedArrival: string
-  deliveryDate: string
-  inspectionDate: string
-  status: YarnSupplierOrderStatus
+  remarks: string
 }
 
-const supplierOrderStatusOptions: YarnSupplierOrderStatus[] = [
-  "Placed",
-  "In Transit",
-  "Partially Received",
-  "Fully Received",
-]
+type ViewOrderFormValues = {
+  orderNo: string
+  poNumber: string
+  styleName: string
+  orderType: string
+  supplier: string
+  orderedQty: string
+  orderDate: string
+  expectedArrival: string
+  status: string
+  remarks: string
+}
+
+function hasSubmittedConsumption(order: PurchaseOrder) {
+  return (
+    order.totalYarnKg !== undefined ||
+    order.totalFabricKg !== undefined ||
+    order.totalAccessoriesQty !== undefined
+  )
+}
 
 function createSupplierOrderId() {
   return `sso-${Date.now()}`
+}
+
+function createSupplierOrderNo(orderType: SupplierOrderItemCategory) {
+  const prefix = orderType === "Yarn" ? "YSO" : "ASO"
+  return `${prefix}-${Date.now()}`
 }
 
 function getSupplierOrderCategory(order: YarnSupplierOrder): SupplierOrderItemCategory {
   return order.itemCategory ?? "Yarn"
 }
 
-function getSupplierOrderItem(order: YarnSupplierOrder) {
-  return order.itemName || order.yarnType || "-"
+function getSupplierOrderStyleName(order: YarnSupplierOrder) {
+  return order.styleName || "-"
 }
 
-function getPoOptions(purchaseOrders: PurchaseOrder[]) {
-  return purchaseOrders.map((po) => ({
-    id: po.id,
-    label: `${getOrderDisplayNo(po)} - ${getOrderDisplayStyle(po)}`,
-  }))
+function getSupplierOrderOrderNo(order: YarnSupplierOrder) {
+  return order.orderNo || order.id.toUpperCase()
 }
+
+function getOrderTypeItemLabel(orderType: SupplierOrderItemCategory) {
+  return orderType === "Yarn" ? "Quality" : "Accessories Qty"
+}
+
+function getOrderTypeItemValue(
+  orderType: SupplierOrderItemCategory,
+  order: PurchaseOrder | null
+) {
+  if (!order) {
+    return ""
+  }
+
+  if (orderType === "Yarn") {
+    return getPurchaseOrderDisplayYarn(order)
+  }
+
+  return String(order.totalAccessoriesQty ?? "")
+}
+
+function getOrderTypeQtyValue(
+  orderType: SupplierOrderItemCategory,
+  order: PurchaseOrder | null
+) {
+  if (!order) {
+    return ""
+  }
+
+  if (orderType === "Yarn") {
+    return String(order.totalYarnKg ?? order.requiredYarnQty ?? "")
+  }
+
+  return String(order.totalAccessoriesQty ?? "")
+}
+
+function getSourceablePurchaseOrders(purchaseOrders: PurchaseOrder[]) {
+  return purchaseOrders.filter(
+    (order) =>
+      hasSubmittedConsumption(order) &&
+      [
+        "Design Completed",
+        "Sent to Yarn",
+        "Yarn Processing",
+        "Yarn Ready",
+      ].includes(order.status)
+  )
+}
+
+function buildCreateOrderFields(
+  createOrderType: SupplierOrderItemCategory | null,
+  poOptions: Array<{ label: string; value: string }>
+): ModalFormField[] {
+  if (!createOrderType) {
+    return []
+  }
+
+  return [
+    {
+      name: "poId",
+      label: "PO Number",
+      type: "select",
+      options: poOptions,
+    },
+    {
+      name: "poNumber",
+      label: "PO Number (Auto)",
+      readOnly: true,
+    },
+    {
+      name: "styleName",
+      label: "Style Name",
+      readOnly: true,
+    },
+    {
+      name: "styleNo",
+      label: "Style Number",
+      readOnly: true,
+    },
+    {
+      name: "qualityOrItem",
+      label: getOrderTypeItemLabel(createOrderType),
+      readOnly: true,
+    },
+    {
+      name: "orderedQty",
+      label: createOrderType === "Yarn" ? "Total Yarn (kg)" : "Total Accessories Qty",
+      readOnly: true,
+    },
+    {
+      name: "supplier",
+      label: "Supplier",
+      placeholder: "Supplier name",
+    },
+    {
+      name: "unitPrice",
+      label: "Unit Price",
+      type: "number",
+      placeholder: createOrderType === "Yarn" ? "5.25" : "0.18",
+    },
+    {
+      name: "orderDate",
+      label: "Order Date",
+      type: "date",
+    },
+    {
+      name: "expectedArrival",
+      label: "Expected Delivery Date",
+      type: "date",
+    },
+    {
+      name: "remarks",
+      label: "Remarks",
+      type: "textarea",
+      placeholder: "Supplier follow-up note",
+    },
+  ]
+}
+
+const editExpectedDeliveryFields: ModalFormField[] = [
+  { name: "orderNo", label: "Order No.", readOnly: true },
+  { name: "poNumber", label: "PO Number", readOnly: true },
+  { name: "supplier", label: "Supplier", readOnly: true },
+  {
+    name: "expectedArrival",
+    label: "Expected Delivery Date",
+    type: "date",
+  },
+  {
+    name: "remarks",
+    label: "Remarks",
+    type: "textarea",
+    placeholder: "Updated delivery note",
+  },
+]
+
+const viewOrderFields: ModalFormField[] = [
+  { name: "orderNo", label: "Order No.", readOnly: true },
+  { name: "poNumber", label: "PO Number", readOnly: true },
+  { name: "styleName", label: "Style Name", readOnly: true },
+  { name: "orderType", label: "Order Type", readOnly: true },
+  { name: "supplier", label: "Supplier", readOnly: true },
+  { name: "orderedQty", label: "Ordered Qty", readOnly: true },
+  { name: "orderDate", label: "Order Date", readOnly: true },
+  { name: "expectedArrival", label: "Expected Delivery", readOnly: true },
+  { name: "status", label: "Status", readOnly: true },
+  { name: "remarks", label: "Remarks", type: "textarea", readOnly: true },
+]
 
 export function MerchandiseSourcingPage() {
   const dispatch = useAppDispatch()
@@ -80,10 +248,30 @@ export function MerchandiseSourcingPage() {
   )
   const supplierOrders = useAppSelector((state) => state.yarnCheck.supplierOrders)
   const [activeFilter, setActiveFilter] = useState("All Orders")
+  const [searchValue, setSearchValue] = useState("")
   const [createOrderType, setCreateOrderType] =
     useState<SupplierOrderItemCategory | null>(null)
   const [editingOrder, setEditingOrder] = useState<YarnSupplierOrder | null>(null)
-  const poOptions = useMemo(() => getPoOptions(purchaseOrders), [purchaseOrders])
+  const [viewingOrder, setViewingOrder] = useState<YarnSupplierOrder | null>(null)
+
+  const sourceablePurchaseOrders = useMemo(
+    () => getSourceablePurchaseOrders(purchaseOrders),
+    [purchaseOrders]
+  )
+
+  const poOptions = useMemo(
+    () =>
+      sourceablePurchaseOrders.map((po) => ({
+        value: po.id,
+        label: `${getPurchaseOrderDisplayNo(po)} - ${getPurchaseOrderDisplayStyle(po)}`,
+      })),
+    [sourceablePurchaseOrders]
+  )
+
+  const createFields = useMemo(
+    () => buildCreateOrderFields(createOrderType, poOptions),
+    [createOrderType, poOptions]
+  )
 
   const {
     register: registerCreate,
@@ -94,13 +282,19 @@ export function MerchandiseSourcingPage() {
   } = useForm<CreateSourcingOrderFormValues>({
     defaultValues: {
       poId: "",
-      supplier: "",
-      itemName: "",
-      color: "",
+      poNumber: "",
+      styleName: "",
+      styleNo: "",
+      qualityOrItem: "",
       orderedQty: "",
+      supplier: "",
+      unitPrice: "",
+      orderDate: "",
       expectedArrival: "",
+      remarks: "",
     },
   })
+
   const selectedCreatePoId = useWatch({
     control: createControl,
     name: "poId",
@@ -110,16 +304,32 @@ export function MerchandiseSourcingPage() {
     register: registerEdit,
     handleSubmit: handleEditSubmit,
     reset: resetEdit,
-  } = useForm<EditSourcingOrderFormValues>({
+  } = useForm<EditExpectedDeliveryFormValues>({
     defaultValues: {
+      orderNo: "",
+      poNumber: "",
       supplier: "",
-      itemName: "",
-      color: "",
-      orderedQty: "",
       expectedArrival: "",
-      deliveryDate: "",
-      inspectionDate: "",
-      status: "Placed",
+      remarks: "",
+    },
+  })
+
+  const {
+    register: registerView,
+    handleSubmit: handleViewSubmit,
+    reset: resetView,
+  } = useForm<ViewOrderFormValues>({
+    defaultValues: {
+      orderNo: "",
+      poNumber: "",
+      styleName: "",
+      orderType: "",
+      supplier: "",
+      orderedQty: "",
+      orderDate: "",
+      expectedArrival: "",
+      status: "",
+      remarks: "",
     },
   })
 
@@ -128,60 +338,100 @@ export function MerchandiseSourcingPage() {
       return
     }
 
-    const selectedPo = purchaseOrders.find((po) => po.id === selectedCreatePoId)
-    if (!selectedPo) {
-      return
-    }
+    const selectedPo =
+      sourceablePurchaseOrders.find((po) => po.id === selectedCreatePoId) ?? null
 
-    setCreateValue("color", selectedPo.color ?? "")
+    setCreateValue("poNumber", selectedPo?.poNumber ?? "")
+    setCreateValue(
+      "styleName",
+      selectedPo ? getPurchaseOrderDisplayStyle(selectedPo) : ""
+    )
+    setCreateValue("styleNo", selectedPo?.styleNo ?? "")
+    setCreateValue(
+      "qualityOrItem",
+      getOrderTypeItemValue(createOrderType, selectedPo)
+    )
+    setCreateValue(
+      "orderedQty",
+      getOrderTypeQtyValue(createOrderType, selectedPo)
+    )
+  }, [
+    createOrderType,
+    selectedCreatePoId,
+    setCreateValue,
+    sourceablePurchaseOrders,
+  ])
 
-    if (createOrderType === "Yarn") {
-      setCreateValue(
-        "itemName",
-        selectedPo.yarn || selectedPo.yarnComposition || ""
-      )
-      setCreateValue(
-        "orderedQty",
-        String(selectedPo.totalYarnKg ?? selectedPo.requiredYarnQty ?? "")
-      )
-      return
-    }
+  const filteredOrders = useMemo(() => {
+    const query = searchValue.trim().toLowerCase()
 
-    setCreateValue("itemName", "Accessories")
-    setCreateValue("orderedQty", String(selectedPo.totalAccessoriesQty ?? ""))
-  }, [createOrderType, purchaseOrders, selectedCreatePoId, setCreateValue])
+    return supplierOrders.filter((order) => {
+      const matchesFilter =
+        activeFilter === "All Orders" ||
+        getSupplierOrderCategory(order) === activeFilter
 
-  const filteredOrders = supplierOrders.filter((order) => {
-    if (activeFilter === "All Orders") {
-      return true
-    }
+      if (!matchesFilter) {
+        return false
+      }
 
-    return getSupplierOrderCategory(order) === activeFilter
-  })
+      if (!query) {
+        return true
+      }
+
+      return [
+        getSupplierOrderOrderNo(order),
+        order.poNumber,
+        getSupplierOrderStyleName(order),
+        order.supplier,
+        order.itemName ?? order.yarnType,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query)
+    })
+  }, [activeFilter, searchValue, supplierOrders])
 
   const openCreateModal = (orderType: SupplierOrderItemCategory) => {
     setCreateOrderType(orderType)
     resetCreate({
       poId: "",
-      supplier: "",
-      itemName: orderType === "Accessories" ? "Accessories" : "",
-      color: "",
+      poNumber: "",
+      styleName: "",
+      styleNo: "",
+      qualityOrItem: "",
       orderedQty: "",
+      supplier: "",
+      unitPrice: "",
+      orderDate: new Date().toISOString().slice(0, 10),
       expectedArrival: "",
+      remarks: "",
     })
   }
 
   const openEditModal = (order: YarnSupplierOrder) => {
     setEditingOrder(order)
     resetEdit({
+      orderNo: getSupplierOrderOrderNo(order),
+      poNumber: order.poNumber,
       supplier: order.supplier,
-      itemName: getSupplierOrderItem(order),
-      color: order.color,
-      orderedQty: String(order.orderedQty),
       expectedArrival: order.expectedArrival,
-      deliveryDate: order.deliveryDate ?? "",
-      inspectionDate: order.inspectionDate ?? "",
+      remarks: order.remarks ?? "",
+    })
+  }
+
+  const openViewModal = (order: YarnSupplierOrder) => {
+    setViewingOrder(order)
+    resetView({
+      orderNo: getSupplierOrderOrderNo(order),
+      poNumber: order.poNumber,
+      styleName: getSupplierOrderStyleName(order),
+      orderType: getSupplierOrderCategory(order),
+      supplier: order.supplier,
+      orderedQty: String(order.orderedQty),
+      orderDate: new Date(order.orderedAt).toLocaleDateString(),
+      expectedArrival: order.expectedArrival,
       status: order.status,
+      remarks: order.remarks ?? "-",
     })
   }
 
@@ -190,71 +440,73 @@ export function MerchandiseSourcingPage() {
       return
     }
 
-    const selectedPo = purchaseOrders.find((po) => po.id === values.poId)
+    const selectedPo =
+      sourceablePurchaseOrders.find((po) => po.id === values.poId) ?? null
+
     if (!selectedPo) {
-      toast.error("Please select a PO first.")
+      toast.error("Please select a PO.")
       return
     }
 
-    const itemName = values.itemName.trim()
     const orderedQty = Number(values.orderedQty)
+    const unitPrice = Number(values.unitPrice)
 
-    if (!itemName) {
-      toast.error("Please enter the item name.")
+    if (!values.supplier.trim()) {
+      toast.error("Supplier is required.")
       return
     }
 
-    if (!Number.isFinite(orderedQty) || orderedQty <= 0) {
-      toast.error("Please enter a valid order quantity.")
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+      toast.error("Please enter a valid unit price.")
       return
     }
 
     dispatch(
       addSupplierOrder({
         id: createSupplierOrderId(),
+        orderNo: createSupplierOrderNo(createOrderType),
         yarnCheckRequestId: selectedPo.yarnCheckRequestId ?? "",
         poId: selectedPo.id,
-        poNumber: getOrderDisplayNo(selectedPo),
+        poNumber: selectedPo.poNumber,
+        styleName: getPurchaseOrderDisplayStyle(selectedPo),
+        styleNo: selectedPo.styleNo,
         supplier: values.supplier.trim(),
-        yarnType: itemName,
-        itemName,
+        yarnType:
+          createOrderType === "Yarn"
+            ? getPurchaseOrderDisplayYarn(selectedPo)
+            : "Accessories",
+        itemName: values.qualityOrItem.trim(),
         itemCategory: createOrderType,
-        color: values.color.trim(),
+        color: selectedPo.color ?? "",
         orderedQty,
+        unitPrice,
         expectedArrival: values.expectedArrival,
-        orderedAt: new Date().toISOString(),
-        deliveryDate: "",
-        inspectionDate: "",
-        status: "Placed",
+        orderedAt: new Date(values.orderDate).toISOString(),
+        remarks: values.remarks.trim(),
+        status: "Ordered",
       })
     )
 
     if (createOrderType === "Yarn") {
-      dispatch(updatePoStatus({ id: selectedPo.id, status: "Yarn Ordered" }))
-      if (selectedPo.yarnCheckRequestId) {
-        dispatch(
-          updateCheckRequestStatus({
-            id: selectedPo.yarnCheckRequestId,
-            status: "Ordered",
-          })
-        )
-      }
+      dispatch(
+        updatePoStatus({
+          id: selectedPo.id,
+          status: "Sent to Yarn",
+          changedBy: "Merchandiser",
+        })
+      )
     }
 
     toast.success(
-      `${createOrderType} supplier order placed for ${getOrderDisplayNo(selectedPo)}.`
+      `${createOrderType} order placed for ${selectedPo.poNumber}.`
     )
     setCreateOrderType(null)
   }
 
-  const handleUpdateOrder = (values: EditSourcingOrderFormValues) => {
+  const handleEditExpectedDelivery = (
+    values: EditExpectedDeliveryFormValues
+  ) => {
     if (!editingOrder) {
-      return
-    }
-
-    const orderedQty = Number(values.orderedQty)
-    if (!Number.isFinite(orderedQty) || orderedQty <= 0) {
-      toast.error("Please enter a valid order quantity.")
       return
     }
 
@@ -262,21 +514,31 @@ export function MerchandiseSourcingPage() {
       updateSupplierOrder({
         id: editingOrder.id,
         updates: {
-          supplier: values.supplier.trim(),
-          yarnType: values.itemName.trim(),
-          itemName: values.itemName.trim(),
-          color: values.color.trim(),
-          orderedQty,
           expectedArrival: values.expectedArrival,
-          deliveryDate: values.deliveryDate,
-          inspectionDate: values.inspectionDate,
-          status: values.status,
+          remarks: values.remarks.trim(),
         },
       })
     )
 
-    toast.success(`Supplier order ${editingOrder.poNumber} updated.`)
+    toast.success(`Expected delivery updated for ${editingOrder.poNumber}.`)
     setEditingOrder(null)
+  }
+
+  const handleCancelOrder = (order: YarnSupplierOrder) => {
+    if (order.status === "Fully Received" || order.status === "Cancelled") {
+      return
+    }
+
+    dispatch(
+      updateSupplierOrder({
+        id: order.id,
+        updates: {
+          status: "Cancelled",
+        },
+      })
+    )
+
+    toast.success(`Order ${getSupplierOrderOrderNo(order)} cancelled.`)
   }
 
   return (
@@ -292,7 +554,7 @@ export function MerchandiseSourcingPage() {
               onClick={() => openCreateModal("Yarn")}
             >
               <Plus className="mr-1.5 size-4" />
-              Place Yarn Order
+              Place New Yarn Order
             </Button>
             <Button
               type="button"
@@ -300,349 +562,215 @@ export function MerchandiseSourcingPage() {
               onClick={() => openCreateModal("Accessories")}
             >
               <Plus className="mr-1.5 size-4" />
-              Place Accessories Order
+              Place New Accessories Order
             </Button>
           </>
         }
       />
 
       <SearchFilterBar
+        compact
         filters={["All Orders", "Yarn", "Accessories"]}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
+        searchPlaceholder="Search order no, PO, style, supplier"
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
       />
 
-      {filteredOrders.length > 0 ? (
+      {filteredOrders.length === 0 ? (
+        <EmptyState
+          title="No sourcing orders yet"
+          description="Place a yarn or accessories order after Design submits material calculation."
+        />
+      ) : (
         <DataTable
+          compact
           columns={[
-            { key: "poNumber", header: "PO" },
+            {
+              key: "orderNo",
+              header: "Order No.",
+              className: "min-w-[6.5rem]",
+              render: (row) => getSupplierOrderOrderNo(row),
+            },
+            {
+              key: "poNumber",
+              header: "PO Number",
+              className: "min-w-[6rem]",
+            },
+            {
+              key: "styleName",
+              header: "Style Name",
+              className: "min-w-[8rem]",
+              render: (row) => getSupplierOrderStyleName(row),
+            },
             {
               key: "itemCategory",
-              header: "Type",
+              header: "Order Type",
+              className: "min-w-[6rem]",
               render: (row) => getSupplierOrderCategory(row),
             },
-            { key: "supplier", header: "Supplier" },
             {
-              key: "itemName",
-              header: "Item",
-              render: (row) => getSupplierOrderItem(row),
-            },
-            {
-              key: "color",
-              header: "Color / Ref",
-              render: (row) => row.color || "-",
+              key: "supplier",
+              header: "Supplier",
+              className: "min-w-[7rem]",
             },
             {
               key: "orderedQty",
               header: "Ordered Qty",
+              className: "min-w-[6rem]",
               render: (row) => Number(row.orderedQty).toLocaleString(),
             },
             {
               key: "orderedAt",
-              header: "Ordered Date",
-              render: (row) => new Date(String(row.orderedAt)).toLocaleDateString(),
-            },
-            { key: "expectedArrival", header: "Expected Delivery" },
-            {
-              key: "deliveryDate",
-              header: "Delivery Date",
-              render: (row) => row.deliveryDate || "-",
+              header: "Order Date",
+              className: "min-w-[6rem]",
+              render: (row) =>
+                new Date(row.orderedAt).toLocaleDateString(),
             },
             {
-              key: "inspectionDate",
-              header: "Inspection Date",
-              render: (row) => row.inspectionDate || "-",
+              key: "expectedArrival",
+              header: "Expected Delivery",
+              className: "min-w-[7rem]",
             },
             {
               key: "status",
               header: "Status",
-              render: (row) => <StatusBadge value={String(row.status)} />,
+              className: "min-w-[6rem]",
+              render: (row) => <StatusBadge value={row.status} />,
             },
             {
               key: "actions",
-              header: "Actions",
+              header: "Action",
+              className: "min-w-[13rem]",
               render: (row) => (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl"
-                  onClick={() => openEditModal(row)}
-                >
-                  <Pencil className="size-3.5" />
-                  Edit
-                </Button>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 rounded-lg px-2 text-[11px]"
+                    onClick={() => openViewModal(row)}
+                  >
+                    <Eye className="mr-1 size-3.5" />
+                    View
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 rounded-lg px-2 text-[11px]"
+                    onClick={() => openEditModal(row)}
+                  >
+                    <Pencil className="mr-1 size-3.5" />
+                    Edit ETA
+                  </Button>
+                  {row.status !== "Cancelled" &&
+                  row.status !== "Fully Received" ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 rounded-lg border-rose-200 bg-rose-50 px-2 text-[11px] text-rose-700 hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/15"
+                      onClick={() => handleCancelOrder(row)}
+                    >
+                      <XCircle className="mr-1 size-3.5" />
+                      Cancel
+                    </Button>
+                  ) : null}
+                </div>
               ),
             },
           ]}
           data={filteredOrders}
         />
-      ) : (
-        <EmptyState
-          title="No supplier orders yet"
-          description="Place a yarn or accessories order to start the sourcing list."
-        />
       )}
 
-      {createOrderType ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 px-4 py-6">
-          <div className="w-full max-w-3xl rounded-[2rem] border border-border/70 bg-card p-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-semibold">
-                  Place {createOrderType} Order
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Create a new supplier order from the Merchandise sourcing desk.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="rounded-2xl"
-                onClick={() => setCreateOrderType(null)}
-              >
-                Close
-              </Button>
-            </div>
+      <RecordFormModal
+        open={Boolean(createOrderType)}
+        title={
+          createOrderType === "Yarn"
+            ? "Place New Yarn Order"
+            : "Place New Accessories Order"
+        }
+        description="Create a sourcing order from a Design-submitted PO using the existing workflow."
+        fields={createFields}
+        register={registerCreate}
+        onClose={() => {
+          setCreateOrderType(null)
+          resetCreate()
+        }}
+        onReset={() =>
+          resetCreate({
+            poId: "",
+            poNumber: "",
+            styleName: "",
+            styleNo: "",
+            qualityOrItem: "",
+            orderedQty: "",
+            supplier: "",
+            unitPrice: "",
+            orderDate: new Date().toISOString().slice(0, 10),
+            expectedArrival: "",
+            remarks: "",
+          })
+        }
+        onSubmit={handleCreateSubmit(handleCreateOrder)}
+        submitLabel="Save Order"
+        maxWidthClassName="max-w-4xl"
+      />
 
-            <form
-              onSubmit={handleCreateSubmit(handleCreateOrder)}
-              className="mt-6 grid gap-4 md:grid-cols-2"
-            >
-              <div className="space-y-2">
-                <label htmlFor="sourcing-po" className="text-sm font-medium">
-                  PO
-                </label>
-                <select
-                  id="sourcing-po"
-                  {...registerCreate("poId", { required: true })}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                  defaultValue=""
-                >
-                  <option value="" disabled>
-                    Select PO
-                  </option>
-                  {poOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="sourcing-supplier" className="text-sm font-medium">
-                  Supplier
-                </label>
-                <input
-                  id="sourcing-supplier"
-                  {...registerCreate("supplier", { required: true })}
-                  placeholder="Supplier name"
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="sourcing-item" className="text-sm font-medium">
-                  {createOrderType === "Yarn" ? "Yarn Type" : "Accessories Item"}
-                </label>
-                <input
-                  id="sourcing-item"
-                  {...registerCreate("itemName", { required: true })}
-                  placeholder={
-                    createOrderType === "Yarn" ? "Yarn composition" : "Buttons / zipper / poly"
-                  }
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="sourcing-color" className="text-sm font-medium">
-                  Color / Reference
-                </label>
-                <input
-                  id="sourcing-color"
-                  {...registerCreate("color", { required: true })}
-                  placeholder="Color or sourcing reference"
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="sourcing-qty" className="text-sm font-medium">
-                  Ordered Quantity
-                </label>
-                <input
-                  id="sourcing-qty"
-                  type="number"
-                  {...registerCreate("orderedQty", { required: true })}
-                  placeholder={createOrderType === "Yarn" ? "850" : "12000"}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="sourcing-eta" className="text-sm font-medium">
-                  Expected Delivery
-                </label>
-                <input
-                  id="sourcing-eta"
-                  type="date"
-                  {...registerCreate("expectedArrival", { required: true })}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="flex items-center justify-end gap-3 md:col-span-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-2xl"
-                  onClick={() => {
-                    setCreateOrderType(null)
-                    resetCreate()
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" className="rounded-2xl">
-                  Place Order
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : null}
+      <RecordFormModal
+        open={Boolean(editingOrder)}
+        title="Edit Expected Delivery"
+        description="Update the supplier ETA for this sourcing order."
+        fields={editExpectedDeliveryFields}
+        register={registerEdit}
+        onClose={() => {
+          setEditingOrder(null)
+          resetEdit()
+        }}
+        onReset={() => {
+          if (!editingOrder) {
+            return
+          }
 
-      {editingOrder ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 px-4 py-6">
-          <div className="w-full max-w-3xl rounded-[2rem] border border-border/70 bg-card p-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-semibold">
-                  Edit Supplier Order
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Update delivery, inspection, and supplier follow-up details for{" "}
-                  {editingOrder.poNumber}.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="rounded-2xl"
-                onClick={() => setEditingOrder(null)}
-              >
-                Close
-              </Button>
-            </div>
+          resetEdit({
+            orderNo: getSupplierOrderOrderNo(editingOrder),
+            poNumber: editingOrder.poNumber,
+            supplier: editingOrder.supplier,
+            expectedArrival: editingOrder.expectedArrival,
+            remarks: editingOrder.remarks ?? "",
+          })
+        }}
+        onSubmit={handleEditSubmit(handleEditExpectedDelivery)}
+        submitLabel="Save Changes"
+        maxWidthClassName="max-w-3xl"
+      />
 
-            <form
-              onSubmit={handleEditSubmit(handleUpdateOrder)}
-              className="mt-6 grid gap-4 md:grid-cols-2"
-            >
-              <div className="space-y-2">
-                <label htmlFor="edit-supplier" className="text-sm font-medium">
-                  Supplier
-                </label>
-                <input
-                  id="edit-supplier"
-                  {...registerEdit("supplier", { required: true })}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-item" className="text-sm font-medium">
-                  Item
-                </label>
-                <input
-                  id="edit-item"
-                  {...registerEdit("itemName", { required: true })}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-color" className="text-sm font-medium">
-                  Color / Reference
-                </label>
-                <input
-                  id="edit-color"
-                  {...registerEdit("color", { required: true })}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-qty" className="text-sm font-medium">
-                  Ordered Quantity
-                </label>
-                <input
-                  id="edit-qty"
-                  type="number"
-                  {...registerEdit("orderedQty", { required: true })}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-eta" className="text-sm font-medium">
-                  Expected Delivery
-                </label>
-                <input
-                  id="edit-eta"
-                  type="date"
-                  {...registerEdit("expectedArrival", { required: true })}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-delivery" className="text-sm font-medium">
-                  Delivery Date
-                </label>
-                <input
-                  id="edit-delivery"
-                  type="date"
-                  {...registerEdit("deliveryDate", { required: true })}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-inspection" className="text-sm font-medium">
-                  Inspection Date
-                </label>
-                <input
-                  id="edit-inspection"
-                  type="date"
-                  {...registerEdit("inspectionDate", { required: true })}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-status" className="text-sm font-medium">
-                  Status
-                </label>
-                <select
-                  id="edit-status"
-                  {...registerEdit("status", { required: true })}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-                >
-                  {supplierOrderStatusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-center justify-end gap-3 md:col-span-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-2xl"
-                  onClick={() => setEditingOrder(null)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" className="rounded-2xl">
-                  Save Changes
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : null}
+      <RecordFormModal
+        open={Boolean(viewingOrder)}
+        title="Supplier Order Details"
+        description="View the sourcing order details."
+        fields={viewOrderFields}
+        register={registerView}
+        onClose={() => {
+          setViewingOrder(null)
+          resetView()
+        }}
+        onReset={() => {
+          if (!viewingOrder) {
+            return
+          }
+
+          openViewModal(viewingOrder)
+        }}
+        onSubmit={handleViewSubmit(() => {
+          setViewingOrder(null)
+        })}
+        submitLabel="Close"
+        maxWidthClassName="max-w-4xl"
+      />
     </div>
   )
 }

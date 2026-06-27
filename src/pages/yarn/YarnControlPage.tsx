@@ -13,6 +13,7 @@ import { DataTable } from "@/components/shared/data-table"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
+import { getPurchaseOrderDisplayYarn } from "@/lib/purchase-orders"
 import { useAppSelector } from "@/store/hooks"
 import type { YarnBatchInspectionStatus } from "@/types/modules"
 
@@ -66,7 +67,7 @@ export function YarnControlPage() {
   )
   const uniqueYarnTypes = new Set(
     purchaseOrders
-      .map((po) => po.yarnComposition?.trim() ?? po.yarn?.trim() ?? "")
+      .map((po) => getPurchaseOrderDisplayYarn(po).trim())
       .filter(Boolean)
   )
   const pendingRequisitionQty = requisitions

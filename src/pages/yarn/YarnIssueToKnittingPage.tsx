@@ -20,6 +20,7 @@ import {
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { WorkflowTrackerCard } from "@/components/shared/workflow-tracker-card"
+import { getPurchaseOrderDisplayYarn } from "@/lib/purchase-orders"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
 import {
@@ -155,6 +156,7 @@ export function YarnIssueToKnittingPage() {
     const selectedRow = requisitionRows.find(
       (row) => row.requisition.id === values.requisitionId
     )
+    const selectedPo = purchaseOrders.find((po) => po.id === values.poId)
     const issueQty = Number(values.issueQty)
     const availableQty = selectedRow?.availableQty ?? 0
     const issuedQtyBefore = selectedRow?.issuedQty ?? 0
@@ -191,10 +193,8 @@ export function YarnIssueToKnittingPage() {
         id: createStockMovementId(),
         poId: values.poId,
         poNumber: values.poNumber,
-        yarnType:
-          purchaseOrders.find((po) => po.id === values.poId)?.yarnComposition ??
-          "",
-        color: purchaseOrders.find((po) => po.id === values.poId)?.color ?? "",
+        yarnType: selectedPo ? getPurchaseOrderDisplayYarn(selectedPo) : "",
+        color: selectedPo?.color ?? "",
         quantity: issueQty,
         movementType: "Issued to Knitting",
         movementDate: values.issueDate,

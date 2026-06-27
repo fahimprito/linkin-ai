@@ -18,17 +18,13 @@ import {
   getDesignRequestWorkflowColumns,
   getOrderDisplayNo,
   getOrderDisplayStyle,
-  getOrderDisplayYarn,
 } from "@/lib/purchase-order-table-columns"
+import { getPurchaseOrderDisplayNo } from "@/lib/purchase-orders"
 import { ModuleSettingsPage } from "@/pages/shared/ModuleSettingsPage"
 import { ModuleFormPage } from "@/pages/shared/ModuleFormPage"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { addNotification } from "@/store/slices/notification-slice"
-import {
-  linkYarnCheckRequest,
-  submitConsumption,
-} from "@/store/slices/merchandise-slice"
-import { addCheckRequest } from "@/store/slices/yarn-check-slice"
+import { submitConsumption } from "@/store/slices/merchandise-slice"
 import type { PurchaseOrder } from "@/types/modules"
 
 type ConsumptionFormValues = {
@@ -58,12 +54,8 @@ const consumptionFields: ModalFormField[] = [
   },
 ]
 
-function createYarnCheckNotificationId() {
+function createWorkflowNotificationId() {
   return `notif-${Date.now()}`
-}
-
-function createYarnCheckRequestId() {
-  return `ycr-${Date.now()}`
 }
 
 function hasSubmittedConsumption(order: PurchaseOrder) {
@@ -74,18 +66,33 @@ function hasSubmittedConsumption(order: PurchaseOrder) {
   )
 }
 
+function isDesignSubmittedOrder(order: PurchaseOrder) {
+  if (!hasSubmittedConsumption(order)) {
+    return false
+  }
+
+  if (
+    order.workflowHistory?.some(
+      (entry) =>
+        entry.status === "Design Completed" || entry.status === "Sent to Yarn"
+    )
+  ) {
+    return true
+  }
+
+  return order.status !== "Sent to Design" && order.status !== "Created"
+}
+
 export function DesignDashboardPage() {
   const purchaseOrders = useAppSelector(
     (state) => state.merchandise.purchaseOrders
   )
   const requestedConsumptionOrders = purchaseOrders.filter(
-    (po) => po.status === "Sent to Design" || hasSubmittedConsumption(po)
+    (po) => po.status === "Sent to Design" && !isDesignSubmittedOrder(po)
   )
-  const pendingConsumptionOrders = purchaseOrders.filter(
-    (po) => po.status === "Sent to Design"
-  )
+  const pendingConsumptionOrders = requestedConsumptionOrders
   const completedConsumptionOrders = purchaseOrders
-    .filter(hasSubmittedConsumption)
+    .filter(isDesignSubmittedOrder)
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
   const submittedColumns = getDesignRequestWorkflowColumns({
     yarnInspectionDateByPo: {},
@@ -217,7 +224,7 @@ export function DesignStylePoPage() {
   )
   const focusedPoId = searchParams.get("poId") ?? ""
   const visiblePurchaseOrders = purchaseOrders
-    .filter((po) => po.status === "Sent to Design")
+    .filter((po) => po.status === "Sent to Design" && !isDesignSubmittedOrder(po))
     .sort((left, right) => {
       if (left.id === focusedPoId) return -1
       if (right.id === focusedPoId) return 1
@@ -264,10 +271,8 @@ export function DesignStylePoPage() {
       return
     }
 
-    const yarnCheckId = createYarnCheckRequestId()
     const orderNo = getOrderDisplayNo(activePo)
     const styleName = getOrderDisplayStyle(activePo)
-    const yarn = getOrderDisplayYarn(activePo)
     const totalYarnKg = Number(values.totalYarnKg)
     const totalFabricKg = Number(values.totalFabricKg)
     const totalAccessoriesQty = Number(values.totalAccessoriesQty)
@@ -281,38 +286,15 @@ export function DesignStylePoPage() {
       })
     )
     dispatch(
-      addCheckRequest({
-        id: yarnCheckId,
-        poId: activePo.id,
-        poNumber: orderNo,
-        buyer: activePo.buyer,
-        style: styleName,
-        yarnComposition: yarn,
-        color: activePo.color ?? "",
-        requiredQty: totalYarnKg,
-        requestedBy: "Design Controller",
-        requestedAt: new Date().toISOString(),
-        status: "Pending",
-      })
-    )
-    dispatch(
-      linkYarnCheckRequest({
-        poId: activePo.id,
-        yarnCheckRequestId: yarnCheckId,
-      })
-    )
-    dispatch(
       addNotification({
-        id: createYarnCheckNotificationId(),
-        title: `New yarn check request: ${orderNo}`,
-        description: `${activePo.buyer} - ${styleName} is ready from Design and has entered the yarn workflow.`,
+        id: createWorkflowNotificationId(),
+        title: `Consumption submitted: ${orderNo}`,
+        description: `${activePo.buyer} - ${styleName} is ready for Merchandise sourcing.`,
         time: "Just now",
         read: false,
       })
     )
-    toast.success(
-      `Consumption submitted for ${orderNo}. Yarn check has started.`
-    )
+    toast.success(`Consumption submitted for ${orderNo}. Ready for sourcing.`)
     setActivePoId(null)
     reset({
       totalYarnKg: 0,
@@ -330,7 +312,7 @@ export function DesignStylePoPage() {
         <section className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground">
             Merchandise requested consumption for{" "}
-            {focusedPo.orderNo || focusedPo.poNumber}.
+            {getPurchaseOrderDisplayNo(focusedPo)}.
           </p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             Add total yarn, fabric, and accessories quantities to complete the
@@ -407,7 +389,7 @@ export function DesignSubmittedPoListPage() {
     (state) => state.merchandise.purchaseOrders
   )
   const submittedPurchaseOrders = purchaseOrders
-    .filter(hasSubmittedConsumption)
+    .filter(isDesignSubmittedOrder)
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
   const submittedColumns = getDesignRequestWorkflowColumns({
     yarnInspectionDateByPo: {},

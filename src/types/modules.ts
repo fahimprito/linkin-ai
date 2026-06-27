@@ -22,11 +22,6 @@ export type POStatus =
   | "Completed"
 
 // ── Purchase Order ───────────────────────────────────────────────────
-export type ConsumptionStatus =
-  | "Not Requested"
-  | "Requested"
-  | "Submitted"
-
 export type PurchaseOrderWorkflowHistoryEntry = {
   status: POStatus
   changedAt: string
@@ -36,9 +31,14 @@ export type PurchaseOrderWorkflowHistoryEntry = {
 export type PurchaseOrderCanonicalFields = {
   id: string
   poNumber: string
+  buyer: string
+  style: string
+  design: string
+  quantity: number
   status: POStatus
   supplier: string
   createdAt: string
+  deliveryDate: string
   styleName?: string
   styleNo?: string
   productionUnit?: string
@@ -59,47 +59,11 @@ export type PurchaseOrderCanonicalFields = {
   color?: string
   yarnCheckRequestId?: string
   requiredYarnQty?: number
+  consumptionRequestedAt?: string
   workflowHistory?: PurchaseOrderWorkflowHistoryEntry[]
 }
 
-export type PurchaseOrderLegacyFields = {
-  buyer: string
-  style: string
-  design: string
-  quantity: number
-  deliveryDate: string
-  sl?: string
-  callNumber?: string
-  orderNo?: string
-  mainSizeHangTagBooking?: string
-  careLabelBooking?: string
-  priceStickerBooking?: string
-  tissue?: string
-  polyCartonBooking?: string
-  buttonZip?: string
-  doneInspection?: string
-  sampleStatus?: string
-  shipMode?: string
-  excessQty?: number
-  newCcd?: string
-  inspectionStyle?: string
-  stylePhoto?: string
-  sizeRange?: string
-  price?: number
-  amount?: number
-  factoryCosting?: string
-  labTest?: string
-  consumptionStatus?: ConsumptionStatus
-  consumptionRequestedAt?: string
-  gg?: string
-  yarnComposition?: string
-  techPack?: string
-  designLayout?: string
-  approval?: string
-}
-
-export type PurchaseOrder = PurchaseOrderCanonicalFields &
-  PurchaseOrderLegacyFields
+export type PurchaseOrder = PurchaseOrderCanonicalFields
 
 export type CreatePurchaseOrderPayload = Omit<PurchaseOrder, "id" | "createdAt">
 
@@ -129,28 +93,34 @@ export type YarnCheckRequest = {
 
 // ── Yarn Supplier Order ──────────────────────────────────────────────
 export type YarnSupplierOrderStatus =
-  | "Placed"
+  | "Ordered"
   | "In Transit"
   | "Partially Received"
   | "Fully Received"
+  | "Cancelled"
 
 export type SupplierOrderItemCategory = "Yarn" | "Accessories"
 
 export type YarnSupplierOrder = {
   id: string
+  orderNo?: string
   yarnCheckRequestId: string
   poId: string
   poNumber: string
+  styleName?: string
+  styleNo?: string
   supplier: string
   yarnType: string
   itemName?: string
   itemCategory?: SupplierOrderItemCategory
   color: string
   orderedQty: number
+  unitPrice?: number
   expectedArrival: string
   orderedAt: string
   deliveryDate?: string
   inspectionDate?: string
+  remarks?: string
   status: YarnSupplierOrderStatus
 }
 

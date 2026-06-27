@@ -4,6 +4,7 @@ import type {
   CreatePurchaseOrderPayload,
   POStatus,
   PurchaseOrder,
+  PurchaseOrderWorkflowHistoryEntry,
 } from "@/types/modules"
 
 const PURCHASE_ORDERS_STORAGE_KEY = "linkin-ai-admin-purchase-orders"
@@ -12,91 +13,159 @@ function canUseStorage() {
   return typeof window !== "undefined"
 }
 
+type LegacyPurchaseOrderInput = Omit<
+  Partial<PurchaseOrder>,
+  "status" | "workflowHistory"
+> & {
+  status?: string
+  workflowHistory?: Array<
+    Omit<PurchaseOrderWorkflowHistoryEntry, "status"> & {
+      status: string
+    }
+  >
+  consumptionStatus?: "Not Requested" | "Requested" | "Submitted"
+  sl?: string
+  callNumber?: string
+  orderNo?: string
+  polyCartonBooking?: string
+  buttonZip?: string
+  sampleStatus?: string
+  shipMode?: string
+  gg?: string
+  yarnComposition?: string
+  newCcd?: string
+  price?: number
+  amount?: number
+}
+
+function getStringValue(...values: Array<string | undefined>) {
+  return values.find((value) => typeof value === "string" && value.trim().length > 0)?.trim() || ""
+}
+
+function getNumberValue(...values: Array<number | undefined>) {
+  return values.find((value) => typeof value === "number" && Number.isFinite(value))
+}
+
 export function getPurchaseOrderDisplayNo(order: PurchaseOrder) {
-  return order.poNumber || order.orderNo || ""
+  return order.poNumber
 }
 
 export function getPurchaseOrderDisplayStyle(order: PurchaseOrder) {
-  return order.styleName || order.style || ""
+  return order.styleName || order.style
 }
 
 export function getPurchaseOrderDisplayGauge(order: PurchaseOrder) {
-  return order.gauge || order.gg || ""
+  return order.gauge || ""
 }
 
 export function getPurchaseOrderDisplayYarn(order: PurchaseOrder) {
-  return order.yarn || order.yarnComposition || order.quality || ""
+  return order.yarn || order.quality || ""
 }
 
 export function getPurchaseOrderDisplayQty(order: PurchaseOrder) {
-  return order.poQty ?? order.quantity ?? 0
+  return order.poQty ?? order.quantity
 }
 
 export function getPurchaseOrderDisplayCcd(order: PurchaseOrder) {
-  return order.ccd || order.deliveryDate || order.newCcd || ""
+  return order.ccd || order.deliveryDate
 }
 
 export function getPurchaseOrderDisplayItemNameCode(order: PurchaseOrder) {
-  return order.itemNameCode || order.callNumber || ""
+  return order.itemNameCode || ""
 }
 
 export function getPurchaseOrderDisplayAccessories(order: PurchaseOrder) {
-  return order.accessories || order.buttonZip || ""
+  return order.accessories || ""
 }
 
 export function getPurchaseOrderDisplayProductionUnit(order: PurchaseOrder) {
-  return order.productionUnit || order.polyCartonBooking || ""
+  return order.productionUnit || ""
 }
 
 export function getPurchaseOrderDisplayPpStatus(order: PurchaseOrder) {
-  return order.ppStatus || order.sampleStatus || ""
+  return order.ppStatus || ""
 }
 
 export function getPurchaseOrderDisplayShipmentSample(order: PurchaseOrder) {
-  return order.shipmentSample || order.shipMode || ""
+  return order.shipmentSample || ""
 }
 
 function normalizePurchaseOrder(
-  order: PurchaseOrder,
+  order: LegacyPurchaseOrderInput,
   index: number
 ): PurchaseOrder {
-  const orderNo = getPurchaseOrderDisplayNo(order)
-  const styleName = getPurchaseOrderDisplayStyle(order)
-  const gauge = getPurchaseOrderDisplayGauge(order)
-  const yarn = getPurchaseOrderDisplayYarn(order)
-  const poQty = getPurchaseOrderDisplayQty(order)
-  const price = order.price ?? 0
+  const createdAt = getStringValue(order.createdAt) || new Date().toISOString()
+  const poNumber = getStringValue(order.poNumber, order.orderNo)
+  const styleName = getStringValue(order.styleName, order.style)
+  const gauge = getStringValue(order.gauge, order.gg)
+  const yarn = getStringValue(order.yarn, order.yarnComposition, order.quality)
+  const poQty = getNumberValue(order.poQty, order.quantity) ?? 0
+  const ccd = getStringValue(order.ccd, order.deliveryDate, order.newCcd)
+  const itemNameCode = getStringValue(order.itemNameCode, order.callNumber)
+  const accessories = getStringValue(order.accessories, order.buttonZip)
+  const productionUnit = getStringValue(
+    order.productionUnit,
+    order.polyCartonBooking
+  )
+  const ppStatus = getStringValue(order.ppStatus, order.sampleStatus)
+  const shipmentSample = getStringValue(
+    order.shipmentSample,
+    order.shipMode
+  )
+  const requiredYarnQty = getNumberValue(
+    order.requiredYarnQty,
+    order.totalYarnKg
+  )
   const normalizedStatus = normalizeLegacyPoStatus(
     order.status === "Draft" && order.consumptionStatus === "Requested"
       ? "Consumption Requested"
       : order.status === "Draft" && order.consumptionStatus === "Submitted"
         ? "Pending Yarn Check"
-        : order.status
+        : order.status || "Created"
   )
 
   return {
-    ...order,
-    sl: order.sl || String(index + 1).padStart(2, "0"),
-    styleName,
-    orderNo,
-    poNumber: order.poNumber || orderNo,
-    style: order.style || styleName,
-    quantity: order.quantity ?? poQty,
+    id: getStringValue(order.id) || `po-${String(index + 1).padStart(3, "0")}`,
+    poNumber,
+    buyer: getStringValue(order.buyer),
+    style: getStringValue(order.style, styleName),
+    design: getStringValue(order.design),
+    quantity: getNumberValue(order.quantity, poQty) ?? 0,
     status: normalizedStatus,
-    deliveryDate: order.deliveryDate || order.newCcd || order.ccd || "",
-    ccd: getPurchaseOrderDisplayCcd(order),
+    supplier: getStringValue(order.supplier),
+    deliveryDate: getStringValue(order.deliveryDate, ccd),
+    createdAt,
+    ...(styleName ? { styleName } : {}),
+    ...(order.styleNo ? { styleNo: order.styleNo } : {}),
+    ...(productionUnit ? { productionUnit } : {}),
+    ...(ccd ? { ccd } : {}),
     poQty,
-    gauge,
-    gg: order.gg || gauge,
-    yarn,
-    yarnComposition: order.yarnComposition || yarn,
-    amount: order.amount ?? (poQty && price ? poQty * price : 0),
-    totalYarnKg: order.totalYarnKg,
-    totalFabricKg: order.totalFabricKg,
-    totalAccessoriesQty: order.totalAccessoriesQty,
-    consumptionStatus: undefined,
-    consumptionRequestedAt: order.consumptionRequestedAt,
-    requiredYarnQty: order.requiredYarnQty ?? order.totalYarnKg,
+    ...(yarn ? { quality: getStringValue(order.quality, yarn) } : {}),
+    ...(gauge ? { gauge } : {}),
+    ...(yarn ? { yarn } : {}),
+    ...(itemNameCode ? { itemNameCode } : {}),
+    ...(accessories ? { accessories } : {}),
+    ...(ppStatus ? { ppStatus } : {}),
+    ...(shipmentSample ? { shipmentSample } : {}),
+    ...(order.remarks ? { remarks: order.remarks } : {}),
+    ...(order.yarnEta ? { yarnEta: order.yarnEta } : {}),
+    ...(typeof order.totalYarnKg === "number"
+      ? { totalYarnKg: order.totalYarnKg }
+      : {}),
+    ...(typeof order.totalFabricKg === "number"
+      ? { totalFabricKg: order.totalFabricKg }
+      : {}),
+    ...(typeof order.totalAccessoriesQty === "number"
+      ? { totalAccessoriesQty: order.totalAccessoriesQty }
+      : {}),
+    ...(order.consumptionRequestedAt
+      ? { consumptionRequestedAt: order.consumptionRequestedAt }
+      : {}),
+    ...(order.color ? { color: order.color } : {}),
+    ...(requiredYarnQty !== undefined ? { requiredYarnQty } : {}),
+    ...(order.yarnCheckRequestId
+      ? { yarnCheckRequestId: order.yarnCheckRequestId }
+      : {}),
     workflowHistory:
       order.workflowHistory && order.workflowHistory.length > 0
         ? order.workflowHistory.map((entry) => ({
@@ -106,7 +175,7 @@ function normalizePurchaseOrder(
         : [
             {
               status: normalizedStatus,
-              changedAt: order.createdAt ?? new Date().toISOString(),
+              changedAt: createdAt,
               changedBy: "System",
             },
           ],
@@ -125,7 +194,7 @@ export function getPurchaseOrders() {
   }
 
   try {
-    const parsedOrders = JSON.parse(storedOrders) as PurchaseOrder[]
+    const parsedOrders = JSON.parse(storedOrders) as LegacyPurchaseOrderInput[]
     const normalizedOrders = parsedOrders.map(normalizePurchaseOrder)
 
     savePurchaseOrders(normalizedOrders)

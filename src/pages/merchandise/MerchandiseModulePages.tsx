@@ -15,6 +15,12 @@ import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
 import {
+  getPurchaseOrderDisplayCcd,
+  getPurchaseOrderDisplayQty,
+  getPurchaseOrderDisplayStyle,
+  getPurchaseOrderDisplayYarn,
+} from "@/lib/purchase-orders"
+import {
   getPurchaseOrderWorkflowColumns,
   purchaseOrderWorkflowHeaderRows,
 } from "@/lib/purchase-order-table-columns"
@@ -44,7 +50,7 @@ export function MerchandiseDashboardPage() {
     (po) => !isReadyToShipStatus(po.status)
   ).length
   const totalStyleCount = new Set(
-    purchaseOrders.map((po) => po.style.trim()).filter(Boolean)
+    purchaseOrders.map((po) => getPurchaseOrderDisplayStyle(po).trim()).filter(Boolean)
   ).size
   const yarnSupplyPendingCount = purchaseOrders.filter((po) =>
     ["Sent to Yarn", "Yarn Processing"].includes(po.status)
@@ -71,7 +77,7 @@ export function MerchandiseDashboardPage() {
     (po) => isReadyToShipStatus(po.status)
   ).length
   const expectedDeliveryCurrentMonthCount = purchaseOrders.filter((po) => {
-    const deliveryDate = new Date(po.deliveryDate)
+    const deliveryDate = new Date(getPurchaseOrderDisplayCcd(po))
 
     return (
       !Number.isNaN(deliveryDate.getTime()) &&
@@ -207,8 +213,16 @@ export function MerchandiseInventoryPage() {
       <DataTable
         columns={[
           { key: "poNumber", header: "PO Number" },
-          { key: "style", header: "Style" },
-          { key: "yarnComposition", header: "Yarn Type" },
+          {
+            key: "style",
+            header: "Style",
+            render: (row) => getPurchaseOrderDisplayStyle(row),
+          },
+          {
+            key: "yarnComposition",
+            header: "Yarn Type",
+            render: (row) => getPurchaseOrderDisplayYarn(row),
+          },
           { key: "color", header: "Color" },
           {
             key: "requiredYarnQty",
@@ -228,7 +242,7 @@ export function MerchandiseShipmentPage() {
     (state) => state.merchandise.purchaseOrders
   )
   const sortedOrders = [...purchaseOrders].sort((left, right) =>
-    left.deliveryDate.localeCompare(right.deliveryDate)
+    getPurchaseOrderDisplayCcd(left).localeCompare(getPurchaseOrderDisplayCcd(right))
   )
 
   return (
@@ -240,16 +254,21 @@ export function MerchandiseShipmentPage() {
         columns={[
           { key: "poNumber", header: "PO Number" },
           { key: "buyer", header: "Buyer" },
-          { key: "style", header: "Style" },
+          {
+            key: "style",
+            header: "Style",
+            render: (row) => getPurchaseOrderDisplayStyle(row),
+          },
           {
             key: "quantity",
             header: "Qty",
-            render: (row) => Number(row.quantity).toLocaleString(),
+            render: (row) =>
+              Number(getPurchaseOrderDisplayQty(row)).toLocaleString(),
           },
           {
             key: "deliveryDate",
             header: "Delivery Date",
-            render: (row) => formatDate(String(row.deliveryDate)),
+            render: (row) => formatDate(getPurchaseOrderDisplayCcd(row)),
           },
           {
             key: "status",

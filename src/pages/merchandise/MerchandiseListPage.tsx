@@ -19,6 +19,18 @@ import {
   getOrderDisplayNo,
   purchaseOrderWorkflowHeaderRows,
 } from "@/lib/purchase-order-table-columns"
+import {
+  getPurchaseOrderDisplayAccessories,
+  getPurchaseOrderDisplayCcd,
+  getPurchaseOrderDisplayGauge,
+  getPurchaseOrderDisplayItemNameCode,
+  getPurchaseOrderDisplayPpStatus,
+  getPurchaseOrderDisplayProductionUnit,
+  getPurchaseOrderDisplayQty,
+  getPurchaseOrderDisplayShipmentSample,
+  getPurchaseOrderDisplayStyle,
+  getPurchaseOrderDisplayYarn,
+} from "@/lib/purchase-orders"
 import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
@@ -103,18 +115,17 @@ function toNumber(value: unknown) {
 function getOrderFormValues(
   order?: PurchaseOrder
 ): CreatePurchaseOrderPayload {
-  const styleName = order?.styleName ?? order?.style ?? ""
-  const poNumber = order?.poNumber ?? order?.orderNo ?? ""
-  const poQty = order?.poQty ?? order?.quantity ?? 0
-  const ccd = order?.ccd ?? order?.deliveryDate ?? ""
-  const quality = order?.quality ?? order?.yarn ?? order?.yarnComposition ?? ""
-  const gauge = order?.gauge ?? order?.gg ?? ""
-  const itemNameCode = order?.itemNameCode ?? order?.callNumber ?? ""
-  const accessories = order?.accessories ?? order?.buttonZip ?? ""
-  const productionUnit =
-    order?.productionUnit ?? order?.polyCartonBooking ?? ""
-  const ppStatus = order?.ppStatus ?? order?.sampleStatus ?? ""
-  const shipmentSample = order?.shipmentSample ?? order?.shipMode ?? ""
+  const styleName = order ? getPurchaseOrderDisplayStyle(order) : ""
+  const poNumber = order?.poNumber ?? ""
+  const poQty = order ? getPurchaseOrderDisplayQty(order) : 0
+  const ccd = order ? getPurchaseOrderDisplayCcd(order) : ""
+  const quality = order ? order.quality ?? getPurchaseOrderDisplayYarn(order) : ""
+  const gauge = order ? getPurchaseOrderDisplayGauge(order) : ""
+  const itemNameCode = order ? getPurchaseOrderDisplayItemNameCode(order) : ""
+  const accessories = order ? getPurchaseOrderDisplayAccessories(order) : ""
+  const productionUnit = order ? getPurchaseOrderDisplayProductionUnit(order) : ""
+  const ppStatus = order ? getPurchaseOrderDisplayPpStatus(order) : ""
+  const shipmentSample = order ? getPurchaseOrderDisplayShipmentSample(order) : ""
 
   return {
     buyer: order?.buyer ?? "",
@@ -124,16 +135,12 @@ function getOrderFormValues(
     status: order?.status ?? "Created",
     supplier: order?.supplier ?? "",
     deliveryDate: ccd,
-    gg: gauge,
     color: order?.color ?? "",
-    yarnComposition: quality,
     requiredYarnQty: order?.requiredYarnQty ?? 0,
-    sl: "",
     styleName,
     styleNo: order?.styleNo ?? "",
     poNumber,
     productionUnit,
-    polyCartonBooking: productionUnit,
     ppStatus,
     shipmentSample,
     ccd,
@@ -161,7 +168,6 @@ function getCopyPoFormValues(order: PurchaseOrder): CreatePurchaseOrderPayload {
     color: "",
     itemNameCode: "",
     remarks: "",
-    sl: "",
     status: "Created",
     yarnCheckRequestId: undefined,
     consumptionRequestedAt: undefined,
@@ -257,9 +263,7 @@ export function MerchandiseListPage() {
 
     const searchableValues = [
       po.poNumber,
-      po.orderNo,
-      po.styleName,
-      po.style,
+      getPurchaseOrderDisplayStyle(po),
       po.styleNo,
       po.color,
       po.supplier,
@@ -305,10 +309,10 @@ export function MerchandiseListPage() {
 
   const onSubmit = (values: CreatePurchaseOrderPayload) => {
     const poNumber = values.poNumber?.trim() || ""
-    const styleName = values.styleName?.trim() || ""
+    const styleName = values.styleName?.trim() || values.style?.trim() || ""
     const gauge = values.gauge?.trim() || ""
-    const quality = values.quality?.trim() || ""
-    const ccd = values.ccd?.trim() || ""
+    const quality = values.quality?.trim() || values.yarn?.trim() || ""
+    const ccd = values.ccd?.trim() || values.deliveryDate?.trim() || ""
     const poQty = toNumber(values.poQty)
     const color = values.color?.trim() || ""
     const itemNameCode = values.itemNameCode?.trim() || ""
@@ -326,8 +330,7 @@ export function MerchandiseListPage() {
     const hasDuplicatePoNumber = purchaseOrders.some(
       (order) =>
         order.id !== editingOrder?.id &&
-        (order.poNumber || order.orderNo || "").trim().toLowerCase() ===
-          normalizedPoNumber
+        order.poNumber.trim().toLowerCase() === normalizedPoNumber
     )
 
     if (hasDuplicatePoNumber) {
@@ -357,29 +360,20 @@ export function MerchandiseListPage() {
 
     const normalizedValues = {
       ...values,
-      sl: "",
       buyer: editingOrder?.buyer ?? "",
       design: editingOrder?.design ?? "",
       poNumber,
-      orderNo: poNumber,
       style: styleName,
       quantity: poQty,
       deliveryDate: ccd,
-      gg: gauge,
-      yarnComposition: quality,
       yarn: quality,
       quality,
       poQty,
       color,
       itemNameCode,
-      callNumber: itemNameCode,
       accessories,
-      buttonZip: accessories,
       ppStatus,
-      sampleStatus: ppStatus,
       shipmentSample,
-      shipMode: shipmentSample,
-      polyCartonBooking: productionUnit,
       productionUnit,
       remarks: values.remarks?.trim() || "",
       gauge,
@@ -472,7 +466,8 @@ export function MerchandiseListPage() {
         column.key === "sl"
           ? {
               ...column,
-              render: (_row, rowIndex) => String(rowIndex + 1).padStart(2, "0"),
+              render: (_row: PurchaseOrder, rowIndex: number) =>
+                String(rowIndex + 1).padStart(2, "0"),
             }
           : column
       ),

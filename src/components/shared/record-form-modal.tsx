@@ -7,7 +7,7 @@ export type ModalFormField = {
   label: string
   type?: "text" | "number" | "date" | "textarea" | "select"
   placeholder?: string
-  options?: string[]
+  options?: Array<string | { label: string; value: string }>
   disabled?: boolean
   readOnly?: boolean
 }
@@ -104,11 +104,21 @@ export function RecordFormModal<T extends FieldValues>({
                     <option value="" disabled>
                       Select an option
                     </option>
-                    {field.options?.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
+                    {field.options?.map((option) => {
+                      const resolvedOption =
+                        typeof option === "string"
+                          ? { label: option, value: option }
+                          : option
+
+                      return (
+                      <option
+                        key={resolvedOption.value}
+                        value={resolvedOption.value}
+                      >
+                        {resolvedOption.label}
                       </option>
-                    ))}
+                      )
+                    })}
                   </select>
                 ) : (
                   <input

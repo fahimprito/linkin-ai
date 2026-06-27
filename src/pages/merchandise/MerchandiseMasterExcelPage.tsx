@@ -3,6 +3,12 @@ import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
+import {
+  getPurchaseOrderDisplayCcd,
+  getPurchaseOrderDisplayGauge,
+  getPurchaseOrderDisplayQty,
+  getPurchaseOrderDisplayStyle,
+} from "@/lib/purchase-orders"
 import { useAppSelector } from "@/store/hooks"
 
 export function MerchandiseMasterExcelPage() {
@@ -60,11 +66,16 @@ export function MerchandiseMasterExcelPage() {
         columns={[
           { key: "poNumber", header: "PO Number" },
           { key: "buyer", header: "Buyer" },
-          { key: "style", header: "Style" },
+          {
+            key: "style",
+            header: "Style",
+            render: (row) => getPurchaseOrderDisplayStyle(row),
+          },
           {
             key: "quantity",
             header: "Order Qty",
-            render: (row) => Number(row.quantity).toLocaleString(),
+            render: (row) =>
+              Number(getPurchaseOrderDisplayQty(row)).toLocaleString(),
           },
           {
             key: "requiredYarnQty",
@@ -73,9 +84,9 @@ export function MerchandiseMasterExcelPage() {
               row.requiredYarnQty ? String(row.requiredYarnQty) : "-",
           },
           {
-            key: "gg",
-            header: "GG",
-            render: (row) => String(row.gg ?? "-"),
+            key: "gauge",
+            header: "Gauge",
+            render: (row) => String(getPurchaseOrderDisplayGauge(row) || "-"),
           },
           {
             key: "color",
@@ -83,7 +94,11 @@ export function MerchandiseMasterExcelPage() {
             render: (row) => String(row.color ?? "-"),
           },
           { key: "supplier", header: "Supplier" },
-          { key: "deliveryDate", header: "Delivery Date" },
+          {
+            key: "deliveryDate",
+            header: "Delivery Date",
+            render: (row) => getPurchaseOrderDisplayCcd(row) || "-",
+          },
           {
             key: "status",
             header: "Current Stage",

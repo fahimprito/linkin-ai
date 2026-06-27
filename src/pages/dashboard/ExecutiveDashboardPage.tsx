@@ -43,7 +43,7 @@ const roleDashboardContent = {
       "Review PO styles, design names, and spec readiness so the design team works from the same live order base as merchandising.",
     quickActions: [
       { label: "Review Styles", note: "Check buyer styles and design names against the current PO list." },
-      { label: "Confirm Specs", note: "Verify GG, color, and yarn details before downstream follow-up begins." },
+      { label: "Confirm Specs", note: "Verify gauge, color, and yarn details before downstream follow-up begins." },
       { label: "Watch Handoffs", note: "Use the shared queue to spot POs that still need design clarification." },
     ],
   },

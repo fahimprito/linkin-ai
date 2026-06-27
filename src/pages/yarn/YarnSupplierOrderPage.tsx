@@ -129,7 +129,7 @@ export function YarnSupplierOrderPage() {
         orderedAt: new Date().toISOString(),
         deliveryDate: "",
         inspectionDate: "",
-        status: "Placed",
+        status: "Ordered",
       })
     )
 

@@ -146,7 +146,8 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         key: "sl",
         header: "SL",
         className: "min-w-[2.75rem] whitespace-nowrap",
-        render: (_row, rowIndex) => String(rowIndex + 1).padStart(2, "0"),
+        render: (_row: ManagementReportRow, rowIndex: number) =>
+          String(rowIndex + 1).padStart(2, "0"),
       },
       {
         key: "poNumber",

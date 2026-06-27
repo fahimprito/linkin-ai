@@ -5,6 +5,12 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
+import {
+  getPurchaseOrderDisplayGauge,
+  getPurchaseOrderDisplayNo,
+  getPurchaseOrderDisplayStyle,
+  getPurchaseOrderDisplayYarn,
+} from "@/lib/purchase-orders"
 import { useAppSelector } from "@/store/hooks"
 
 export function DesignPage() {
@@ -19,11 +25,16 @@ export function DesignPage() {
   ).size
 
   const specReadyCount = purchaseOrders.filter(
-    (order) => order.gg && order.color && order.yarnComposition
+    (order) =>
+      Boolean(getPurchaseOrderDisplayGauge(order) && order.color && getPurchaseOrderDisplayYarn(order))
   ).length
 
   const pendingDesignFollowUp = purchaseOrders.filter(
-    (order) => !order.design || !order.gg || !order.color || !order.yarnComposition
+    (order) =>
+      !order.design ||
+      !getPurchaseOrderDisplayGauge(order) ||
+      !order.color ||
+      !getPurchaseOrderDisplayYarn(order)
   ).length
 
   return (
@@ -77,14 +88,23 @@ export function DesignPage() {
             ) : (
               <DataTable
                 columns={[
-                  { key: "poNumber", header: "PO Number" },
+                  {
+                    key: "poNumber",
+                    header: "PO Number",
+                    render: (row) => getPurchaseOrderDisplayNo(row),
+                  },
                   { key: "buyer", header: "Buyer" },
-                  { key: "style", header: "Style" },
+                  {
+                    key: "style",
+                    header: "Style",
+                    render: (row) => getPurchaseOrderDisplayStyle(row),
+                  },
                   { key: "design", header: "Design" },
                   {
-                    key: "gg",
-                    header: "GG",
-                    render: (row) => String(row.gg ?? "-"),
+                    key: "gauge",
+                    header: "Gauge",
+                    render: (row) =>
+                      String(getPurchaseOrderDisplayGauge(row) || "-"),
                   },
                   {
                     key: "color",
@@ -92,9 +112,10 @@ export function DesignPage() {
                     render: (row) => String(row.color ?? "-"),
                   },
                   {
-                    key: "yarnComposition",
-                    header: "Yarn",
-                    render: (row) => String(row.yarnComposition ?? "-"),
+                    key: "yarnType",
+                    header: "Yarn Type",
+                    render: (row) =>
+                      String(getPurchaseOrderDisplayYarn(row) || "-"),
                   },
                   {
                     key: "status",
@@ -120,7 +141,7 @@ export function DesignPage() {
               {
                 icon: Ruler,
                 title: "Spec completeness",
-                note: "Make sure GG, yarn composition, and color are visible before yarn follow-up starts.",
+                note: "Make sure gauge, yarn type, and color are visible before yarn follow-up starts.",
               },
               {
                 icon: Sparkles,

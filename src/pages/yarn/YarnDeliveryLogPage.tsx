@@ -2,7 +2,6 @@ import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PageHeader } from "@/components/shared/page-header"
@@ -12,8 +11,14 @@ import {
 } from "@/components/shared/record-form-modal"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
+import { Button } from "@/components/ui/button"
+import {
+  getPurchaseOrderDisplayNo,
+  getPurchaseOrderDisplayQty,
+  getPurchaseOrderDisplayStyle,
+  getPurchaseOrderDisplayYarn,
+} from "@/lib/purchase-orders"
 import { upsertInventoryFromReceipt } from "@/lib/yarn-inventory"
-import { isStatusAtOrAfterSentToYarn } from "@/lib/workflow-status"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePurchaseOrder } from "@/store/slices/merchandise-slice"
 import {
@@ -22,10 +27,9 @@ import {
   updateCheckRequestStatus,
   updateSupplierOrderStatus,
 } from "@/store/slices/yarn-check-slice"
-import type { PurchaseOrder } from "@/types/modules"
+import type { PurchaseOrder, YarnSupplierOrder } from "@/types/modules"
 
 type DeliveryFormValues = {
-  poId: string
   poNumber: string
   supplier: string
   batchNumber: string
@@ -37,8 +41,9 @@ type DeliveryFormValues = {
 const deliveryFields: ModalFormField[] = [
   {
     name: "poNumber",
-    label: "PO Number (read-only)",
+    label: "PO Number",
     placeholder: "LK-2006",
+    readOnly: true,
   },
   {
     name: "supplier",
@@ -73,8 +78,41 @@ function createStockMovementId() {
   return `ysm-${Date.now()}`
 }
 
-function hasSubmittedConsumption(order: PurchaseOrder) {
-  return isStatusAtOrAfterSentToYarn(order.status)
+function getLinkedYarnSupplierOrder(
+  poId: string,
+  supplierOrders: YarnSupplierOrder[]
+) {
+  return supplierOrders
+    .filter(
+      (supplierOrder) =>
+        (supplierOrder.itemCategory ?? "Yarn") === "Yarn" &&
+        supplierOrder.poId === poId &&
+        supplierOrder.status !== "Cancelled"
+    )
+    .sort((left, right) => {
+      const leftDate = left.orderedAt || left.expectedArrival || ""
+      const rightDate = right.orderedAt || right.expectedArrival || ""
+      return new Date(rightDate).getTime() - new Date(leftDate).getTime()
+    })[0]
+}
+
+function getReceivablePurchaseOrders(
+  purchaseOrders: PurchaseOrder[],
+  supplierOrders: YarnSupplierOrder[]
+) {
+  const receivablePoIds = new Set(
+    supplierOrders
+      .filter(
+        (supplierOrder) =>
+          (supplierOrder.itemCategory ?? "Yarn") === "Yarn" &&
+          !["Cancelled", "Fully Received"].includes(supplierOrder.status)
+      )
+      .map((supplierOrder) => supplierOrder.poId)
+  )
+
+  return purchaseOrders
+    .filter((order) => receivablePoIds.has(order.id))
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
 }
 
 export function YarnDeliveryLogPage() {
@@ -92,7 +130,6 @@ export function YarnDeliveryLogPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const { register, handleSubmit, reset } = useForm<DeliveryFormValues>({
     defaultValues: {
-      poId: "",
       poNumber: "",
       supplier: "",
       batchNumber: "",
@@ -103,11 +140,8 @@ export function YarnDeliveryLogPage() {
   })
 
   const visiblePurchaseOrders = useMemo(
-    () =>
-      purchaseOrders
-        .filter(hasSubmittedConsumption)
-        .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
-    [purchaseOrders]
+    () => getReceivablePurchaseOrders(purchaseOrders, supplierOrders),
+    [purchaseOrders, supplierOrders]
   )
 
   const filteredOrders = useMemo(() => {
@@ -117,38 +151,36 @@ export function YarnDeliveryLogPage() {
       return visiblePurchaseOrders
     }
 
-    return visiblePurchaseOrders.filter((po) =>
-      [
-        po.poNumber,
-        po.orderNo,
-        po.styleName,
-        po.style,
+    return visiblePurchaseOrders.filter((po) => {
+      const linkedSupplierOrder = getLinkedYarnSupplierOrder(po.id, supplierOrders)
+
+      return [
+        getPurchaseOrderDisplayNo(po),
+        getPurchaseOrderDisplayStyle(po),
         po.styleNo,
         po.color,
         po.supplier,
+        linkedSupplierOrder?.supplier,
       ].some((value) =>
         String(value ?? "").toLowerCase().includes(normalizedSearch)
       )
-    )
-  }, [searchQuery, visiblePurchaseOrders])
+    })
+  }, [searchQuery, supplierOrders, visiblePurchaseOrders])
 
   const openCreateForOrder = (poId: string) => {
     const order = visiblePurchaseOrders.find((po) => po.id === poId)
-    if (!order) return
+    if (!order) {
+      return
+    }
 
     const existingBatches = deliveryBatches.filter((batch) => batch.poId === poId)
     const nextBatchNum = existingBatches.length + 1
-    const linkedSupplierOrder = supplierOrders.find(
-      (supplierOrder) =>
-        (supplierOrder.itemCategory ?? "Yarn") === "Yarn" &&
-        supplierOrder.poId === poId
-    )
+    const linkedSupplierOrder = getLinkedYarnSupplierOrder(poId, supplierOrders)
 
     setSelectedPoId(poId)
     reset({
-      poId: order.id,
-      poNumber: order.poNumber || order.orderNo || "",
-      supplier: order.supplier || linkedSupplierOrder?.supplier || "",
+      poNumber: getPurchaseOrderDisplayNo(order),
+      supplier: linkedSupplierOrder?.supplier || order.supplier || "",
       batchNumber: `LOT-${String(nextBatchNum).padStart(3, "0")}`,
       quantity: "",
       deliveryDate: new Date().toISOString().split("T")[0],
@@ -158,33 +190,41 @@ export function YarnDeliveryLogPage() {
   }
 
   const onSubmit = (values: DeliveryFormValues) => {
-    const selectedPo = visiblePurchaseOrders.find((po) => po.id === values.poId)
+    const selectedPo = visiblePurchaseOrders.find((po) => po.id === selectedPoId)
     if (!selectedPo) {
       toast.error("Selected PO not found.")
       return
     }
 
-    const linkedSupplierOrder = supplierOrders.find(
-      (order) =>
-        (order.itemCategory ?? "Yarn") === "Yarn" &&
-        order.poId === values.poId &&
-        order.status !== "Fully Received"
+    const linkedSupplierOrder = getLinkedYarnSupplierOrder(
+      selectedPo.id,
+      supplierOrders
     )
+
+    if (!linkedSupplierOrder) {
+      toast.error("No active yarn supplier order found for this PO.")
+      return
+    }
+
     const receivedQty = Number(values.quantity)
+    if (!Number.isFinite(receivedQty) || receivedQty <= 0) {
+      toast.error("Please enter a valid received quantity.")
+      return
+    }
+
+    if (!values.supplier.trim()) {
+      toast.error("Supplier is required.")
+      return
+    }
+
     const batchId = createDeliveryBatchId()
     const stockMovementId = createStockMovementId()
-    const totalReceivedForPo =
-      deliveryBatches
-        .filter((batch) => batch.poId === values.poId)
-        .reduce((sum, batch) => sum + batch.quantity, 0) + receivedQty
-    const requiredQty = selectedPo.totalYarnKg ?? selectedPo.requiredYarnQty ?? 0
-    const nextPoStatus = "Yarn Processing"
 
     dispatch(
       addDeliveryBatch({
         id: batchId,
-        supplierOrderId: linkedSupplierOrder?.id ?? `manual-${values.poId}`,
-        poId: values.poId,
+        supplierOrderId: linkedSupplierOrder.id,
+        poId: selectedPo.id,
         poNumber: values.poNumber,
         batchNumber: values.batchNumber,
         quantity: receivedQty,
@@ -199,10 +239,9 @@ export function YarnDeliveryLogPage() {
     dispatch(
       addStockMovement({
         id: stockMovementId,
-        poId: values.poId,
+        poId: selectedPo.id,
         poNumber: values.poNumber,
-        yarnType:
-          selectedPo.yarnComposition || selectedPo.yarn || selectedPo.quality || "",
+        yarnType: getPurchaseOrderDisplayYarn(selectedPo),
         color: selectedPo.color ?? "",
         quantity: receivedQty,
         movementType: "Accepted Receipt",
@@ -215,45 +254,43 @@ export function YarnDeliveryLogPage() {
     )
 
     upsertInventoryFromReceipt({
-      yarnName:
-        selectedPo.yarnComposition || selectedPo.yarn || selectedPo.quality || "",
-      quality: selectedPo.quality || selectedPo.yarnComposition || selectedPo.yarn || "",
+      yarnName: getPurchaseOrderDisplayYarn(selectedPo),
+      quality: selectedPo.quality || getPurchaseOrderDisplayYarn(selectedPo),
       lotNo: values.batchNumber,
       supplier: values.supplier.trim(),
       quantity: receivedQty,
       actionDate: values.deliveryDate,
       notes: values.remarks,
-      poId: values.poId,
+      poId: selectedPo.id,
       poNumber: values.poNumber,
     })
 
     dispatch(
       updatePurchaseOrder({
-        id: values.poId,
+        id: selectedPo.id,
         updates: {
           ...selectedPo,
           supplier: values.supplier.trim(),
-          status: nextPoStatus,
+          yarnEta: linkedSupplierOrder.expectedArrival || selectedPo.yarnEta,
+          status: "Yarn Processing",
         },
       })
     )
 
-    if (linkedSupplierOrder) {
-      const totalReceivedForSupplierOrder =
-        deliveryBatches
-          .filter((batch) => batch.supplierOrderId === linkedSupplierOrder.id)
-          .reduce((sum, batch) => sum + batch.quantity, 0) + receivedQty
+    const totalReceivedForSupplierOrder =
+      deliveryBatches
+        .filter((batch) => batch.supplierOrderId === linkedSupplierOrder.id)
+        .reduce((sum, batch) => sum + batch.quantity, 0) + receivedQty
 
-      dispatch(
-        updateSupplierOrderStatus({
-          id: linkedSupplierOrder.id,
-          status:
-            totalReceivedForSupplierOrder >= linkedSupplierOrder.orderedQty
-              ? "Fully Received"
-              : "Partially Received",
-        })
-      )
-    }
+    dispatch(
+      updateSupplierOrderStatus({
+        id: linkedSupplierOrder.id,
+        status:
+          totalReceivedForSupplierOrder >= linkedSupplierOrder.orderedQty
+            ? "Fully Received"
+            : "Partially Received",
+      })
+    )
 
     if (selectedPo.yarnCheckRequestId) {
       dispatch(
@@ -303,13 +340,17 @@ export function YarnDeliveryLogPage() {
       {filteredOrders.length === 0 ? (
         <EmptyState
           title="No assigned POs yet"
-          description="After the Design Controller submits a PO, it will appear here for receiving."
+          description="POs appear here after Merchandise places a yarn sourcing order."
         />
       ) : (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Assigned PO List</h2>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {filteredOrders.map((order) => {
+              const linkedSupplierOrder = getLinkedYarnSupplierOrder(
+                order.id,
+                supplierOrders
+              )
               const orderBatches = deliveryBatches.filter(
                 (batch) => batch.poId === order.id
               )
@@ -325,7 +366,10 @@ export function YarnDeliveryLogPage() {
                 )
                 .reduce((sum, movement) => sum + movement.quantity, 0)
               const stockBalance = receivedQty - issuedQty
-              const requiredQty = order.totalYarnKg ?? order.requiredYarnQty ?? 0
+              const requiredQty =
+                order.totalYarnKg ??
+                order.requiredYarnQty ??
+                getPurchaseOrderDisplayQty(order)
 
               return (
                 <div
@@ -335,22 +379,28 @@ export function YarnDeliveryLogPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold">
-                        {order.poNumber || order.orderNo}
+                        {getPurchaseOrderDisplayNo(order)}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {order.styleName || order.style}
+                        {getPurchaseOrderDisplayStyle(order)}
                       </p>
                     </div>
-                    <StatusBadge value={order.status} />
+                    <StatusBadge value={linkedSupplierOrder?.status || order.status} />
                   </div>
                   <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-                    <p>Supplier: {order.supplier || "—"}</p>
+                    <p>
+                      Supplier:{" "}
+                      {linkedSupplierOrder?.supplier || order.supplier || "—"}
+                    </p>
                     <p>Required: {requiredQty || 0} kg</p>
                     <p>Received: {receivedQty} kg</p>
                     <p>Stock Balance: {stockBalance} kg</p>
                     <p>
-                      Receive History: {orderBatches.length} delivery
-                      {orderBatches.length === 1 ? "" : "ies"}
+                      Expected Delivery: {linkedSupplierOrder?.expectedArrival || "—"}
+                    </p>
+                    <p>
+                      Receive History: {orderBatches.length} deliver
+                      {orderBatches.length === 1 ? "y" : "ies"}
                     </p>
                   </div>
                   <Button
@@ -379,9 +429,10 @@ export function YarnDeliveryLogPage() {
                 key: "supplier",
                 header: "Supplier",
                 render: (row) =>
-                  String(
-                    purchaseOrders.find((po) => po.id === row.poId)?.supplier ?? "—"
-                  ),
+                  getLinkedYarnSupplierOrder(String(row.poId), supplierOrders)
+                    ?.supplier ??
+                  purchaseOrders.find((po) => po.id === row.poId)?.supplier ??
+                  "—",
               },
               { key: "deliveryDate", header: "Receive Date" },
               {
@@ -435,20 +486,26 @@ export function YarnDeliveryLogPage() {
         }}
         onReset={() => {
           const order = visiblePurchaseOrders.find((po) => po.id === selectedPoId)
-          if (order) {
-            const existingBatches = deliveryBatches.filter(
-              (batch) => batch.poId === selectedPoId
-            )
-            reset({
-              poId: selectedPoId,
-              poNumber: order.poNumber || order.orderNo || "",
-              supplier: order.supplier ?? "",
-              batchNumber: `LOT-${String(existingBatches.length + 1).padStart(3, "0")}`,
-              quantity: "",
-              deliveryDate: new Date().toISOString().split("T")[0],
-              remarks: "",
-            })
+          if (!order) {
+            return
           }
+
+          const linkedSupplierOrder = getLinkedYarnSupplierOrder(
+            selectedPoId,
+            supplierOrders
+          )
+          const existingBatches = deliveryBatches.filter(
+            (batch) => batch.poId === selectedPoId
+          )
+
+          reset({
+            poNumber: getPurchaseOrderDisplayNo(order),
+            supplier: linkedSupplierOrder?.supplier || order.supplier || "",
+            batchNumber: `LOT-${String(existingBatches.length + 1).padStart(3, "0")}`,
+            quantity: "",
+            deliveryDate: new Date().toISOString().split("T")[0],
+            remarks: "",
+          })
         }}
         onSubmit={handleSubmit(onSubmit)}
         submitLabel="Save Receive"

@@ -5,9 +5,16 @@ import { DataTable } from "@/components/shared/data-table"
 import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { poStatusToStage } from "@/components/shared/stage-tracker"
+import {
+  getPurchaseOrderDisplayCcd,
+  getPurchaseOrderDisplayNo,
+  getPurchaseOrderDisplayQty,
+  getPurchaseOrderDisplayStyle,
+} from "@/lib/purchase-orders"
 import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
 import { workflowProgressByStatus } from "@/lib/workflow-status"
 import { useAppSelector } from "@/store/hooks"
+import type { PurchaseOrder } from "@/types/modules"
 
 const quickLinks = [
   {
@@ -119,19 +126,21 @@ export function ReportsPage() {
               key: "sl",
               header: "SL",
               className: "min-w-[3rem]",
-              render: (_row, rowIndex) => String(rowIndex + 1).padStart(2, "0"),
+              render: (_row: PurchaseOrder, rowIndex: number) =>
+                String(rowIndex + 1).padStart(2, "0"),
             },
             {
               key: "poNumber",
               header: "PO Number",
               className: "min-w-[5.75rem]",
-              render: (row) => String(row.poNumber || row.orderNo || "—"),
+              render: (row) => String(getPurchaseOrderDisplayNo(row) || "—"),
             },
             {
               key: "styleName",
               header: "Style Name",
               className: "min-w-[7rem]",
-              render: (row) => String(row.styleName || row.style || "—"),
+              render: (row) =>
+                String(getPurchaseOrderDisplayStyle(row) || "—"),
             },
             {
               key: "styleNo",
@@ -144,7 +153,7 @@ export function ReportsPage() {
               header: "Quantity",
               className: "min-w-[5rem]",
               render: (row) =>
-                Number(row.poQty ?? row.quantity ?? 0).toLocaleString("en-US"),
+                Number(getPurchaseOrderDisplayQty(row)).toLocaleString("en-US"),
             },
             {
               key: "color",
@@ -156,7 +165,7 @@ export function ReportsPage() {
               key: "deliveryDate",
               header: "CCD",
               className: "min-w-[5.75rem]",
-              render: (row) => String(row.ccd || row.deliveryDate || "—"),
+              render: (row) => String(getPurchaseOrderDisplayCcd(row) || "—"),
             },
             {
               key: "materialSummary",
