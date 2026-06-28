@@ -131,6 +131,15 @@ export function MerchandiseDashboardPage() {
     )
   }).length
   const draftPoList = purchaseOrders.filter((po) => po.status === "Created")
+  const currentMonthPoList = purchaseOrders.filter((po) => {
+    const ccdDate = new Date(getPurchaseOrderDisplayCcd(po))
+
+    return (
+      !Number.isNaN(ccdDate.getTime()) &&
+      ccdDate.getFullYear() === today.getFullYear() &&
+      ccdDate.getMonth() === today.getMonth()
+    )
+  })
   const purchaseOrderWorkflowMetrics = useMemo(() => {
     return createPurchaseOrderWorkflowMetrics({
       purchaseOrders,
@@ -214,6 +223,13 @@ export function MerchandiseDashboardPage() {
       <DataTable
         columns={workflowColumns}
         data={draftPoList}
+        headerRows={dashboardHeaderRows}
+        compact
+      />
+      <p className="text-lg font-semibold">PO Current Month</p>
+      <DataTable
+        columns={workflowColumns}
+        data={currentMonthPoList}
         headerRows={dashboardHeaderRows}
         compact
       />
