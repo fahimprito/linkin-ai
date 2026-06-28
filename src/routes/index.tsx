@@ -10,8 +10,6 @@ import { UnauthorizedPage } from "@/pages/common/UnauthorizedPage"
 import { ExecutiveDashboardPage } from "@/pages/dashboard/ExecutiveDashboardPage"
 import {
   MerchandiseProductionUpdatesPage,
-  YarnInformationReportPage,
-  YarnStockCalculationReportPage,
 } from "@/pages/forms/OperationsFormPages"
 import {
   DesignDashboardPage,
@@ -321,28 +319,12 @@ export const router = createBrowserRouter([
                 element: <ReportsPage />,
               },
               {
-                path: "/management/yarn-information",
-                element: <YarnInformationReportPage />,
-              },
-              {
-                path: "/management/yarn-stock-calculation",
-                element: <YarnStockCalculationReportPage />,
-              },
-              {
                 path: "/management/po-tracker",
                 element: <ManagementPoDetailTrackerPage />,
               },
               {
                 path: "/reports",
                 element: <Navigate to="/management" replace />,
-              },
-              {
-                path: "/reports/yarn-information",
-                element: <Navigate to="/management/yarn-information" replace />,
-              },
-              {
-                path: "/reports/yarn-stock-calculation",
-                element: <Navigate to="/management/yarn-stock-calculation" replace />,
               },
               {
                 path: "/reports/po-tracker",

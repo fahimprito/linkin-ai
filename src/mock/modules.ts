@@ -625,7 +625,7 @@ export const moduleSummaries: Record<string, GenericModuleSummary> = {
       {
         id: "r1",
         label: "Visible Reports",
-        value: "03",
+        value: "01",
         tone: "default",
       },
       {
@@ -643,12 +643,6 @@ export const moduleSummaries: Record<string, GenericModuleSummary> = {
     ],
     records: [
       { buyer: "H&M", report: "PO Tracker", readiness: "86%", status: "Watch" },
-      {
-        buyer: "Uniqlo",
-        report: "Yarn Information",
-        readiness: "95%",
-        status: "Healthy",
-      },
     ],
   },
 }

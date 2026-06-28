@@ -40,7 +40,7 @@ export function Sidebar() {
             <Bot className="size-5" />
           </div>
           <div>
-            <p className="text-sm font-semibold">Linkin AI</p>
+            <p className="text-sm font-semibold">KnitOps</p>
             <p className="text-xs text-muted-foreground">Admin dashboard</p>
           </div>
         </div>

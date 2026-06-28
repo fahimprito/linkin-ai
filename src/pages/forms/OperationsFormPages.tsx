@@ -584,47 +584,6 @@ export function FullSystemProductionReportPage() {
   )
 }
 
-export function YarnInformationReportPage() {
-  return (
-    <ModuleFormPage
-      title="Yarn Information Register"
-      description="Maintain yarn information fields for buyer, style, color, lot, composition, receiving, and supplier traceability."
-      storageKey="form-report-yarn-information"
-      fields={[
-        { name: "buyerName", label: "Buyer Name", placeholder: "H&M" },
-        { name: "styleNo", label: "Style No", placeholder: "ST-2048" },
-        { name: "color", label: "Color", placeholder: "Navy" },
-        { name: "lotNo", label: "Lot No", placeholder: "LOT-1022" },
-        { name: "yarnComposition", label: "Yarn Type", placeholder: "80% Wool / 20% Nylon" },
-        { name: "receivedDate", label: "Received Date", type: "date" },
-        { name: "quantity", label: "Quantity", placeholder: "820 kg" },
-        { name: "bag", label: "Bag", placeholder: "33" },
-        { name: "remarks", label: "Remarks", placeholder: "Released for knitting" },
-        { name: "supplier", label: "Supplier", placeholder: "Delta Yarn" },
-      ]}
-    />
-  )
-}
-
-export function YarnStockCalculationReportPage() {
-  return (
-    <ModuleFormPage
-      title="Yarn Stock Calculation"
-      description="Track daily yarn stock movement by color, delivered quantities, balances, and controller signature."
-      storageKey="form-report-yarn-stock-calculation"
-      fields={[
-        { name: "date", label: "Date", type: "date" },
-        { name: "colorQty", label: "Color Qty", placeholder: "Navy 320 kg" },
-        { name: "deliveryYarn", label: "Delivery Yarn", placeholder: "240 kg" },
-        { name: "deliveryBag", label: "Delivery Bag", placeholder: "12" },
-        { name: "balanceYarn", label: "Balance Yarn", placeholder: "80 kg" },
-        { name: "balanceBag", label: "Balance Bag", placeholder: "4" },
-        { name: "signature", label: "Signature", placeholder: "Controller Name" },
-      ]}
-    />
-  )
-}
-
 export function PackingSectionReportPage() {
   return (
     <ModuleFormPage

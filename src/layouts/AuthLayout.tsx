@@ -5,18 +5,12 @@ export function AuthLayout() {
     <div className="grid min-h-svh lg:grid-cols-[1.15fr_0.85fr]">
       <section className="hidden bg-[linear-gradient(145deg,_rgba(24,24,27,0.98),_rgba(54,65,83,0.95))] p-10 text-white lg:flex lg:flex-col lg:justify-between">
         <div className="max-w-md">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/60">
-            Linkin AI
-          </p>
           <h1 className="mt-6 text-4xl font-semibold tracking-tight">
-            BEST WOOL SWEATER&apos;S LIMITED
+            KnitOps
           </h1>
           <p className="mt-3 text-sm font-medium tracking-[0.18em] text-white/65 uppercase">
-            Jarun, Konabari, Gazipur
-          </p>
-          <h2 className="mt-8 text-3xl font-semibold tracking-tight">
             Manufacturing orchestration across merchandising, production, and inventory.
-          </h2>
+          </p>
           <p className="mt-5 text-sm leading-7 text-white/72">
             A unified operations layer for cross-functional teams managing garment planning,
             production execution, quality control, and executive reporting.

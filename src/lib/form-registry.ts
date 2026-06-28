@@ -30,11 +30,7 @@ export const moduleFormStorageKeys: Record<
     "form-store-floor-delivery",
     "form-store-status-report",
   ],
-  reports: [
-    "form-report-yarn-information",
-    "form-report-yarn-stock-calculation",
-    "form-report-po-tracker",
-  ],
+  reports: ["form-report-po-tracker"],
 }
 
 export const allFormStorageKeys = Object.values(moduleFormStorageKeys).flat()

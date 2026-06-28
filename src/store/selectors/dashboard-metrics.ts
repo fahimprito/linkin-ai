@@ -360,18 +360,6 @@ export function selectReportsDashboardMetrics(
   return [
     metric(
       "report-1",
-      "Yarn Registers",
-      getRecordsByKey(state, "form-report-yarn-information").length,
-      "success"
-    ),
-    metric(
-      "report-2",
-      "Stock Calculations",
-      getRecordsByKey(state, "form-report-yarn-stock-calculation").length,
-      "default"
-    ),
-    metric(
-      "report-3",
       "PO Trackers",
       getRecordsByKey(state, "form-report-po-tracker").length,
       "warning"

@@ -22,16 +22,6 @@ const quickLinks = [
     description: "Track management-facing PO progress in one place.",
     to: "/management/po-tracker",
   },
-  {
-    title: "Yarn Information",
-    description: "Review yarn register and supplier-level details.",
-    to: "/management/yarn-information",
-  },
-  {
-    title: "Yarn Stock Calculation",
-    description: "Check current yarn stock movement and balance.",
-    to: "/management/yarn-stock-calculation",
-  },
 ]
 
 export function ReportsPage() {

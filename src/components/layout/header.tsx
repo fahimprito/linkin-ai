@@ -45,7 +45,7 @@ export function Header() {
       </Button>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium uppercase tracking-[0.28em] text-muted-foreground">
-          Linkin AI Admin
+          KnitOps Admin
         </p>
         <h1 className="truncate text-lg font-semibold">Dashboard Overview</h1>
       </div>

@@ -1,23 +1,90 @@
-# Linkin AI Admin
+# Linkin AI ERP Frontend
 
-Frontend foundation for an enterprise SaaS platform called `Linkin AI`.
+Role-based ERP frontend for knit garment operations. The app coordinates the PO workflow across Merchandising, Design, Yarn, Store, and Management with shared tables, dashboards, and local workflow state.
 
-Linkin AI is designed for garment manufacturing operations. The platform connects cross-functional departments, standardizes workflows, tracks production, manages inventory, and provides management dashboards and insights.
+## What This Project Does
 
-This repository currently focuses on the frontend only. Data is mocked for now, but the architecture is prepared for external REST APIs.
+Linkin AI models a department-by-department production flow:
 
-## Overview
+- Merchandiser creates and manages purchase orders
+- Design receives submitted POs and adds consumption data
+- Yarn receives approved yarn-related POs, tracks receiving, inspection, swatch, and inventory
+- Store receives accessories-related POs, tracks receiving, inspection, and inventory
+- Management monitors workflow progress through a dashboard and PO tracker
 
-The app is built as a scalable admin dashboard with:
+The current build is frontend-only. Most business data is stored in `localStorage` and managed through Redux Toolkit so the app behaves like a working internal ERP prototype without requiring a backend.
 
-- role-based authentication and protected routing
-- department-based module access
-- dashboard and auth layouts
-- reusable UI building blocks
-- Redux Toolkit state management
-- RTK Query-based service layer
-- mock data and placeholder API behavior
-- responsive desktop and mobile navigation
+## Current Modules
+
+### Merchandise
+
+- Dashboard
+- PO List
+- Create PO
+- Create PO from Existing Style
+- Edit/Delete PO
+- Sourcing
+- Supplier management
+- Production updates
+- Inventory
+- Shipment
+- Management-style report
+- Master Excel page
+
+### Design
+
+- Dashboard
+- Request Consumption
+- Submitted PO List
+- Reports
+- Settings
+
+### Yarn
+
+- Dashboard
+- PO List
+- Requisition
+- Receive Yarn
+- Inspection
+- Swatch Card
+- Reports
+- Inventory
+- Supplier order / delivery / issue workflow pages
+
+### Store
+
+- Dashboard
+- PO List
+- Receive Accessories
+- Inspection
+- Inventory
+- Reports
+
+### Management
+
+- Dashboard
+- PO Detail Tracker
+
+## Key Functional Areas
+
+- Role-based login and protected routing
+- Module-aware sidebar navigation
+- Shared PO workflow across departments
+- Two-level grouped PO table headers where needed
+- Search, filter, sort, export, pagination, and responsive tables
+- Sticky action columns in large workflow tables
+- Local workflow synchronization between Merchandising, Design, Yarn, Store, and Management views
+- Status badges and workflow progress tracking
+- Light/dark theme support with light mode as default
+- Mobile-friendly sidebar and dashboard layout
+
+## Workflow Snapshot
+
+The PO workflow is modeled in the UI around these statuses:
+
+`Created` -> `Sent to Design` -> `Design Completed` -> `Sent to Yarn` -> `Yarn Processing` -> `Yarn Ready` -> `Sent to Store` -> `Store Processing` -> `Store Ready` -> downstream production stages
+
+Not every downstream production module is fully active yet, but the shared workflow model is already used by the active modules and reports.
 
 ## Tech Stack
 
@@ -31,270 +98,127 @@ The app is built as a scalable admin dashboard with:
 - `React Hook Form`
 - `Sonner`
 - `Axios`
-- `shadcn/ui` patterns with custom shared components
+- `Lucide React`
 
-## Business Context
+## Project Structure
 
-Linkin AI is intended to support multiple operational departments inside a garment manufacturing workflow:
+```txt
+src/
+|-- app/                    # app providers
+|-- components/
+|   |-- layout/             # header, sidebar, app shell
+|   |-- shared/             # reusable business components
+|   `-- ui/                 # low-level UI primitives
+|-- features/
+|   `-- auth/               # auth state
+|-- layouts/                # auth and dashboard layouts
+|-- lib/                    # workflow helpers, storage helpers, utilities
+|-- mock/                   # mock auth and seed data
+|-- pages/
+|   |-- auth/
+|   |-- dashboard/
+|   |-- design/
+|   |-- merchandise/
+|   |-- reports/
+|   |-- store/
+|   `-- yarn/
+|-- routes/                 # route config and redirects
+|-- services/               # RTK Query base API
+|-- store/                  # Redux store and slices
+`-- types/                  # shared domain types
+```
 
-- Merchandise
-- Yarn Control
-- Store Control
-- Knitting
-- Linking
-- Finishing
-- Management
-- Super Admin
+## State And Persistence
 
-Each user sees only the modules they are allowed to access.
+The app uses Redux Toolkit as the main state layer.
 
-## Authentication And RBAC
+### Active store areas
 
-The frontend includes a complete mock authentication architecture:
+- `auth`
+- `merchandise`
+- `yarnCheck`
+- `storeService`
+- `knitting`
+- `formSubmissions`
+- `notifications`
+- `ui`
+- `baseApi`
 
-- Login page
-- Forgot password page
-- Reset password page
-- Session persistence in local storage
-- Protected routes
-- Role-based route access
-- Default redirect based on role permissions
+### Persistence
 
-### Supported Roles
+The app currently persists important workflow data in `localStorage`, including:
+
+- user session
+- purchase orders
+- yarn receiving and inventory records
+- store receiving and inventory records
+- supplier records
+- notifications
+- form submissions
+
+This makes the prototype immediately usable during development without backend setup.
+
+## Authentication
+
+Mock authentication is built in.
+
+### Supported roles
 
 - `super_admin`
-- `merchandise_user`
-- `yarn_control_user`
-- `store_control_user`
-- `knitting_user`
-- `linking_user`
-- `finishing_user`
+- `merchandising_user`
+- `design_user`
+- `yarn_user`
+- `store_user`
 - `management_user`
 
-### Demo Accounts
+### Demo accounts
 
-All demo users currently use:
+All demo accounts use:
 
 ```txt
 password123
 ```
 
-Available demo emails:
+Available emails:
 
 - `admin@linkin.ai`
 - `merch@linkin.ai`
+- `design@linkin.ai`
 - `yarn@linkin.ai`
 - `store@linkin.ai`
-- `knit@linkin.ai`
-- `linking@linkin.ai`
-- `finishing@linkin.ai`
 - `management@linkin.ai`
 
-## Core Modules
+## Routing Overview
 
-### 1. Executive Dashboard
+The live app routes are organized around:
 
-- KPI cards
-- production overview
-- inventory overview
-- recent activity
-- executive reporting entry point
+- `/login`, `/forgot-password`, `/reset-password`
+- `/dashboard`
+- `/merchandise/*`
+- `/design/*`
+- `/yarn/*`
+- `/store/*`
+- `/management/*`
+- `/profile`
 
-### 2. Merchandise Module
+Route access is enforced by role through `src/routes/index.tsx` and `src/routes/protected-route.tsx`.
 
-- purchase order list
-- purchase order detail page
-- buyer information
-- design information
-- yarn consumption request context
-- supplier order tracking
-- production tracking
+## Shared UI Components
 
-### 3. Yarn Control Module
-
-- yarn purchase orders
-- supplier receipts
-- stock management
-- inspection records
-- floor delivery records
-
-### 4. Store Control Module
-
-- accessories purchase orders
-- supplier receipts
-- inventory tracking
-- inspection records
-- delivery records
-- stock reports
-
-### 5. Knitting Module
-
-- production orders
-- planning
-- requisitions
-- progress tracking
-- management reporting
-
-### 6. Linking Module
-
-- linking orders
-- planning
-- production tracking
-- status updates
-- management reporting
-
-### 7. Finishing Module
-
-- washing
-- ironing
-- packing
-- production planning
-- requisition requests
-- production tracking
-- management reports
-
-### 8. Reports And Analytics
-
-- executive analytics
-- production overview
-- yarn overview
-- store overview
-- shipment overview
-- KPI placeholders
-- chart placeholders
-
-## Frontend Architecture
-
-The project uses a feature-friendly and enterprise-ready structure:
-
-```txt
-src/
-├── app/
-├── assets/
-├── components/
-│   ├── layout/
-│   ├── shared/
-│   └── ui/
-├── features/
-├── hooks/
-├── layouts/
-├── lib/
-├── mock/
-├── pages/
-├── routes/
-├── services/
-├── store/
-└── types/
-```
-
-### Important Areas
-
-- `src/app`
-  App-level providers such as Redux, theme, and Sonner.
-
-- `src/components/layout`
-  Header, sidebar, breadcrumbs, and dashboard shell pieces.
-
-- `src/components/shared`
-  Reusable business UI components like tables, cards, states, and menus.
-
-- `src/features/auth`
-  Authentication state and role/session logic.
-
-- `src/mock`
-  Mock users, mock module data, and notifications.
-
-- `src/pages`
-  Route-level screens for auth, dashboard, modules, and shared page templates.
-
-- `src/routes`
-  Router configuration, protected route handling, and role-based redirects.
-
-- `src/services`
-  RTK Query base API and mocked async endpoints.
-
-- `src/store`
-  Redux store setup and shared slices.
-
-- `src/types`
-  Shared TypeScript domain types.
-
-## State Management
-
-Redux Toolkit is used for client state, and RTK Query is used for API-facing state.
-
-### Configured Slices
-
-- `authSlice`
-- `uiSlice`
-- `notificationSlice`
-
-### API Layer
-
-- `baseApi` is configured with RTK Query
-- `linkinApi` currently returns mock async responses
-- the structure is ready to swap from `fakeBaseQuery` to real API requests
-
-## Reusable UI Components
-
-The app already includes shared building blocks such as:
+The project already includes reusable building blocks used across modules:
 
 - `DataTable`
 - `PageHeader`
 - `SearchFilterBar`
 - `StatusBadge`
 - `MetricCard`
+- `StageTracker`
+- `ConfirmationDialog`
 - `EmptyState`
 - `LoadingState`
-- `ConfirmationDialog`
 - `UserMenu`
-- `NotificationDropdown`
 
-## Layout System
-
-### Auth Layout
-
-Used for:
-
-- login
-- forgot password
-- reset password
-
-### Dashboard Layout
-
-Used for:
-
-- sidebar navigation
-- top header
-- breadcrumbs
-- notification access
-- responsive mobile sidebar behavior
-
-## Routing
-
-Routing is organized around:
-
-- auth routes
-- protected routes
-- role-based route groups
-- unauthorized fallback
-- not found page
-
-Users are redirected to their first permitted module after login.
-
-## Mocked Data Strategy
-
-Until backend APIs are connected, the app uses:
-
-- mock auth users
-- mock module summaries
-- mock purchase orders
-- mock notifications
-- mocked RTK Query endpoints with async timing
-
-This keeps the UI and state flow realistic while backend integration is pending.
-
-## Getting Started
+## Development
 
 ### Install
 
@@ -302,16 +226,22 @@ This keeps the UI and state flow realistic while backend integration is pending.
 npm install
 ```
 
-### Run Development Server
+### Start dev server
 
 ```bash
 npm run dev
 ```
 
-### Type Check
+### Type check
 
 ```bash
 npm run typecheck
+```
+
+### Lint
+
+```bash
+npm run lint
 ```
 
 ### Build
@@ -320,41 +250,39 @@ npm run typecheck
 npm run build
 ```
 
-### Preview Production Build
+### Preview build
 
 ```bash
 npm run preview
 ```
 
-## Current Status
+## Notes For Developers
 
-Implemented:
+- The app is currently frontend-first and backend-ready, but not backend-connected.
+- Some legacy or placeholder pages still exist in the repository for future modules, but the active production flow is driven by the route tree in `src/routes/index.tsx`.
+- Several workflow integrations are implemented through shared helpers in `src/lib/` rather than isolated page logic.
+- If you change PO fields or workflow statuses, update the shared types, helpers, and table column definitions together.
 
-- dashboard shell
-- auth pages
-- mock login flow
-- role-based access control
-- module pages and placeholders
-- shared components
-- RTK Query mock service layer
-- session persistence
-- responsive sidebar and header
+## Current Scope
 
-Still good next steps:
+Implemented well enough to demo:
 
-- real backend API integration
-- real search/filter logic
-- profile and settings pages
-- charts and visual analytics
-- tables with pagination/sorting
-- form validation and submission flows
-- permissions from backend
-- testing setup
+- auth flow
+- role-aware navigation
+- merchandise PO workflow
+- design handoff flow
+- yarn receiving / inspection / reporting / inventory UI
+- store receiving / inspection / reporting / inventory UI
+- management PO tracking
+- responsive admin shell
 
-## Notes
+Still evolving:
 
-- Some earlier scaffold files still exist in the repo, such as older starter layout/page files, but the active app flow uses the route-based architecture under `src/routes`, `src/layouts`, and `src/pages`.
-- The service layer currently mixes RTK Query mocks and an `axios` helper so the app is ready for future API integration.
+- full production module rollout
+- backend API integration
+- audit trail hardening
+- deeper validation rules across all stages
+- automated tests
 
 ## License
 

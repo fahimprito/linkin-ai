@@ -52,7 +52,7 @@ export function LoginPage() {
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">Authentication</p>
-          <h1 className="text-2xl font-semibold">Sign in to Linkin AI</h1>
+          <h1 className="text-2xl font-semibold">Sign in to KnitOps</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Use your work credentials to access the dashboard.
           </p>

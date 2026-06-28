@@ -124,8 +124,6 @@ export const dashboardNavigation: NavigationItem[] = [
     allowedRoles: ["super_admin", "management_user"],
     children: [
       { label: "Dashboard", to: "/management", icon: Gauge },
-      { label: "Yarn Information", to: "/management/yarn-information", icon: Cable },
-      { label: "Yarn Stock Calc", to: "/management/yarn-stock-calculation", icon: Boxes },
       { label: "PO Tracker", to: "/management/po-tracker", icon: ScanSearch },
     ],
   },
