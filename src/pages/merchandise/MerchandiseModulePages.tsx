@@ -8,11 +8,12 @@
   Truck,
   Warehouse,
 } from "lucide-react"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 import { DataTable } from "@/components/shared/data-table"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
+import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import {
   getPurchaseOrderDisplayCcd,
@@ -180,11 +181,45 @@ export function MerchandiseInventoryPage() {
   const purchaseOrders = useAppSelector(
     (state) => state.merchandise.purchaseOrders
   )
+  const stockMovements = useAppSelector((state) => state.yarnCheck.stockMovements)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activeFilter, setActiveFilter] = useState("All")
   const totalRequiredYarn = purchaseOrders.reduce(
     (sum, po) => sum + (po.requiredYarnQty ?? 0),
     0
   )
   const coloredStyles = purchaseOrders.filter((po) => po.color?.trim()).length
+  const normalizedSearch = searchQuery.trim().toLowerCase()
+  const filteredOrders = purchaseOrders.filter((po) => {
+    const hasSupplier = po.supplier.trim().length > 0
+    const hasColor = Boolean(po.color?.trim())
+    const hasRequiredYarn = Number(po.requiredYarnQty ?? 0) > 0
+
+    const matchesFilter =
+      activeFilter === "All" ||
+      (activeFilter === "Supplier Assigned" && hasSupplier) ||
+      (activeFilter === "No Supplier" && !hasSupplier) ||
+      (activeFilter === "With Color" && hasColor) ||
+      (activeFilter === "Required Yarn" && hasRequiredYarn)
+
+    if (!matchesFilter) {
+      return false
+    }
+
+    if (!normalizedSearch) {
+      return true
+    }
+
+    return [
+      po.poNumber,
+      getPurchaseOrderDisplayStyle(po),
+      getPurchaseOrderDisplayYarn(po),
+      po.color,
+      po.supplier,
+    ].some((value) =>
+      String(value ?? "").toLowerCase().includes(normalizedSearch)
+    )
+  })
 
   return (
     <div className="space-y-6">
@@ -210,6 +245,21 @@ export function MerchandiseInventoryPage() {
           tone="warning"
         />
       </section>
+      <SearchFilterBar
+        compact
+        filters={[
+          "All",
+          "Supplier Assigned",
+          "No Supplier",
+          "With Color",
+          "Required Yarn",
+        ]}
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        searchPlaceholder="Search PO, style, yarn type, color, supplier"
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
       <DataTable
         columns={[
           { key: "poNumber", header: "PO Number" },
@@ -225,13 +275,29 @@ export function MerchandiseInventoryPage() {
           },
           { key: "color", header: "Color" },
           {
-            key: "requiredYarnQty",
-            header: "Required Yarn (kg)",
-            render: (row) => String(row.requiredYarnQty ?? "-"),
+            key: "availableYarn",
+            header: "Available Yarn (kg)",
+            render: (row) => {
+              const availableYarn = stockMovements
+                .filter((movement) => movement.poId === row.id)
+                .reduce((sum, movement) => {
+                  if (movement.movementType === "Issued to Knitting") {
+                    return sum - movement.quantity
+                  }
+
+                  return sum + movement.quantity
+                }, 0)
+
+              return String(availableYarn > 0 ? availableYarn : 0)
+            },
           },
-          { key: "supplier", header: "Supplier" },
+          {
+            key: "expiryDate",
+            header: "Expiry Date",
+            render: (row) => String(row.yarnEta ?? "-"),
+          },
         ]}
-        data={purchaseOrders}
+        data={filteredOrders}
       />
     </div>
   )
