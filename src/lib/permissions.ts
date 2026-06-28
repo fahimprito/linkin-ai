@@ -80,7 +80,7 @@ export const dashboardNavigation: NavigationItem[] = [
     children: [
       { label: "Dashboard", to: "/design/dashboard", icon: Gauge },
       {
-        label: "Request Consumption",
+        label: "Consumption Required",
         to: "/design/request-consumption",
         icon: ClipboardList,
       },
