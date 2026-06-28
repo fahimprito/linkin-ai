@@ -4,6 +4,7 @@ import {
   Cable,
   CheckCircle,
   ClipboardList,
+  Package,
   FileSearch,
   Gauge,
   Handshake,
@@ -17,7 +18,7 @@ import {
 } from "lucide-react"
 
 import type { AppModuleKey, UserRole } from "@/types/auth"
-import type { NavigationItem } from "@/types/navigation"
+import type { NavigationChildItem, NavigationItem } from "@/types/navigation"
 
 export const roleLabels: Record<UserRole, string> = {
   super_admin: "Admin",
@@ -56,7 +57,15 @@ export const dashboardNavigation: NavigationItem[] = [
       { label: "Sourcing", to: "/merchandise/sourcing", icon: ShoppingBag },
       { label: "Supplier", to: "/merchandise/supplier", icon: ShoppingBag },
       { label: "Production", to: "/merchandise/production", icon: ClipboardList },
-      { label: "Inventory", to: "/merchandise/inventory", icon: Boxes },
+      {
+        label: "Inventory",
+        to: "/merchandise/inventory",
+        icon: Boxes,
+        children: [
+          { label: "Yarn", to: "/merchandise/inventory/yarn", icon: Cable },
+          { label: "Store", to: "/merchandise/inventory/store", icon: Package },
+        ],
+      },
       { label: "Shipment", to: "/merchandise/shipment", icon: Truck },
       { label: "Report", to: "/merchandise/report", icon: BarChart3 },
       { label: "Settings", to: "/merchandise/settings", icon: Settings },
@@ -137,6 +146,35 @@ export function hasRoleAccess(userRole: UserRole, allowedRoles?: UserRole[]) {
   return allowedRoles.includes(userRole)
 }
 
+function flattenNavigationChildren(
+  parentItem: NavigationItem,
+  children: NavigationChildItem[]
+): NavigationItem[] {
+  return children.flatMap((child) => {
+    if (child.children?.length) {
+      return [
+        {
+          ...parentItem,
+          label: child.label,
+          to: child.to,
+          icon: child.icon ?? parentItem.icon,
+          children: child.children,
+        },
+      ]
+    }
+
+    return [
+      {
+        ...parentItem,
+        label: child.label,
+        to: child.to,
+        icon: child.icon ?? parentItem.icon,
+        children: undefined,
+      },
+    ]
+  })
+}
+
 export function hasModuleAccess(
   permissions: AppModuleKey[] | undefined,
   moduleKey: AppModuleKey
@@ -174,13 +212,7 @@ export function getNavigationForUser(
       ]
     }
 
-    return item.children.map((child) => ({
-      ...item,
-      label: child.label,
-      to: child.to,
-      icon: child.icon ?? item.icon,
-      children: undefined,
-    }))
+    return flattenNavigationChildren(item, item.children)
   })
 }
 

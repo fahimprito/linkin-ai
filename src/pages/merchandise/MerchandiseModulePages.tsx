@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import {
+  getPurchaseOrderDisplayAccessories,
   getPurchaseOrderDisplayCcd,
   getPurchaseOrderDisplayQty,
   getPurchaseOrderDisplayStyle,
@@ -26,8 +27,11 @@ import {
   purchaseOrderWorkflowHeaderRows,
 } from "@/lib/purchase-order-table-columns"
 import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
+import { getStoredStoreInventoryRecords } from "@/lib/store-accessories"
+import { getStoredStoreControllerRecords } from "@/lib/store-controller"
 import { ModuleSettingsPage } from "@/pages/shared/ModuleSettingsPage"
 import { useAppSelector } from "@/store/hooks"
+import type { StoreInspectionStatus } from "@/types/modules"
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString()
@@ -35,6 +39,46 @@ function formatDate(value: string) {
 
 function isReadyToShipStatus(status: string) {
   return status.toLowerCase().includes("ready to ship")
+}
+
+type MerchandiseStoreInventoryRow = {
+  id: string
+  poNumber: string
+  styleName: string
+  styleNo: string
+  accessories: string
+  totalRequiredQty: number
+  inHouseAccessories: number
+  balanceAccessories: number
+  supplier: string
+  eta: string
+  inspectionStatus: string
+  inventoryStatus: string
+  remarks: string
+}
+
+function getStoreInventoryStatus(params: {
+  inspectionStatus?: StoreInspectionStatus
+  currentStock: number
+  receivedQty: number
+}) {
+  if (params.inspectionStatus === "Rejected") {
+    return "Rejected"
+  }
+
+  if (params.currentStock > 0) {
+    return "In Stock"
+  }
+
+  if (params.inspectionStatus === "Approved" && params.receivedQty > 0) {
+    return "Out of Stock"
+  }
+
+  if (params.receivedQty > 0) {
+    return "Pending Inspection"
+  }
+
+  return "Not Received"
 }
 
 export function MerchandiseDashboardPage() {
@@ -264,10 +308,11 @@ export function MerchandiseInventoryPage() {
         columns={[
           { key: "poNumber", header: "PO Number" },
           {
-            key: "style",
-            header: "Style",
+            key: "styleName",
+            header: "Style Name",
             render: (row) => getPurchaseOrderDisplayStyle(row),
           },
+          { key: "styleNo", header: "Style Number" },
           {
             key: "yarnComposition",
             header: "Yarn Type",
@@ -298,6 +343,209 @@ export function MerchandiseInventoryPage() {
           },
         ]}
         data={filteredOrders}
+      />
+    </div>
+  )
+}
+
+export function MerchandiseStoreInventoryPage() {
+  const purchaseOrders = useAppSelector((state) => state.merchandise.purchaseOrders)
+  const supplierOrders = useAppSelector((state) => state.yarnCheck.supplierOrders)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activeFilter, setActiveFilter] = useState("All Stock")
+
+  const storeControllerRecords = useMemo(() => getStoredStoreControllerRecords(), [])
+  const storeInventoryRecords = useMemo(() => getStoredStoreInventoryRecords(), [])
+
+  const rows = useMemo<MerchandiseStoreInventoryRow[]>(() => {
+    return purchaseOrders
+      .filter((po) => {
+        const requiredQty = po.totalAccessoriesQty ?? 0
+        const hasStoreRecord = storeControllerRecords.some((record) => record.poId === po.id)
+        const hasStoreInventory = storeInventoryRecords.some(
+          (record) => record.poId === po.id || record.poNumber === po.poNumber
+        )
+        const hasAccessoriesOrder = supplierOrders.some(
+          (order) =>
+            (order.itemCategory ?? "Yarn") === "Accessories" && order.poId === po.id
+        )
+
+        return requiredQty > 0 || hasStoreRecord || hasStoreInventory || hasAccessoriesOrder
+      })
+      .map((po) => {
+        const storeRecord = storeControllerRecords.find((record) => record.poId === po.id)
+        const accessoriesOrder = supplierOrders
+          .filter(
+            (order) =>
+              (order.itemCategory ?? "Yarn") === "Accessories" && order.poId === po.id
+          )
+          .sort((left, right) => right.orderedAt.localeCompare(left.orderedAt))[0]
+        const relatedInventoryRecords = storeInventoryRecords.filter(
+          (record) => record.poId === po.id || record.poNumber === po.poNumber
+        )
+        const totalRequiredQty = po.totalAccessoriesQty ?? 0
+        const inHouseAccessories = storeRecord?.receivedQty ?? 0
+        const balanceAccessories = Math.max(0, totalRequiredQty - inHouseAccessories)
+        const currentStock = relatedInventoryRecords.reduce(
+          (sum, record) => sum + record.currentStock,
+          0
+        )
+        const inspectionStatus = storeRecord?.inspectionStatus ?? "Pending"
+        const inventoryStatus = getStoreInventoryStatus({
+          inspectionStatus: storeRecord?.inspectionStatus,
+          currentStock,
+          receivedQty: inHouseAccessories,
+        })
+
+        return {
+          id: po.id,
+          poNumber: po.poNumber,
+          styleName: getPurchaseOrderDisplayStyle(po),
+          styleNo: po.styleNo ?? "",
+          accessories: getPurchaseOrderDisplayAccessories(po),
+          totalRequiredQty,
+          inHouseAccessories,
+          balanceAccessories,
+          supplier:
+            storeRecord?.supplier ||
+            accessoriesOrder?.supplier ||
+            relatedInventoryRecords[0]?.supplier ||
+            "—",
+          eta: storeRecord?.eta || accessoriesOrder?.expectedArrival || "—",
+          inspectionStatus,
+          inventoryStatus,
+          remarks: storeRecord?.remarks || "—",
+        }
+      })
+  }, [purchaseOrders, storeControllerRecords, storeInventoryRecords, supplierOrders])
+
+  const normalizedSearch = searchQuery.trim().toLowerCase()
+  const filteredRows = rows.filter((row) => {
+    const matchesFilter =
+      activeFilter === "All Stock" ||
+      (activeFilter === "In Stock" && row.inventoryStatus === "In Stock") ||
+      (activeFilter === "Shortage" && row.balanceAccessories > 0) ||
+      (activeFilter === "Approved" && row.inspectionStatus === "Approved") ||
+      (activeFilter === "Pending Inspection" &&
+        row.inventoryStatus === "Pending Inspection") ||
+      (activeFilter === "Rejected" && row.inspectionStatus === "Rejected")
+
+    if (!matchesFilter) {
+      return false
+    }
+
+    if (!normalizedSearch) {
+      return true
+    }
+
+    return [
+      row.poNumber,
+      row.styleName,
+      row.styleNo,
+      row.accessories,
+      row.supplier,
+      row.remarks,
+    ].some((value) =>
+      String(value ?? "").toLowerCase().includes(normalizedSearch)
+    )
+  })
+
+  const totalRequiredAccessories = rows.reduce(
+    (sum, row) => sum + row.totalRequiredQty,
+    0
+  )
+  const totalInHouseAccessories = rows.reduce(
+    (sum, row) => sum + row.inHouseAccessories,
+    0
+  )
+  const approvedRows = rows.filter((row) => row.inspectionStatus === "Approved").length
+  const shortageRows = rows.filter((row) => row.balanceAccessories > 0).length
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Merchandise Inventory View - Store" />
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
+        <MetricCard
+          label="Required Accessories"
+          value={String(totalRequiredAccessories)}
+          tone="default"
+        />
+        <MetricCard
+          label="In-House Accessories"
+          value={String(totalInHouseAccessories)}
+          tone="success"
+        />
+        <MetricCard
+          label="Approved Rows"
+          value={String(approvedRows).padStart(2, "0")}
+          tone="success"
+        />
+        <MetricCard
+          label="Shortage Rows"
+          value={String(shortageRows).padStart(2, "0")}
+          tone="warning"
+        />
+      </section>
+
+      <SearchFilterBar
+        compact
+        filters={[
+          "All Stock",
+          "In Stock",
+          "Shortage",
+          "Approved",
+          "Pending Inspection",
+          "Rejected",
+        ]}
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        searchPlaceholder="Search PO, style, style no, accessories, supplier"
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+
+      <DataTable
+        compact
+        columns={[
+          { key: "poNumber", header: "PO Number", className: "min-w-[5.75rem]" },
+          { key: "styleName", header: "Style Name", className: "min-w-[7rem]" },
+          { key: "styleNo", header: "Style Number", className: "min-w-[5.75rem]" },
+          { key: "accessories", header: "Accessories", className: "min-w-[7rem]" },
+          {
+            key: "totalRequiredQty",
+            header: "Total Required Qty",
+            className: "min-w-[6rem]",
+            render: (row) => String(row.totalRequiredQty),
+          },
+          {
+            key: "inHouseAccessories",
+            header: "In-House Accessories",
+            className: "min-w-[6rem]",
+            render: (row) => String(row.inHouseAccessories),
+          },
+          {
+            key: "balanceAccessories",
+            header: "Balance Accessories",
+            className: "min-w-[6rem]",
+            render: (row) => String(row.balanceAccessories),
+          },
+          { key: "supplier", header: "Supplier", className: "min-w-[6rem]" },
+          { key: "eta", header: "ETA", className: "min-w-[5.75rem]" },
+          {
+            key: "inspectionStatus",
+            header: "Inspection Status",
+            className: "min-w-[6rem]",
+            render: (row) => <StatusBadge value={row.inspectionStatus} />,
+          },
+          {
+            key: "inventoryStatus",
+            header: "Inventory Status",
+            className: "min-w-[6rem]",
+            render: (row) => <StatusBadge value={row.inventoryStatus} />,
+          },
+          { key: "remarks", header: "Remarks", className: "min-w-[7rem]" },
+        ]}
+        data={filteredRows}
       />
     </div>
   )

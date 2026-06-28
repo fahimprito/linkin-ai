@@ -25,6 +25,7 @@ import { MerchandiseSupplierPage } from "@/pages/merchandise/MerchandiseSupplier
 import {
   MerchandiseDashboardPage,
   MerchandiseInventoryPage,
+  MerchandiseStoreInventoryPage,
   MerchandiseSettingsPage,
   MerchandiseShipmentPage,
 } from "@/pages/merchandise/MerchandiseModulePages"
@@ -124,7 +125,15 @@ export const router = createBrowserRouter([
               },
               {
                 path: "/merchandise/inventory",
+                element: <Navigate to="/merchandise/inventory/yarn" replace />,
+              },
+              {
+                path: "/merchandise/inventory/yarn",
                 element: <MerchandiseInventoryPage />,
+              },
+              {
+                path: "/merchandise/inventory/store",
+                element: <MerchandiseStoreInventoryPage />,
               },
               {
                 path: "/merchandise/shipment",
