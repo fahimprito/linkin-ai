@@ -1,4 +1,4 @@
-import { Copy, FileUp, Pencil, Trash2 } from "lucide-react"
+import { FileUp, Pencil, Trash2 } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router"
@@ -87,7 +87,7 @@ const purchaseOrderFields: ModalFormField[] = [
   },
 ]
 
-const copyPoReadOnlyFieldNames = new Set([
+const styleCreateReadOnlyFieldNames = new Set([
   "styleName",
   "styleNo",
   "gauge",
@@ -98,7 +98,7 @@ const copyPoReadOnlyFieldNames = new Set([
   "shipmentSample",
 ])
 
-const copyPoBlankFieldNames = new Set([
+const styleCreateBlankFieldNames = new Set([
   "poNumber",
   "poQty",
   "ccd",
@@ -156,40 +156,56 @@ function getOrderFormValues(
   }
 }
 
-function getCopyPoFormValues(order: PurchaseOrder): CreatePurchaseOrderPayload {
-  const values = getOrderFormValues(order)
-
+function getCreateFromStyleFormValues(
+  order: PurchaseOrder
+): CreatePurchaseOrderPayload {
   return {
-    ...values,
-    poNumber: "",
-    poQty: 0,
+    buyer: "",
+    style: getPurchaseOrderDisplayStyle(order),
+    design: "",
     quantity: 0,
-    ccd: "",
-    color: "",
-    itemNameCode: "",
-    remarks: "",
     status: "Created",
-    yarnCheckRequestId: undefined,
-    consumptionRequestedAt: undefined,
+    supplier: "",
+    deliveryDate: "",
+    color: "",
+    requiredYarnQty: 0,
+    styleName: getPurchaseOrderDisplayStyle(order),
+    styleNo: order.styleNo ?? "",
+    poNumber: "",
+    productionUnit: getPurchaseOrderDisplayProductionUnit(order),
+    ppStatus: getPurchaseOrderDisplayPpStatus(order),
+    shipmentSample: getPurchaseOrderDisplayShipmentSample(order),
+    poQty: 0,
+    ccd: "",
+    quality: order.quality ?? getPurchaseOrderDisplayYarn(order),
+    gauge: getPurchaseOrderDisplayGauge(order),
+    itemNameCode: "",
+    accessories: getPurchaseOrderDisplayAccessories(order),
+    remarks: "",
+    totalYarnKg: 0,
+    totalFabricKg: 0,
+    totalAccessoriesQty: 0,
   }
 }
 
-function getPurchaseOrderFieldsForMode(
-  mode: "create" | "edit" | "copy"
-): ModalFormField[] {
-  if (mode !== "copy") {
+function getPurchaseOrderFieldsForMode(mode: "create" | "edit") {
+  if (mode !== "edit") {
     return purchaseOrderFields
   }
 
+  return purchaseOrderFields
+}
+
+function getStyleCreateFields(): ModalFormField[] {
   return purchaseOrderFields.map((field) => {
-    if (copyPoReadOnlyFieldNames.has(field.name)) {
+    if (styleCreateReadOnlyFieldNames.has(field.name)) {
       return {
         ...field,
         readOnly: true,
       }
     }
 
-    if (copyPoBlankFieldNames.has(field.name)) {
+    if (styleCreateBlankFieldNames.has(field.name)) {
       return {
         ...field,
         placeholder:
@@ -208,9 +224,11 @@ export function MerchandiseListPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isCreateFromStyleModalOpen, setIsCreateFromStyleModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null)
-  const [copySourceOrder, setCopySourceOrder] = useState<PurchaseOrder | null>(null)
+  const [selectedStyleName, setSelectedStyleName] = useState("")
+  const [styleSourceOrder, setStyleSourceOrder] = useState<PurchaseOrder | null>(null)
   const [orderPendingDelete, setOrderPendingDelete] =
     useState<PurchaseOrder | null>(null)
   const [uploadedPoFileName, setUploadedPoFileName] = useState("")
@@ -227,18 +245,44 @@ export function MerchandiseListPage() {
       defaultValues: getOrderFormValues(),
     }
   )
+  const {
+    register: registerStyleCreate,
+    handleSubmit: handleStyleCreateSubmit,
+    reset: resetStyleCreate,
+  } = useForm<CreatePurchaseOrderPayload>({
+    defaultValues: getOrderFormValues(),
+  })
 
   const defaultFormValues = getOrderFormValues()
-  const isCopyMode = Boolean(copySourceOrder)
-  const modalMode: "create" | "edit" | "copy" = editingOrder
-    ? "edit"
-    : copySourceOrder
-      ? "copy"
-      : "create"
+  const modalMode: "create" | "edit" = editingOrder ? "edit" : "create"
   const modalFields = useMemo(
     () => getPurchaseOrderFieldsForMode(modalMode),
     [modalMode]
   )
+  const styleCreateFields = useMemo(() => getStyleCreateFields(), [])
+  const styleOptions = useMemo(() => {
+    const styleMap = new Map<string, PurchaseOrder>()
+
+    purchaseOrders.forEach((order) => {
+      const styleName = getPurchaseOrderDisplayStyle(order).trim()
+      if (!styleName) {
+        return
+      }
+
+      const normalizedStyleName = styleName.toLowerCase()
+      if (!styleMap.has(normalizedStyleName)) {
+        styleMap.set(normalizedStyleName, order)
+      }
+    })
+
+    return Array.from(styleMap.entries())
+      .map(([normalizedStyleName, order]) => ({
+        normalizedStyleName,
+        label: getPurchaseOrderDisplayStyle(order),
+        order,
+      }))
+      .sort((left, right) => left.label.localeCompare(right.label))
+  }, [purchaseOrders])
 
   // Filter POs based on active filter
   const filteredOrders = purchaseOrders.filter((po) => {
@@ -277,9 +321,15 @@ export function MerchandiseListPage() {
 
   const openCreateModal = () => {
     setEditingOrder(null)
-    setCopySourceOrder(null)
     reset(defaultFormValues)
     setIsCreateModalOpen(true)
+  }
+
+  const openCreateFromStyleModal = () => {
+    setSelectedStyleName("")
+    setStyleSourceOrder(null)
+    resetStyleCreate(defaultFormValues)
+    setIsCreateFromStyleModalOpen(true)
   }
 
   const handleUploadPo = () => {
@@ -294,20 +344,28 @@ export function MerchandiseListPage() {
   }
 
   const openEditModal = (order: PurchaseOrder) => {
-    setCopySourceOrder(null)
     reset(getOrderFormValues(order))
     setEditingOrder(order)
     setIsCreateModalOpen(true)
   }
 
-  const openCopyModal = (order: PurchaseOrder) => {
-    setEditingOrder(null)
-    setCopySourceOrder(order)
-    reset(getCopyPoFormValues(order))
-    setIsCreateModalOpen(true)
+  const handleStyleSelection = (nextStyleName: string) => {
+    setSelectedStyleName(nextStyleName)
+    const matchedStyle = styleOptions.find(
+      (styleOption) =>
+        styleOption.label.trim().toLowerCase() === nextStyleName.trim().toLowerCase()
+    )?.order
+
+    setStyleSourceOrder(matchedStyle ?? null)
+    resetStyleCreate(
+      matchedStyle ? getCreateFromStyleFormValues(matchedStyle) : defaultFormValues
+    )
   }
 
-  const onSubmit = (values: CreatePurchaseOrderPayload) => {
+  const buildNormalizedPurchaseOrderValues = (
+    values: CreatePurchaseOrderPayload,
+    baseOrder?: PurchaseOrder | null
+  ) => {
     const poNumber = values.poNumber?.trim() || ""
     const styleName = values.styleName?.trim() || values.style?.trim() || ""
     const gauge = values.gauge?.trim() || ""
@@ -355,13 +413,13 @@ export function MerchandiseListPage() {
 
     if (!itemNameCode) {
       toast.error("Item Name & Code is required.")
-      return
+      return null
     }
 
-    const normalizedValues = {
+    return {
       ...values,
-      buyer: editingOrder?.buyer ?? "",
-      design: editingOrder?.design ?? "",
+      buyer: editingOrder?.buyer ?? baseOrder?.buyer ?? "",
+      design: editingOrder?.design ?? baseOrder?.design ?? "",
       poNumber,
       style: styleName,
       quantity: poQty,
@@ -377,18 +435,20 @@ export function MerchandiseListPage() {
       productionUnit,
       remarks: values.remarks?.trim() || "",
       gauge,
-      supplier: copySourceOrder?.supplier ?? editingOrder?.supplier ?? "",
-      yarnEta: copySourceOrder?.yarnEta ?? editingOrder?.yarnEta ?? "",
-      requiredYarnQty:
-        copySourceOrder?.requiredYarnQty ?? editingOrder?.requiredYarnQty ?? 0,
-      totalYarnKg: copySourceOrder?.totalYarnKg ?? editingOrder?.totalYarnKg ?? 0,
-      totalFabricKg:
-        copySourceOrder?.totalFabricKg ?? editingOrder?.totalFabricKg ?? 0,
-      totalAccessoriesQty:
-        copySourceOrder?.totalAccessoriesQty ??
-        editingOrder?.totalAccessoriesQty ??
-        0,
+      supplier: editingOrder?.supplier ?? "",
+      yarnEta: editingOrder?.yarnEta ?? "",
+      requiredYarnQty: editingOrder?.requiredYarnQty ?? 0,
+      totalYarnKg: editingOrder?.totalYarnKg ?? 0,
+      totalFabricKg: editingOrder?.totalFabricKg ?? 0,
+      totalAccessoriesQty: editingOrder?.totalAccessoriesQty ?? 0,
       status: editingOrder?.status ?? "Created",
+    }
+  }
+
+  const onSubmit = (values: CreatePurchaseOrderPayload) => {
+    const normalizedValues = buildNormalizedPurchaseOrderValues(values)
+    if (!normalizedValues) {
+      return
     }
 
     if (editingOrder) {
@@ -398,19 +458,41 @@ export function MerchandiseListPage() {
           updates: normalizedValues,
         })
       )
-      toast.success(`Purchase order ${poNumber} updated successfully.`)
-    } else if (copySourceOrder) {
-      dispatch(addPurchaseOrder(normalizedValues))
-      toast.success(`New PO ${poNumber} copied successfully.`)
+      toast.success(
+        `Purchase order ${normalizedValues.poNumber} updated successfully.`
+      )
     } else {
       dispatch(addPurchaseOrder(normalizedValues))
-      toast.success(`Purchase order ${poNumber} created successfully.`)
+      toast.success(
+        `Purchase order ${normalizedValues.poNumber} created successfully.`
+      )
     }
 
     reset(defaultFormValues)
     setEditingOrder(null)
-    setCopySourceOrder(null)
     setIsCreateModalOpen(false)
+  }
+
+  const handleCreateFromStyle = (values: CreatePurchaseOrderPayload) => {
+    if (!styleSourceOrder) {
+      toast.error("Please select a style name first.")
+      return
+    }
+
+    const normalizedValues = buildNormalizedPurchaseOrderValues(
+      values,
+      styleSourceOrder
+    )
+    if (!normalizedValues) {
+      return
+    }
+
+    dispatch(addPurchaseOrder(normalizedValues))
+    toast.success(`Purchase order ${normalizedValues.poNumber} created successfully.`)
+    setIsCreateFromStyleModalOpen(false)
+    setSelectedStyleName("")
+    setStyleSourceOrder(null)
+    resetStyleCreate(defaultFormValues)
   }
 
   const handleRequestConsumption = (po: PurchaseOrder) => {
@@ -495,6 +577,14 @@ export function MerchandiseListPage() {
               onClick={openCreateModal}
             >
               Create PO
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-2xl"
+              onClick={openCreateFromStyleModal}
+            >
+              Create PO from Existing Style
             </Button>
           </>
         }
@@ -600,18 +690,6 @@ export function MerchandiseListPage() {
                     variant="outline"
                     size="sm"
                     className="h-7 w-7 cursor-pointer rounded-lg px-0 text-[11px] sm:w-auto sm:px-2"
-                    onClick={() => openCopyModal(po)}
-                    aria-label="Copy purchase order"
-                    title="Copy PO"
-                  >
-                    <Copy className="size-3.5" />
-                    <span className="hidden sm:inline">Copy</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 w-7 cursor-pointer rounded-lg px-0 text-[11px] sm:w-auto sm:px-2"
                     onClick={() => openEditModal(po)}
                     aria-label="Edit purchase order"
                     title="Edit"
@@ -647,30 +725,21 @@ export function MerchandiseListPage() {
         title={
           editingOrder
             ? "Edit Purchase Order"
-            : copySourceOrder
-              ? "Create New PO"
-              : "Create PO Request"
+            : "Create PO Request"
         }
         description={
-          copySourceOrder
-            ? "This new PO is copied from the selected row. Read-only fields are locked, and the new PO-specific fields must be entered."
-            : "Fill in PO details. The order will start in Created status, then move to Design for consumption before Yarn begins."
+          "Fill in PO details. The order will start in Created status, then move to Design for consumption before Yarn begins."
         }
         fields={modalFields}
         register={register}
         onClose={() => {
           setIsCreateModalOpen(false)
           setEditingOrder(null)
-          setCopySourceOrder(null)
           reset(defaultFormValues)
         }}
         onReset={() => {
           if (editingOrder) {
             reset(getOrderFormValues(editingOrder))
-            return
-          }
-          if (copySourceOrder) {
-            reset(getCopyPoFormValues(copySourceOrder))
             return
           }
           reset(defaultFormValues)
@@ -679,12 +748,149 @@ export function MerchandiseListPage() {
         submitLabel={
           editingOrder
             ? "Update Purchase Order"
-            : isCopyMode
-              ? "Create PO"
-              : "Submit Purchase Order"
+            : "Submit Purchase Order"
         }
         maxWidthClassName="max-w-6xl"
       />
+
+      {isCreateFromStyleModalOpen ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-4 py-6">
+          <div className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[2rem] border border-border/70 bg-card p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold">Create PO from Existing Style</h2>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Select an existing style, review the read-only fields, then enter the new PO-specific values.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => {
+                  setIsCreateFromStyleModalOpen(false)
+                  setSelectedStyleName("")
+                  setStyleSourceOrder(null)
+                  resetStyleCreate(defaultFormValues)
+                }}
+              >
+                Close
+              </Button>
+            </div>
+
+            <div className="mt-6 space-y-2">
+              <label htmlFor="existing-style-name" className="text-sm font-medium">
+                Style Name
+              </label>
+              <input
+                id="existing-style-name"
+                list="existing-style-options"
+                value={selectedStyleName}
+                onChange={(event) => handleStyleSelection(event.target.value)}
+                placeholder="Search and select a style name"
+                className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+              />
+              <datalist id="existing-style-options">
+                {styleOptions.map((styleOption) => (
+                  <option key={styleOption.normalizedStyleName} value={styleOption.label} />
+                ))}
+              </datalist>
+            </div>
+
+            <form
+              onSubmit={handleStyleCreateSubmit(handleCreateFromStyle)}
+              className="mt-6 grid gap-4 md:grid-cols-2"
+            >
+              {styleCreateFields.map((field) => {
+                const commonClassName =
+                  "w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+
+                return (
+                  <div
+                    key={field.name}
+                    className={
+                      field.type === "textarea" ? "space-y-2 md:col-span-2" : "space-y-2"
+                    }
+                  >
+                    <label htmlFor={`style-create-${field.name}`} className="text-sm font-medium">
+                      {field.label}
+                    </label>
+                    {field.type === "textarea" ? (
+                      <textarea
+                        id={`style-create-${field.name}`}
+                        {...registerStyleCreate(field.name as keyof CreatePurchaseOrderPayload, {
+                          required: true,
+                        })}
+                        placeholder={field.placeholder}
+                        rows={4}
+                        readOnly={field.readOnly}
+                        className={`${commonClassName} ${
+                          field.readOnly
+                            ? "cursor-not-allowed bg-muted text-muted-foreground"
+                            : ""
+                        }`}
+                      />
+                    ) : (
+                      <input
+                        id={`style-create-${field.name}`}
+                        type={field.type ?? "text"}
+                        {...registerStyleCreate(field.name as keyof CreatePurchaseOrderPayload, {
+                          required: true,
+                        })}
+                        placeholder={field.placeholder}
+                        readOnly={field.readOnly}
+                        className={`${commonClassName} ${
+                          field.readOnly
+                            ? "cursor-not-allowed bg-muted text-muted-foreground"
+                            : ""
+                        }`}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+
+              <div className="flex items-center justify-end gap-3 md:col-span-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-2xl"
+                  onClick={() => {
+                    if (styleSourceOrder) {
+                      resetStyleCreate(getCreateFromStyleFormValues(styleSourceOrder))
+                      return
+                    }
+
+                    resetStyleCreate(defaultFormValues)
+                  }}
+                >
+                  Reset
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-2xl"
+                  onClick={() => {
+                    setIsCreateFromStyleModalOpen(false)
+                    setSelectedStyleName("")
+                    setStyleSourceOrder(null)
+                    resetStyleCreate(defaultFormValues)
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="rounded-2xl"
+                  disabled={!styleSourceOrder}
+                >
+                  Create PO
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
       {isUploadModalOpen ? (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-4">
