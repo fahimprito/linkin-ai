@@ -1,124 +1,157 @@
-﻿import { ClipboardList, Package2 } from "lucide-react"
-import { Link } from "react-router"
-
-import { STORE_SERVICE_STEPS, getStoreWorkflowGuidance } from "@/lib/store-workflow"
-import { Button } from "@/components/ui/button"
+import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
-import { WorkflowTrackerCard } from "@/components/shared/workflow-tracker-card"
+import { StatusBadge } from "@/components/shared/status-badge"
+import {
+  getPurchaseOrderDisplayItemNameCode,
+  getPurchaseOrderDisplayNo,
+  getPurchaseOrderDisplayQty,
+  getPurchaseOrderDisplayStyle,
+} from "@/lib/purchase-orders"
+import { getStoredStoreControllerRecords } from "@/lib/store-controller"
 import { useAppSelector } from "@/store/hooks"
 
 export function StoreControlPage() {
-  const requisitions = useAppSelector((state) => state.storeService.requisitions)
-  const issueLogs = useAppSelector((state) => state.storeService.issueLogs)
-  const openRequisitions = requisitions.filter(
-    (requisition) => requisition.status !== "Issued"
+  const purchaseOrders = useAppSelector((state) => state.merchandise.purchaseOrders)
+  const supplierOrders = useAppSelector((state) => state.yarnCheck.supplierOrders)
+  const storeRecords = getStoredStoreControllerRecords()
+
+  const accessoryOrders = supplierOrders.filter(
+    (order) =>
+      (order.itemCategory ?? "Yarn") === "Accessories" &&
+      order.status !== "Cancelled"
+  )
+  const accessoryPoIds = new Set(accessoryOrders.map((order) => order.poId))
+  const visiblePurchaseOrders = purchaseOrders.filter((order) =>
+    accessoryPoIds.has(order.id)
+  )
+  const pendingInspection = storeRecords.filter(
+    (record) =>
+      !record.inspectionStatus ||
+      ["Pending", "Received"].includes(record.inspectionStatus)
   ).length
-  const trackerStage =
-    requisitions.length === 0
-      ? "Incoming Requisition"
-      : requisitions.some((requisition) => requisition.status === "Pending")
-        ? "Review Need"
-        : openRequisitions > 0
-        ? "Issue Materials"
-        : "Log"
-  const guidance = getStoreWorkflowGuidance(trackerStage)
+  const totalReceivedQty = storeRecords.reduce(
+    (sum, record) => sum + (record.receivedQty ?? 0),
+    0
+  )
+  const totalStockBalance = storeRecords.reduce(
+    (sum, record) => sum + (record.stockBalance ?? 0),
+    0
+  )
+  const approvedOrders = visiblePurchaseOrders
+    .map((order) => ({
+      ...order,
+      storeRecord: storeRecords.find((record) => record.poId === order.id),
+    }))
+    .filter((order) => order.storeRecord?.inspectionStatus === "Approved")
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Store Control Service"
-      />
+      <PageHeader title="Store Controller Dashboard" />
 
       <section className="grid grid-cols-2 gap-4 md:grid-cols-4 2xl:grid-cols-8">
         <MetricCard
-          label="Open Requisitions"
-          value={String(openRequisitions).padStart(2, "0")}
+          label="Accessories POs"
+          value={String(visiblePurchaseOrders.length).padStart(2, "0")}
+          tone="default"
+        />
+        <MetricCard
+          label="Pending Inspection"
+          value={String(pendingInspection).padStart(2, "0")}
           tone="warning"
         />
         <MetricCard
-          label="Issue Logs"
-          value={String(issueLogs.length).padStart(2, "0")}
+          label="Received Qty"
+          value={String(totalReceivedQty)}
           tone="success"
         />
         <MetricCard
-          label="Source Modules"
-          value="02"
-          tone="default"
+          label="Stock Balance"
+          value={String(totalStockBalance)}
+          tone="success"
         />
       </section>
 
-      <WorkflowTrackerCard
-        trackerLabel="Shared Service Tracker"
-        title="Store Controller service flow"
-        summary={
-          requisitions.length > 0
-            ? guidance.summary
-            : "No requisitions have arrived yet. This service module is ready for the same requisition -> issuance -> log flow whenever the next stage is enabled."
-        }
-        nextAction={guidance.nextAction}
-        stages={STORE_SERVICE_STEPS}
-        currentStage={trackerStage}
-        helperText="This module is intentionally shared so later production stages reuse one consistent issue-and-log workflow."
-      />
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-semibold">Approved PO List</h2>
+          <p className="text-sm text-muted-foreground">
+            Store Controller POs with approved inspection status.
+          </p>
+        </div>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        {[
-          {
-            to: "/store/requisitions",
-            icon: ClipboardList,
-            label: "Incoming Requisitions",
-            desc: "Review material requests from production modules.",
-          },
-          {
-            to: "/store/issue-log",
-            icon: Package2,
-            label: "Issue Log",
-            desc: "Track all issued materials in one read-only history.",
-          },
-        ].map((item) => (
-          <Link
-            key={item.to}
-            to={item.to}
-            className="group flex items-start gap-4 rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md"
-          >
-            <div className="rounded-xl bg-primary/10 p-2.5">
-              <item.icon className="size-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold group-hover:text-primary">
-                {item.label}
-              </p>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {item.desc}
-              </p>
-            </div>
-          </Link>
-        ))}
+        {approvedOrders.length === 0 ? (
+          <EmptyState
+            title="No approved Store POs yet"
+            description="Approved Store Controller purchase orders will appear here automatically."
+          />
+        ) : (
+          <DataTable
+            compact
+            columns={[
+              {
+                key: "poNumber",
+                header: "PO Number",
+                className: "min-w-[6rem]",
+                render: (row) => getPurchaseOrderDisplayNo(row),
+              },
+              {
+                key: "styleName",
+                header: "Style Name",
+                className: "min-w-[7rem]",
+                render: (row) => getPurchaseOrderDisplayStyle(row),
+              },
+              {
+                key: "itemNameCode",
+                header: "Item Name & Code",
+                className: "min-w-[7rem]",
+                render: (row) => getPurchaseOrderDisplayItemNameCode(row) || "—",
+              },
+              {
+                key: "quantity",
+                header: "Quantity",
+                className: "min-w-[5rem]",
+                render: (row) => getPurchaseOrderDisplayQty(row).toLocaleString(),
+              },
+              {
+                key: "supplier",
+                header: "Supplier",
+                className: "min-w-[7rem]",
+                render: (row) => row.storeRecord?.supplier || "—",
+              },
+              {
+                key: "inspectionDate",
+                header: "Inspection Date",
+                className: "min-w-[6rem]",
+                render: (row) => row.storeRecord?.inspectionDate || "—",
+              },
+              {
+                key: "receivedQty",
+                header: "Received Qty",
+                className: "min-w-[5rem]",
+                render: (row) => String(row.storeRecord?.receivedQty ?? "—"),
+              },
+              {
+                key: "stockBalance",
+                header: "Stock Balance",
+                className: "min-w-[5rem]",
+                render: (row) => String(row.storeRecord?.stockBalance ?? "—"),
+              },
+              {
+                key: "status",
+                header: "Status",
+                className: "min-w-[6rem]",
+                render: (row) => (
+                  <StatusBadge value={row.storeRecord?.inspectionStatus ?? "Pending"} />
+                ),
+              },
+            ]}
+            data={approvedOrders}
+          />
+        )}
       </section>
 
-      {requisitions.length === 0 ? (
-        <EmptyState
-          title="Store service is ready"
-          description="No active module has sent a material requisition yet. Requests will appear here automatically when the next shared-service flow is enabled."
-        />
-      ) : (
-        <section className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Next service action</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Open requisitions should be resolved from the requisitions page.
-              </p>
-            </div>
-            <Button asChild variant="outline" className="rounded-2xl">
-              <Link to="/store/requisitions">Open Requisitions</Link>
-            </Button>
-          </div>
-        </section>
-      )}
     </div>
   )
 }
-

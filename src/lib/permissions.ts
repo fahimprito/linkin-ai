@@ -109,8 +109,11 @@ export const dashboardNavigation: NavigationItem[] = [
     allowedRoles: ["super_admin", "store_user"],
     children: [
       { label: "Dashboard", to: "/store", icon: Gauge },
-      { label: "Requisitions", to: "/store/requisitions", icon: ClipboardList },
-      { label: "Issue Log", to: "/store/issue-log", icon: Truck },
+      { label: "PO List", to: "/store/po-list", icon: ClipboardList },
+      { label: "Receive Accessories", to: "/store/receive-accessories", icon: Truck },
+      { label: "Inspection", to: "/store/inspection", icon: FileSearch },
+      { label: "Inventory", to: "/store/inventory", icon: Boxes },
+      { label: "Reports", to: "/store/reports", icon: Truck },
     ],
   },
   {

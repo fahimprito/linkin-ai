@@ -74,6 +74,26 @@ export function getPurchaseOrderDisplayItemNameCode(order: PurchaseOrder) {
   return order.itemNameCode || ""
 }
 
+export function getPurchaseOrderDisplayItemName(order: PurchaseOrder) {
+  const itemNameCode = getPurchaseOrderDisplayItemNameCode(order)
+  if (!itemNameCode) {
+    return ""
+  }
+
+  const [itemName] = itemNameCode.split("/").map((value) => value.trim())
+  return itemName || itemNameCode
+}
+
+export function getPurchaseOrderDisplayItemCode(order: PurchaseOrder) {
+  const itemNameCode = getPurchaseOrderDisplayItemNameCode(order)
+  if (!itemNameCode || !itemNameCode.includes("/")) {
+    return ""
+  }
+
+  const segments = itemNameCode.split("/").map((value) => value.trim()).filter(Boolean)
+  return segments.at(-1) || ""
+}
+
 export function getPurchaseOrderDisplayAccessories(order: PurchaseOrder) {
   return order.accessories || ""
 }

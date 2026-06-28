@@ -18,6 +18,7 @@ import {
   getPurchaseOrderDisplayStyle,
   getPurchaseOrderDisplayYarn,
 } from "@/lib/purchase-orders"
+import { getStoredSuppliers } from "@/lib/suppliers"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
 import {
@@ -25,6 +26,7 @@ import {
   updateSupplierOrder,
 } from "@/store/slices/yarn-check-slice"
 import type {
+  MerchandiseSupplier,
   PurchaseOrder,
   SupplierOrderItemCategory,
   YarnSupplierOrder,
@@ -37,7 +39,13 @@ type CreateSourcingOrderFormValues = {
   styleNo: string
   qualityOrItem: string
   orderedQty: string
+  supplierCode: string
   supplier: string
+  supplierContactPerson: string
+  supplierPhone: string
+  supplierEmail: string
+  supplierAddress: string
+  supplierLeadTimeDays: string
   unitPrice: string
   orderDate: string
   expectedArrival: string
@@ -143,7 +151,8 @@ function getSourceablePurchaseOrders(purchaseOrders: PurchaseOrder[]) {
 
 function buildCreateOrderFields(
   createOrderType: SupplierOrderItemCategory | null,
-  poOptions: Array<{ label: string; value: string }>
+  poOptions: Array<{ label: string; value: string }>,
+  supplierOptions: Array<{ label: string; value: string }>
 ): ModalFormField[] {
   if (!createOrderType) {
     return []
@@ -182,9 +191,30 @@ function buildCreateOrderFields(
       readOnly: true,
     },
     {
-      name: "supplier",
+      name: "supplierCode",
       label: "Supplier",
-      placeholder: "Supplier name",
+      type: "select",
+      options: supplierOptions,
+    },
+    {
+      name: "supplier",
+      label: "Supplier Name",
+      readOnly: true,
+    },
+    {
+      name: "supplierContactPerson",
+      label: "Contact Person",
+      readOnly: true,
+    },
+    {
+      name: "supplierPhone",
+      label: "Phone",
+      readOnly: true,
+    },
+    {
+      name: "supplierLeadTimeDays",
+      label: "Lead Time (Days)",
+      readOnly: true,
     },
     {
       name: "unitPrice",
@@ -253,6 +283,7 @@ export function MerchandiseSourcingPage() {
     useState<SupplierOrderItemCategory | null>(null)
   const [editingOrder, setEditingOrder] = useState<YarnSupplierOrder | null>(null)
   const [viewingOrder, setViewingOrder] = useState<YarnSupplierOrder | null>(null)
+  const [suppliers] = useState<MerchandiseSupplier[]>(() => getStoredSuppliers())
 
   const sourceablePurchaseOrders = useMemo(
     () => getSourceablePurchaseOrders(purchaseOrders),
@@ -268,9 +299,25 @@ export function MerchandiseSourcingPage() {
     [sourceablePurchaseOrders]
   )
 
+  const supplierOptions = useMemo(
+    () =>
+      suppliers
+        .filter(
+          (supplier) =>
+            supplier.status === "Active" &&
+            (supplier.supplierType === "Both" ||
+              supplier.supplierType === createOrderType)
+        )
+        .map((supplier) => ({
+          value: supplier.supplierCode,
+          label: `${supplier.supplierName} (${supplier.supplierCode})`,
+        })),
+    [createOrderType, suppliers]
+  )
+
   const createFields = useMemo(
-    () => buildCreateOrderFields(createOrderType, poOptions),
-    [createOrderType, poOptions]
+    () => buildCreateOrderFields(createOrderType, poOptions, supplierOptions),
+    [createOrderType, poOptions, supplierOptions]
   )
 
   const {
@@ -287,7 +334,13 @@ export function MerchandiseSourcingPage() {
       styleNo: "",
       qualityOrItem: "",
       orderedQty: "",
+      supplierCode: "",
       supplier: "",
+      supplierContactPerson: "",
+      supplierPhone: "",
+      supplierEmail: "",
+      supplierAddress: "",
+      supplierLeadTimeDays: "",
       unitPrice: "",
       orderDate: "",
       expectedArrival: "",
@@ -298,6 +351,10 @@ export function MerchandiseSourcingPage() {
   const selectedCreatePoId = useWatch({
     control: createControl,
     name: "poId",
+  })
+  const selectedSupplierCode = useWatch({
+    control: createControl,
+    name: "supplierCode",
   })
 
   const {
@@ -362,6 +419,27 @@ export function MerchandiseSourcingPage() {
     sourceablePurchaseOrders,
   ])
 
+  useEffect(() => {
+    const selectedSupplier =
+      suppliers.find((supplier) => supplier.supplierCode === selectedSupplierCode) ??
+      null
+
+    setCreateValue("supplier", selectedSupplier?.supplierName ?? "")
+    setCreateValue(
+      "supplierContactPerson",
+      selectedSupplier?.contactPerson ?? ""
+    )
+    setCreateValue("supplierPhone", selectedSupplier?.phone ?? "")
+    setCreateValue("supplierEmail", selectedSupplier?.email ?? "")
+    setCreateValue("supplierAddress", selectedSupplier?.address ?? "")
+    setCreateValue(
+      "supplierLeadTimeDays",
+      selectedSupplier?.leadTimeDays !== undefined
+        ? String(selectedSupplier.leadTimeDays)
+        : ""
+    )
+  }, [selectedSupplierCode, setCreateValue, suppliers])
+
   const filteredOrders = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
 
@@ -400,7 +478,13 @@ export function MerchandiseSourcingPage() {
       styleNo: "",
       qualityOrItem: "",
       orderedQty: "",
+      supplierCode: "",
       supplier: "",
+      supplierContactPerson: "",
+      supplierPhone: "",
+      supplierEmail: "",
+      supplierAddress: "",
+      supplierLeadTimeDays: "",
       unitPrice: "",
       orderDate: new Date().toISOString().slice(0, 10),
       expectedArrival: "",
@@ -442,19 +526,22 @@ export function MerchandiseSourcingPage() {
 
     const selectedPo =
       sourceablePurchaseOrders.find((po) => po.id === values.poId) ?? null
+    const selectedSupplier =
+      suppliers.find((supplier) => supplier.supplierCode === values.supplierCode) ??
+      null
 
     if (!selectedPo) {
       toast.error("Please select a PO.")
       return
     }
 
-    const orderedQty = Number(values.orderedQty)
-    const unitPrice = Number(values.unitPrice)
-
-    if (!values.supplier.trim()) {
-      toast.error("Supplier is required.")
+    if (!selectedSupplier) {
+      toast.error("Please select a supplier.")
       return
     }
+
+    const orderedQty = Number(values.orderedQty)
+    const unitPrice = Number(values.unitPrice)
 
     if (!Number.isFinite(unitPrice) || unitPrice < 0) {
       toast.error("Please enter a valid unit price.")
@@ -470,7 +557,13 @@ export function MerchandiseSourcingPage() {
         poNumber: selectedPo.poNumber,
         styleName: getPurchaseOrderDisplayStyle(selectedPo),
         styleNo: selectedPo.styleNo,
-        supplier: values.supplier.trim(),
+        supplierCode: selectedSupplier.supplierCode,
+        supplierContactPerson: selectedSupplier.contactPerson,
+        supplierPhone: selectedSupplier.phone,
+        supplierEmail: selectedSupplier.email,
+        supplierAddress: selectedSupplier.address,
+        supplierLeadTimeDays: selectedSupplier.leadTimeDays,
+        supplier: selectedSupplier.supplierName,
         yarnType:
           createOrderType === "Yarn"
             ? getPurchaseOrderDisplayYarn(selectedPo)
@@ -655,16 +748,19 @@ export function MerchandiseSourcingPage() {
                     <Eye className="mr-1 size-3.5" />
                     View
                   </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 rounded-lg px-2 text-[11px]"
-                    onClick={() => openEditModal(row)}
-                  >
-                    <Pencil className="mr-1 size-3.5" />
-                    Edit ETA
-                  </Button>
+                  {row.status !== "Cancelled" &&
+                  row.status !== "Fully Received" ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 rounded-lg px-2 text-[11px]"
+                      onClick={() => openEditModal(row)}
+                    >
+                      <Pencil className="mr-1 size-3.5" />
+                      Edit ETA
+                    </Button>
+                  ) : null}
                   {row.status !== "Cancelled" &&
                   row.status !== "Fully Received" ? (
                     <Button
@@ -708,7 +804,13 @@ export function MerchandiseSourcingPage() {
             styleNo: "",
             qualityOrItem: "",
             orderedQty: "",
+            supplierCode: "",
             supplier: "",
+            supplierContactPerson: "",
+            supplierPhone: "",
+            supplierEmail: "",
+            supplierAddress: "",
+            supplierLeadTimeDays: "",
             unitPrice: "",
             orderDate: new Date().toISOString().slice(0, 10),
             expectedArrival: "",

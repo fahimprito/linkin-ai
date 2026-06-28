@@ -101,6 +101,83 @@ export type YarnSupplierOrderStatus =
 
 export type SupplierOrderItemCategory = "Yarn" | "Accessories"
 
+export type SupplierType = "Yarn" | "Accessories" | "Both"
+
+export type SupplierStatus = "Active" | "Inactive"
+
+export type StoreInspectionStatus =
+  | "Pending"
+  | "Received"
+  | "Inspected"
+  | "Approved"
+  | "Rejected"
+
+export type MerchandiseSupplier = {
+  id: string
+  supplierCode: string
+  supplierName: string
+  contactPerson: string
+  phone: string
+  email?: string
+  address?: string
+  supplierType: SupplierType
+  leadTimeDays?: number
+  notes?: string
+  status: SupplierStatus
+  createdAt: string
+}
+
+export type StoreControllerPoRecord = {
+  poId: string
+  supplier?: string
+  eta?: string
+  inspectionStatus?: StoreInspectionStatus
+  inspectionDate?: string
+  receivedQty?: number
+  issuedQty?: number
+  stockBalance?: number
+  remarks?: string
+  updatedAt: string
+}
+
+export type StoreAccessoryReceipt = {
+  id: string
+  poId: string
+  poNumber: string
+  supplier: string
+  batchNumber: string
+  quantity: number
+  receiveDate: string
+  remarks?: string
+  createdAt: string
+  createdBy: string
+}
+
+export type StoreInventoryRecord = {
+  id: string
+  itemName: string
+  itemCode?: string
+  lotNo: string
+  supplier: string
+  availableQty: number
+  reservedQty: number
+  issuedQty: number
+  currentStock: number
+  lastUpdated: string
+  poId?: string
+  poNumber?: string
+  source: "received" | "manual"
+}
+
+export type StoreInventoryHistoryRecord = {
+  id: string
+  inventoryId: string
+  action: string
+  quantity: number
+  actionDate: string
+  notes?: string
+}
+
 export type YarnSupplierOrder = {
   id: string
   orderNo?: string
@@ -109,6 +186,12 @@ export type YarnSupplierOrder = {
   poNumber: string
   styleName?: string
   styleNo?: string
+  supplierCode?: string
+  supplierContactPerson?: string
+  supplierPhone?: string
+  supplierEmail?: string
+  supplierAddress?: string
+  supplierLeadTimeDays?: number
   supplier: string
   yarnType: string
   itemName?: string

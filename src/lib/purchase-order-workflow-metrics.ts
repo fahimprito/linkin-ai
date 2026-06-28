@@ -1,6 +1,13 @@
 import type { YarnStockMovement } from "@/types/production"
+import { getStoredAccessoryReceipts } from "@/lib/store-accessories"
+import {
+  deriveStoreWorkflowStatus,
+  getStoredStoreControllerRecords,
+} from "@/lib/store-controller"
 import type {
   PurchaseOrder,
+  StoreAccessoryReceipt,
+  StoreControllerPoRecord,
   YarnBatchInspectionStatus,
   YarnSupplierOrder,
 } from "@/types/modules"
@@ -17,8 +24,10 @@ export type PurchaseOrderWorkflowMetrics = {
   storeInspectionDateByPo: Record<string, string | undefined>
   storeInspectionStatusByPo: Record<string, string | undefined>
   storeReceivedQtyByPo: Record<string, number>
+  storeIssuedQtyByPo: Record<string, number>
   storeStockBalanceByPo: Record<string, number>
   storeSupplierByPo: Record<string, string | undefined>
+  storeEtaByPo: Record<string, string | undefined>
 }
 
 type DeliveryBatchLike = {
@@ -99,6 +108,51 @@ function resolveInventoryStatus(input: {
   return "Available"
 }
 
+function resolveStoreInventoryStatus(input: {
+  order: PurchaseOrder
+  inspectionStatus?: string
+  receivedQty: number
+  issuedQty: number
+  stockBalance: number
+}) {
+  const { order, inspectionStatus, receivedQty, issuedQty, stockBalance } = input
+  const requiredQty = order.totalAccessoriesQty ?? 0
+
+  if (inspectionStatus === "Rejected") {
+    return "Rejected"
+  }
+
+  if (receivedQty <= 0) {
+    return "Pending Receipt"
+  }
+
+  if (issuedQty > 0 && stockBalance <= 0) {
+    return "Issued to Production"
+  }
+
+  if (stockBalance <= 0) {
+    return "No Stock"
+  }
+
+  if (requiredQty > 0 && stockBalance < requiredQty) {
+    return "Partial Stock"
+  }
+
+  if (inspectionStatus === "Approved") {
+    return "Available"
+  }
+
+  if (
+    inspectionStatus === "Received" ||
+    inspectionStatus === "Inspected" ||
+    inspectionStatus === "Pending"
+  ) {
+    return "Under Inspection"
+  }
+
+  return "Available"
+}
+
 export function getLatestInspectionStatusByPo(
   poId: string,
   deliveryBatches: DeliveryBatchLike[]
@@ -119,12 +173,16 @@ export function createPurchaseOrderWorkflowMetrics(input: {
   deliveryBatches: DeliveryBatchLike[]
   stockMovements: YarnStockMovement[]
   supplierOrders?: YarnSupplierOrder[]
+  storeControllerRecords?: StoreControllerPoRecord[]
+  storeReceipts?: StoreAccessoryReceipt[]
 }): PurchaseOrderWorkflowMetrics {
   const {
     purchaseOrders,
     deliveryBatches,
     stockMovements,
     supplierOrders = [],
+    storeControllerRecords = getStoredStoreControllerRecords(),
+    storeReceipts = getStoredAccessoryReceipts(),
   } = input
 
   const yarnSupplierByPo: Record<string, string | undefined> = {}
@@ -160,6 +218,18 @@ export function createPurchaseOrderWorkflowMetrics(input: {
 
   const yarnStockBalanceByPo: Record<string, number> = {}
   const inventoryStatusByPo: Record<string, string | undefined> = {}
+  const storeInspectionDateByPo: Record<string, string | undefined> = {}
+  const storeInspectionStatusByPo: Record<string, string | undefined> = {}
+  const storeReceivedQtyByPo: Record<string, number> = {}
+  const storeIssuedQtyByPo: Record<string, number> = {}
+  const storeStockBalanceByPo: Record<string, number> = {}
+  const storeSupplierByPo: Record<string, string | undefined> = {}
+  const storeEtaByPo: Record<string, string | undefined> = {}
+
+  storeReceipts.forEach((receipt) => {
+    storeReceivedQtyByPo[receipt.poId] =
+      (storeReceivedQtyByPo[receipt.poId] ?? 0) + receipt.quantity
+  })
 
   purchaseOrders.forEach((order) => {
     const latestSupplierOrder = getLatestYarnSupplierOrderByPo(
@@ -183,6 +253,48 @@ export function createPurchaseOrderWorkflowMetrics(input: {
       issuedQty,
       stockBalance,
     })
+
+    const storeRecord = storeControllerRecords.find(
+      (record) => record.poId === order.id
+    )
+    storeInspectionDateByPo[order.id] = storeRecord?.inspectionDate
+    storeInspectionStatusByPo[order.id] = storeRecord?.inspectionStatus
+    storeSupplierByPo[order.id] = storeRecord?.supplier
+    storeEtaByPo[order.id] = storeRecord?.eta
+    storeIssuedQtyByPo[order.id] = storeRecord?.issuedQty ?? 0
+    storeStockBalanceByPo[order.id] =
+      storeRecord?.stockBalance ??
+      Math.max(
+        0,
+        (storeRecord?.receivedQty ?? storeReceivedQtyByPo[order.id] ?? 0) -
+          (storeRecord?.issuedQty ?? 0)
+      )
+
+    const derivedStoreStatus = deriveStoreWorkflowStatus(order, storeRecord)
+    const isStoreStageActive = [
+      "Store Processing",
+      "Store Ready",
+      "Sent to Knitting",
+      "Knitting In Progress",
+      "Knitting Completed",
+      "Sent to Linking",
+      "Linking In Progress",
+      "Linking Completed",
+      "Sent to Finishing",
+      "Finishing In Progress",
+      "Ready to Ship",
+      "Completed",
+    ].includes(derivedStoreStatus)
+
+    if (isStoreStageActive) {
+      inventoryStatusByPo[order.id] = resolveStoreInventoryStatus({
+        order,
+        inspectionStatus: storeRecord?.inspectionStatus,
+        receivedQty: storeRecord?.receivedQty ?? storeReceivedQtyByPo[order.id] ?? 0,
+        issuedQty: storeRecord?.issuedQty ?? 0,
+        stockBalance: storeStockBalanceByPo[order.id],
+      })
+    }
   })
 
   return {
@@ -194,10 +306,12 @@ export function createPurchaseOrderWorkflowMetrics(input: {
     yarnReceivedQtyByPo,
     yarnStockBalanceByPo,
     inventoryStatusByPo,
-    storeInspectionDateByPo: {},
-    storeInspectionStatusByPo: {},
-    storeReceivedQtyByPo: {},
-    storeStockBalanceByPo: {},
-    storeSupplierByPo: {},
+    storeInspectionDateByPo,
+    storeInspectionStatusByPo,
+    storeReceivedQtyByPo,
+    storeIssuedQtyByPo,
+    storeStockBalanceByPo,
+    storeSupplierByPo,
+    storeEtaByPo,
   }
 }

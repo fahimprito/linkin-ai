@@ -326,8 +326,10 @@ export function getPurchaseOrderWorkflowColumns(
     storeInspectionDateByPo: metrics.storeInspectionDateByPo ?? {},
     storeInspectionStatusByPo: metrics.storeInspectionStatusByPo ?? {},
     storeReceivedQtyByPo: metrics.storeReceivedQtyByPo ?? {},
+    storeIssuedQtyByPo: metrics.storeIssuedQtyByPo ?? {},
     storeStockBalanceByPo: metrics.storeStockBalanceByPo ?? {},
     storeSupplierByPo: metrics.storeSupplierByPo ?? {},
+    storeEtaByPo: metrics.storeEtaByPo ?? {},
   }
 
   return [

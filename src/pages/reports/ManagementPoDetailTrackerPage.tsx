@@ -55,6 +55,23 @@ function getProgress(status: string) {
   return workflowProgressByStatus[status as keyof typeof workflowProgressByStatus] ?? 0
 }
 
+function isStoreStageStatus(status: string) {
+  return [
+    "Store Processing",
+    "Store Ready",
+    "Sent to Knitting",
+    "Knitting In Progress",
+    "Knitting Completed",
+    "Sent to Linking",
+    "Linking In Progress",
+    "Linking Completed",
+    "Sent to Finishing",
+    "Finishing In Progress",
+    "Ready to Ship",
+    "Completed",
+  ].includes(status)
+}
+
 function selectOptions(values: string[], label: string) {
   return [
     label,
@@ -96,11 +113,14 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
           fabricKg: order.totalFabricKg ?? 0,
           accessoriesQty: order.totalAccessoriesQty ?? 0,
         },
-        eta: workflowMetrics.yarnEtaByPo[order.id] ?? order.yarnEta ?? "",
+        eta: isStoreStageStatus(order.status)
+          ? workflowMetrics.storeEtaByPo[order.id] ?? ""
+          : workflowMetrics.yarnEtaByPo[order.id] ?? order.yarnEta ?? "",
         inventoryStatus:
           workflowMetrics.inventoryStatusByPo[order.id] ?? "Pending Receipt",
-        inspectionStatus:
-          workflowMetrics.yarnInspectionStatusByPo[order.id] ?? "Pending",
+        inspectionStatus: isStoreStageStatus(order.status)
+          ? workflowMetrics.storeInspectionStatusByPo[order.id] ?? "Pending"
+          : workflowMetrics.yarnInspectionStatusByPo[order.id] ?? "Pending",
         progress: getProgress(order.status),
         currentStage: buildCurrentStage(order.status),
       })),

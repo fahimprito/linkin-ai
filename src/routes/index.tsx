@@ -10,7 +10,6 @@ import { UnauthorizedPage } from "@/pages/common/UnauthorizedPage"
 import { ExecutiveDashboardPage } from "@/pages/dashboard/ExecutiveDashboardPage"
 import {
   MerchandiseProductionUpdatesPage,
-  MerchandiseSupplierFollowUpPage,
   YarnInformationReportPage,
   YarnStockCalculationReportPage,
 } from "@/pages/forms/OperationsFormPages"
@@ -24,6 +23,7 @@ import {
 import { MerchandiseListPage } from "@/pages/merchandise/MerchandiseListPage"
 import { MerchandiseMasterExcelPage } from "@/pages/merchandise/MerchandiseMasterExcelPage"
 import { MerchandiseSourcingPage } from "@/pages/merchandise/MerchandiseSourcingPage"
+import { MerchandiseSupplierPage } from "@/pages/merchandise/MerchandiseSupplierPage"
 import {
   MerchandiseDashboardPage,
   MerchandiseInventoryPage,
@@ -38,8 +38,15 @@ import {
 import { ReportsPage } from "@/pages/reports/ReportsPage"
 import { DefaultRedirect } from "@/routes/default-redirect"
 import { StoreControlPage } from "@/pages/store/StoreControlPage"
-import { StoreIssueLogPage } from "@/pages/store/StoreIssueLogPage"
-import { StoreRequisitionsPage } from "@/pages/store/StoreRequisitionsPage"
+import {
+  StoreAccessoriesInspectionReportPage,
+  StoreAccessoriesReceivingReportPage,
+  StoreInspectionPage,
+  StoreInventoryPage,
+  StoreReportsPage,
+} from "@/pages/store/StoreModulePages"
+import { StorePoListPage } from "@/pages/store/StorePoListPage"
+import { StoreReceiveAccessoriesPage } from "@/pages/store/StoreReceiveAccessoriesPage"
 import { YarnControlPage } from "@/pages/yarn/YarnControlPage"
 import { YarnCheckRequestsPage } from "@/pages/yarn/YarnCheckRequestsPage"
 import { YarnSupplierOrderPage } from "@/pages/yarn/YarnSupplierOrderPage"
@@ -111,7 +118,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: "/merchandise/supplier",
-                element: <MerchandiseSupplierFollowUpPage />,
+                element: <MerchandiseSupplierPage />,
               },
               {
                 path: "/merchandise/production",
@@ -253,32 +260,56 @@ export const router = createBrowserRouter([
                 element: <StoreControlPage />,
               },
               {
+                path: "/store/po-list",
+                element: <StorePoListPage />,
+              },
+              {
+                path: "/store/receive-accessories",
+                element: <StoreReceiveAccessoriesPage />,
+              },
+              {
                 path: "/store/requisitions",
-                element: <StoreRequisitionsPage />,
+                element: <Navigate to="/store/po-list" replace />,
               },
               {
                 path: "/store/issue-log",
-                element: <StoreIssueLogPage />,
+                element: <Navigate to="/store/po-list" replace />,
               },
               {
                 path: "/store/accessories-po",
-                element: <Navigate to="/store" replace />,
+                element: <Navigate to="/store/po-list" replace />,
               },
               {
                 path: "/store/stock-receipt",
-                element: <Navigate to="/store" replace />,
+                element: <Navigate to="/store/receive-accessories" replace />,
               },
               {
                 path: "/store/inspection",
-                element: <Navigate to="/store" replace />,
+                element: <StoreInspectionPage />,
+              },
+              {
+                path: "/store/inventory",
+                element: <StoreInventoryPage />,
               },
               {
                 path: "/store/floor-delivery",
-                element: <Navigate to="/store/issue-log" replace />,
+                element: <Navigate to="/store/po-list" replace />,
+              },
+              {
+                path: "/store/reports",
+                element: <StoreReportsPage />,
+              },
+              {
+                path: "/store/reports/accessories-inspection",
+                element: <StoreAccessoriesInspectionReportPage />,
+              },
+              {
+                path: "/store/reports/accessories-receiving",
+                element: <StoreAccessoriesReceivingReportPage />,
               },
               {
                 path: "/store/status-report",
-                element: <Navigate to="/store" replace />,
+                element: <Navigate to="/store/reports" replace />,
               },
             ],
           },
