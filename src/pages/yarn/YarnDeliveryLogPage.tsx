@@ -21,6 +21,7 @@ import {
 import { upsertInventoryFromReceipt } from "@/lib/yarn-inventory"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePurchaseOrder } from "@/store/slices/merchandise-slice"
+import { addNotification } from "@/store/slices/notification-slice"
 import {
   addDeliveryBatch,
   addStockMovement,
@@ -76,6 +77,10 @@ function createDeliveryBatchId() {
 
 function createStockMovementId() {
   return `ysm-${Date.now()}`
+}
+
+function createNotificationId() {
+  return `notif-${Date.now()}`
 }
 
 function getLinkedYarnSupplierOrder(
@@ -300,6 +305,17 @@ export function YarnDeliveryLogPage() {
         })
       )
     }
+
+    dispatch(
+      addNotification({
+        id: createNotificationId(),
+        title: `Yarn received: ${values.poNumber}`,
+        description: `${receivedQty} kg yarn has been received from ${values.supplier.trim()} and stock was updated.`,
+        time: "Just now",
+        read: false,
+        targetRoles: ["merchandising_user", "management_user", "super_admin"],
+      })
+    )
 
     toast.success(`Yarn received for PO ${values.poNumber}. Stock updated.`)
     setIsCreateModalOpen(false)

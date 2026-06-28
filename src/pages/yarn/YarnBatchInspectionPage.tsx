@@ -12,6 +12,7 @@ import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
+import { addNotification } from "@/store/slices/notification-slice"
 import { updateBatchInspectionStatus } from "@/store/slices/yarn-check-slice"
 
 type InspectionReport = {
@@ -66,6 +67,10 @@ function saveInspectionReports(records: InspectionReport[]) {
 
 function createInspectionReportId() {
   return `inspection-${Date.now()}`
+}
+
+function createNotificationId() {
+  return `notif-${Date.now()}`
 }
 
 export function YarnBatchInspectionPage() {
@@ -231,12 +236,32 @@ export function YarnBatchInspectionPage() {
             changedBy: "Yarn Controller",
           })
         )
+        dispatch(
+          addNotification({
+            id: createNotificationId(),
+            title: `Yarn ready: ${values.poNumber}`,
+            description: `Batch ${values.batchNumber} passed inspection. The PO is now yarn-ready.`,
+            time: "Just now",
+            read: false,
+            targetRoles: ["merchandising_user", "management_user", "super_admin"],
+          })
+        )
       } else {
         dispatch(
           updatePoStatus({
             id: matchedBatch.poId,
             status: "Yarn Processing",
             changedBy: "Yarn Controller",
+          })
+        )
+        dispatch(
+          addNotification({
+            id: createNotificationId(),
+            title: `Yarn inspection failed: ${values.poNumber}`,
+            description: `Batch ${values.batchNumber} failed inspection and remains in Yarn Processing.`,
+            time: "Just now",
+            read: false,
+            targetRoles: ["merchandising_user", "management_user", "super_admin"],
           })
         )
       }

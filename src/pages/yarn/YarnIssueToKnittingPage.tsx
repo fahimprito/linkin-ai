@@ -211,6 +211,7 @@ export function YarnIssueToKnittingPage() {
         description: `${issueQty} kg has been issued by Yarn Control to the knitting floor for PO ${values.poNumber}.`,
         time: "Just now",
         read: false,
+        targetRoles: ["management_user", "super_admin"],
       })
     )
 

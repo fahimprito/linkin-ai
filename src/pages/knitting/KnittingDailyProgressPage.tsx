@@ -166,6 +166,7 @@ export function KnittingDailyProgressPage() {
           description: `PO ${values.poNumber} finished knitting and has been routed to the Linking stage.`,
           time: "Just now",
           read: false,
+          targetRoles: ["management_user", "super_admin"],
         })
       )
     }

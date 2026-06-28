@@ -36,6 +36,7 @@ import {
 } from "@/lib/purchase-orders"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
+import { addNotification } from "@/store/slices/notification-slice"
 import type {
   PurchaseOrder,
   StoreAccessoryReceipt,
@@ -153,6 +154,10 @@ function createInventoryRecordId() {
 
 function createInventoryHistoryId() {
   return `store-inventory-history-${Date.now()}`
+}
+
+function createNotificationId() {
+  return `notif-${Date.now()}`
 }
 
 function computeCurrentStock(
@@ -613,6 +618,23 @@ export function StoreInspectionPage() {
         })
       )
     }
+
+    dispatch(
+      addNotification({
+        id: createNotificationId(),
+        title:
+          values.result === "Pass"
+            ? `Accessories approved: ${values.poNumber}`
+            : `Accessories rejected: ${values.poNumber}`,
+        description:
+          values.result === "Pass"
+            ? `Batch ${values.batchNumber} passed store inspection and stock is approved.`
+            : `Batch ${values.batchNumber} failed store inspection and rejected quantity was recorded.`,
+        time: "Just now",
+        read: false,
+        targetRoles: ["merchandising_user", "management_user", "super_admin"],
+      })
+    )
 
     setIsFormOpen(false)
     setEditingReport(null)

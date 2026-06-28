@@ -21,6 +21,7 @@ import {
 import { getStoredSuppliers } from "@/lib/suppliers"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
+import { addNotification } from "@/store/slices/notification-slice"
 import {
   addSupplierOrder,
   updateSupplierOrder,
@@ -88,6 +89,10 @@ function createSupplierOrderId() {
 function createSupplierOrderNo(orderType: SupplierOrderItemCategory) {
   const prefix = orderType === "Yarn" ? "YSO" : "ASO"
   return `${prefix}-${Date.now()}`
+}
+
+function createNotificationId() {
+  return `notif-${Date.now()}`
 }
 
 function getSupplierOrderCategory(order: YarnSupplierOrder): SupplierOrderItemCategory {
@@ -588,6 +593,27 @@ export function MerchandiseSourcingPage() {
           changedBy: "Merchandiser",
         })
       )
+      dispatch(
+        addNotification({
+          id: createNotificationId(),
+          title: `Yarn order placed: ${selectedPo.poNumber}`,
+          description: `${selectedSupplier.supplierName} has been assigned for yarn sourcing. Yarn Controller can continue the receiving workflow.`,
+          time: "Just now",
+          read: false,
+          targetRoles: ["yarn_user", "management_user", "super_admin"],
+        })
+      )
+    } else {
+      dispatch(
+        addNotification({
+          id: createNotificationId(),
+          title: `Accessories order placed: ${selectedPo.poNumber}`,
+          description: `${selectedSupplier.supplierName} has been assigned for accessories sourcing. Store Controller can continue the receiving workflow.`,
+          time: "Just now",
+          read: false,
+          targetRoles: ["store_user", "management_user", "super_admin"],
+        })
+      )
     }
 
     toast.success(
@@ -612,6 +638,19 @@ export function MerchandiseSourcingPage() {
         },
       })
     )
+    dispatch(
+      addNotification({
+        id: createNotificationId(),
+        title: `ETA updated: ${editingOrder.poNumber}`,
+        description: `${editingOrder.supplier} expected delivery is now ${values.expectedArrival}.`,
+        time: "Just now",
+        read: false,
+        targetRoles:
+          getSupplierOrderCategory(editingOrder) === "Yarn"
+            ? ["yarn_user", "management_user", "super_admin"]
+            : ["store_user", "management_user", "super_admin"],
+      })
+    )
 
     toast.success(`Expected delivery updated for ${editingOrder.poNumber}.`)
     setEditingOrder(null)
@@ -628,6 +667,19 @@ export function MerchandiseSourcingPage() {
         updates: {
           status: "Cancelled",
         },
+      })
+    )
+    dispatch(
+      addNotification({
+        id: createNotificationId(),
+        title: `Order cancelled: ${order.poNumber}`,
+        description: `${getSupplierOrderCategory(order)} supplier order ${getSupplierOrderOrderNo(order)} has been cancelled.`,
+        time: "Just now",
+        read: false,
+        targetRoles:
+          getSupplierOrderCategory(order) === "Yarn"
+            ? ["yarn_user", "management_user", "super_admin"]
+            : ["store_user", "management_user", "super_admin"],
       })
     )
 

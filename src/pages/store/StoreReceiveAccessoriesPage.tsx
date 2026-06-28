@@ -34,6 +34,7 @@ import {
 } from "@/lib/store-controller"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
+import { addNotification } from "@/store/slices/notification-slice"
 import { updateSupplierOrderStatus } from "@/store/slices/yarn-check-slice"
 import type {
   PurchaseOrder,
@@ -72,6 +73,10 @@ const receiveFields: ModalFormField[] = [
 
 function createStoreReceiptId() {
   return `sar-${Date.now()}`
+}
+
+function createNotificationId() {
+  return `notif-${Date.now()}`
 }
 
 function getLatestAccessoriesOrderByPo(
@@ -373,6 +378,16 @@ export function StoreReceiveAccessoriesPage() {
         })
       )
     }
+    dispatch(
+      addNotification({
+        id: createNotificationId(),
+        title: `Accessories received: ${values.poNumber}`,
+        description: `${quantity} accessories units have been received from ${values.supplier.trim()} and inventory was updated.`,
+        time: "Just now",
+        read: false,
+        targetRoles: ["merchandising_user", "management_user", "super_admin"],
+      })
+    )
     setIsCreateModalOpen(false)
     setSelectedPoId("")
     toast.success(`Accessories received for ${values.poNumber}. Inventory updated.`)

@@ -126,6 +126,7 @@ export function KnittingRequisitionPage() {
         description: `Knitting requested ${requiredQty} kg yarn for PO ${values.poNumber}. Yarn Control can now issue stock against this requisition.`,
         time: "Just now",
         read: false,
+        targetRoles: ["yarn_user", "super_admin"],
       })
     )
 

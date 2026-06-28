@@ -33,6 +33,7 @@ import {
 } from "@/lib/purchase-orders"
 import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { addNotification } from "@/store/slices/notification-slice"
 import {
   addPurchaseOrder,
   deletePurchaseOrder,
@@ -110,6 +111,10 @@ const styleCreateBlankFieldNames = new Set([
 function toNumber(value: unknown) {
   const normalized = Number(value)
   return Number.isFinite(normalized) ? normalized : 0
+}
+
+function createNotificationId() {
+  return `notif-${Date.now()}`
 }
 
 function getOrderFormValues(
@@ -463,6 +468,16 @@ export function MerchandiseListPage() {
       )
     } else {
       dispatch(addPurchaseOrder(normalizedValues))
+      dispatch(
+        addNotification({
+          id: createNotificationId(),
+          title: `New PO created: ${normalizedValues.poNumber}`,
+          description: `${normalizedValues.styleName || normalizedValues.style} has been created in Merchandise and is ready for workflow follow-up.`,
+          time: "Just now",
+          read: false,
+          targetRoles: ["merchandising_user", "management_user", "super_admin"],
+        })
+      )
       toast.success(
         `Purchase order ${normalizedValues.poNumber} created successfully.`
       )
@@ -488,6 +503,16 @@ export function MerchandiseListPage() {
     }
 
     dispatch(addPurchaseOrder(normalizedValues))
+    dispatch(
+      addNotification({
+        id: createNotificationId(),
+        title: `New PO created from style: ${normalizedValues.poNumber}`,
+        description: `${normalizedValues.styleName || normalizedValues.style} has been added as a new Merchandise PO.`,
+        time: "Just now",
+        read: false,
+        targetRoles: ["merchandising_user", "management_user", "super_admin"],
+      })
+    )
     toast.success(`Purchase order ${normalizedValues.poNumber} created successfully.`)
     setIsCreateFromStyleModalOpen(false)
     setSelectedStyleName("")
@@ -500,6 +525,16 @@ export function MerchandiseListPage() {
 
     if (currentStatus === "Created") {
       dispatch(requestConsumption({ id: po.id }))
+      dispatch(
+        addNotification({
+          id: createNotificationId(),
+          title: `PO sent to Design: ${getOrderDisplayNo(po)}`,
+          description: `${getPurchaseOrderDisplayStyle(po)} is now waiting for Design consumption submission.`,
+          time: "Just now",
+          read: false,
+          targetRoles: ["design_user", "management_user", "super_admin"],
+        })
+      )
       if (user?.role === "super_admin") {
         toast.success(
           `Consumption request sent for ${getOrderDisplayNo(po)}.`

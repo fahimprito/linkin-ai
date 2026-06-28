@@ -156,6 +156,7 @@ export function YarnSupplierOrderPage() {
         description: `Yarn order placed with ${values.supplier}. Expected arrival: ${values.expectedArrival}.`,
         time: "Just now",
         read: false,
+        targetRoles: ["merchandising_user", "management_user", "super_admin"],
       })
     )
 

@@ -292,6 +292,7 @@ export function DesignStylePoPage() {
         description: `${activePo.buyer} - ${styleName} is ready for Merchandise sourcing.`,
         time: "Just now",
         read: false,
+        targetRoles: ["merchandising_user", "management_user", "super_admin"],
       })
     )
     toast.success(`Consumption submitted for ${orderNo}. Ready for sourcing.`)
