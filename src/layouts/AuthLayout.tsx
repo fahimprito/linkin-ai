@@ -1,19 +1,25 @@
 import { Outlet } from "react-router"
 
+import authSideBackground from "@/assets/image/AP21123708926950.webp"
 import brainSystemLogo from "@/assets/image/brain-system-logo.jpeg"
 
 export function AuthLayout() {
   return (
     <div className="grid min-h-svh lg:grid-cols-[1.15fr_0.85fr]">
-      <section className="hidden bg-[linear-gradient(145deg,_rgba(24,24,27,0.98),_rgba(54,65,83,0.95))] p-10 text-white lg:flex lg:flex-col lg:justify-between">
+      <section
+        className="hidden bg-cover bg-center bg-no-repeat p-10 text-white lg:flex lg:flex-col lg:justify-between"
+        style={{
+          backgroundImage: `linear-gradient(145deg, rgba(24,24,27,0.82), rgba(54,65,83,0.78)), url(${authSideBackground})`,
+        }}
+      >
         <div className="max-w-md">
-          <h1 className="mt-6 text-4xl font-semibold tracking-tight">
+          <h1 className="mt-6 text-6xl font-semibold tracking-tight">
             KnitOps
           </h1>
-          <p className="mt-3 text-sm font-medium tracking-[0.18em] text-white/65 uppercase">
+          <p className="mt-3 text-xl font-medium tracking-[0.18em] text-white/65 uppercase">
             Manufacturing orchestration across merchandising, production, and inventory.
           </p>
-          <p className="mt-5 text-sm leading-7 text-white/72">
+          <p className="mt-5 text-md leading-7 text-white/72">
             A unified operations layer for cross-functional teams managing garment planning,
             production execution, quality control, and executive reporting.
           </p>
