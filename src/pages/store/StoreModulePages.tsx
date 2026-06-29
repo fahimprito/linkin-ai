@@ -1,6 +1,6 @@
 import { Download, Eye, Pencil, Plus } from "lucide-react"
 import { useMemo, useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { Link } from "react-router"
 import { toast } from "sonner"
 
@@ -380,7 +380,7 @@ export function StoreInspectionPage() {
   )
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [reportFileName, setReportFileName] = useState("")
-  const { register, handleSubmit, reset, setValue, watch } =
+  const { register, handleSubmit, reset, setValue, control } =
     useForm<StoreInspectionFormValues>({
       defaultValues: {
         poId: "",
@@ -400,7 +400,10 @@ export function StoreInspectionPage() {
       },
     })
 
-  const poNumberValue = watch("poNumber")
+  const poNumberValue = useWatch({
+    control,
+    name: "poNumber",
+  })
   const availableReceipts = useMemo(
     () =>
       receipts.filter((receipt) =>

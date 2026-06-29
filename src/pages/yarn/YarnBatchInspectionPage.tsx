@@ -1,6 +1,6 @@
 import { Eye, Pencil } from "lucide-react"
 import { useMemo, useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -88,7 +88,7 @@ export function YarnBatchInspectionPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [testReportName, setTestReportName] = useState("")
 
-  const { register, handleSubmit, reset, setValue, watch } =
+  const { register, handleSubmit, reset, setValue, control } =
     useForm<InspectionFormValues>({
       defaultValues: {
         poId: "",
@@ -107,7 +107,10 @@ export function YarnBatchInspectionPage() {
       },
     })
 
-  const poNumberValue = watch("poNumber")
+  const poNumberValue = useWatch({
+    control,
+    name: "poNumber",
+  })
   const availableBatches = useMemo(
     () =>
       deliveryBatches.filter((batch) =>

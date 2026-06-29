@@ -52,11 +52,6 @@ type ReceiveAccessoriesFormValues = {
   remarks: string
 }
 
-type ReceivableStorePo = PurchaseOrder & {
-  storeRecord?: StoreControllerPoRecord
-  accessoriesSupplierOrder?: YarnSupplierOrder
-}
-
 const receiveFields: ModalFormField[] = [
   { name: "poNumber", label: "PO Number", readOnly: true },
   { name: "supplier", label: "Supplier" },

@@ -28,14 +28,22 @@ export type DataTableHeaderRow = {
   className?: string
 }
 
-type DataTableProps<T extends Record<string, unknown>> = {
+type DataTableProps<T extends object> = {
   columns: DataTableColumn<T>[]
   data: T[]
   headerRows?: DataTableHeaderRow[]
   compact?: boolean
 }
 
-export function DataTable<T extends Record<string, unknown>>({
+function getCellValue<T extends object>(row: T, key: DataTableColumn<T>["key"]) {
+  if (typeof key === "string" && key in row) {
+    return (row as Record<string, unknown>)[key]
+  }
+
+  return ""
+}
+
+export function DataTable<T extends object>({
   columns,
   data,
   headerRows,
@@ -44,12 +52,12 @@ export function DataTable<T extends Record<string, unknown>>({
   const scrollContainerRef = React.useRef<HTMLDivElement | null>(null)
   const [showStickyShadow, setShowStickyShadow] =
     React.useState(true)
-  const resolvedHeaderRows =
+  const resolvedHeaderRows: DataTableHeaderRow[] =
     headerRows ??
     [
       {
         key: "default",
-        cells: columns.map((column) => ({
+        cells: columns.map<DataTableHeaderCell>((column) => ({
           key: String(column.key),
           label: column.header,
         })),
@@ -150,7 +158,7 @@ export function DataTable<T extends Record<string, unknown>>({
                       column.stickyClassName,
                       showStickyShadow && column.stickyShadowClassName,
                       column.stickyClassName &&
-                        (rowIndex % 2 === 0 ? "z-10 bg-background/95" : "z-10 bg-card"),
+                      (rowIndex % 2 === 0 ? "z-10 bg-background/95" : "z-10 bg-card"),
                       columnIndex === columns.length - 1 && "border-r-0",
                       rowIndex === data.length - 1 && "border-b-0",
                       column.className
@@ -158,7 +166,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   >
                     {column.render
                       ? column.render(row, rowIndex)
-                      : String(row[column.key as keyof T] ?? "")}
+                      : String(getCellValue(row, column.key) ?? "")}
                   </td>
                 ))}
               </tr>

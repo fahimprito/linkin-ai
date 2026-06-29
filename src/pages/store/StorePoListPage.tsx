@@ -505,19 +505,19 @@ export function StorePoListPage() {
                 key: "colors",
                 header: "Colors",
                 className: "min-w-[5rem]",
-                render: (row) => row.color ?? "â€”",
+                render: (row) => row.color ?? "-",
               },
               {
                 key: "itemNameCode",
                 header: "Item Name & Code",
                 className: "min-w-[7rem]",
-                render: (row) => getPurchaseOrderDisplayItemNameCode(row) || "â€”",
+                render: (row) => getPurchaseOrderDisplayItemNameCode(row) || "-",
               },
               {
                 key: "accessories",
                 header: "Accessories",
                 className: "min-w-[6rem]",
-                render: (row) => row.accessories ?? "â€”",
+                render: (row) => row.accessories ?? "-",
               },
               {
                 key: "totalAccessoriesQty",
@@ -526,7 +526,7 @@ export function StorePoListPage() {
                 render: (row) =>
                   row.totalAccessoriesQty !== undefined
                     ? String(row.totalAccessoriesQty)
-                    : "â€”",
+                    : "-",
               },
               {
                 key: "supplier",
@@ -535,7 +535,7 @@ export function StorePoListPage() {
                 render: (row) =>
                   row.storeRecord?.supplier ||
                   row.accessoriesSupplierOrder?.supplier ||
-                  "â€”",
+                  "-",
               },
               {
                 key: "eta",
@@ -544,7 +544,7 @@ export function StorePoListPage() {
                 render: (row) =>
                   row.storeRecord?.eta ||
                   row.accessoriesSupplierOrder?.expectedArrival ||
-                  "â€”",
+                  "-",
               },
               {
                 key: "inspectionStatus",
@@ -558,7 +558,7 @@ export function StorePoListPage() {
                 key: "inspectionDate",
                 header: "Inspection Date",
                 className: "min-w-[6rem]",
-                render: (row) => row.storeRecord?.inspectionDate ?? "â€”",
+                render: (row) => row.storeRecord?.inspectionDate ?? "-",
               },
               {
                 key: "receivedQty",
@@ -567,7 +567,7 @@ export function StorePoListPage() {
                 render: (row) =>
                   row.storeRecord?.receivedQty !== undefined
                     ? String(row.storeRecord.receivedQty)
-                    : "â€”",
+                    : "-",
               },
               {
                 key: "issuedQty",
@@ -576,7 +576,7 @@ export function StorePoListPage() {
                 render: (row) =>
                   row.storeRecord?.issuedQty !== undefined
                     ? String(row.storeRecord.issuedQty)
-                    : "â€”",
+                    : "-",
               },
               {
                 key: "stockBalance",
@@ -585,13 +585,13 @@ export function StorePoListPage() {
                 render: (row) =>
                   row.storeRecord?.stockBalance !== undefined
                     ? String(row.storeRecord.stockBalance)
-                    : "â€”",
+                    : "-",
               },
               {
                 key: "remarks",
                 header: "Remarks",
                 className: "min-w-[6rem]",
-                render: (row) => row.storeRecord?.remarks ?? "â€”",
+                render: (row) => row.storeRecord?.remarks ?? "-",
               },
               {
                 key: "action",
