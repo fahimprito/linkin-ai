@@ -1,4 +1,4 @@
-import { FileUp, Pencil, Trash2 } from "lucide-react"
+import { ClipboardList, Factory, FileUp, PackageCheck, Pencil, Trash2 } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router"
@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/shared/data-table"
 import { FileUploadField } from "@/components/shared/file-upload-field"
+import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
 import {
   RecordFormModal,
@@ -582,10 +583,10 @@ export function MerchandiseListPage() {
       getPurchaseOrderWorkflowColumns(purchaseOrderWorkflowMetrics).map((column) =>
         column.key === "sl"
           ? {
-              ...column,
-              render: (_row: PurchaseOrder, rowIndex: number) =>
-                String(rowIndex + 1).padStart(2, "0"),
-            }
+            ...column,
+            render: (_row: PurchaseOrder, rowIndex: number) =>
+              String(rowIndex + 1).padStart(2, "0"),
+          }
           : column
       ),
     [purchaseOrderWorkflowMetrics]
@@ -626,29 +627,31 @@ export function MerchandiseListPage() {
       />
 
       {/* Quick Metric Strip */}
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
-          <p className="text-xs text-muted-foreground">Total POs</p>
-          <p className="mt-1 text-2xl font-bold">{purchaseOrders.length}</p>
-        </div>
-        <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
-          <p className="text-xs text-muted-foreground">Created</p>
-          <p className="mt-1 text-2xl font-bold text-slate-600 dark:text-slate-300">
-            {draftCount}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
-          <p className="text-xs text-muted-foreground">Yarn Check</p>
-          <p className="mt-1 text-2xl font-bold text-violet-600 dark:text-violet-300">
-            {yarnCheckCount}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
-          <p className="text-xs text-muted-foreground">Sent to Knitting</p>
-          <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-300">
-            {productionCount}
-          </p>
-        </div>
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-8">
+        <MetricCard
+          label="Total POs"
+          value={String(purchaseOrders.length)}
+          tone="default"
+          icon={ClipboardList}
+        />
+        <MetricCard
+          label="Created"
+          value={String(draftCount)}
+          tone="default"
+          icon={PackageCheck}
+        />
+        <MetricCard
+          label="Yarn Check"
+          value={String(yarnCheckCount)}
+          tone="warning"
+          icon={PackageCheck}
+        />
+        <MetricCard
+          label="Sent to Knitting"
+          value={String(productionCount)}
+          tone="success"
+          icon={Factory}
+        />
       </section>
 
       {/* Search and quick filters */}
@@ -859,11 +862,10 @@ export function MerchandiseListPage() {
                         placeholder={field.placeholder}
                         rows={4}
                         readOnly={field.readOnly}
-                        className={`${commonClassName} ${
-                          field.readOnly
+                        className={`${commonClassName} ${field.readOnly
                             ? "cursor-not-allowed bg-muted text-muted-foreground"
                             : ""
-                        }`}
+                          }`}
                       />
                     ) : (
                       <input
@@ -874,11 +876,10 @@ export function MerchandiseListPage() {
                         })}
                         placeholder={field.placeholder}
                         readOnly={field.readOnly}
-                        className={`${commonClassName} ${
-                          field.readOnly
+                        className={`${commonClassName} ${field.readOnly
                             ? "cursor-not-allowed bg-muted text-muted-foreground"
                             : ""
-                        }`}
+                          }`}
                       />
                     )}
                   </div>

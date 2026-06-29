@@ -1,4 +1,4 @@
-import { purchaseOrders as defaultPurchaseOrders } from "@/mock/modules"
+import { demoPurchaseOrders as defaultPurchaseOrders } from "@/mock/demo-data"
 import { normalizeLegacyPoStatus } from "@/lib/workflow-status"
 import type {
   CreatePurchaseOrderPayload,
@@ -216,6 +216,10 @@ export function getPurchaseOrders() {
   try {
     const parsedOrders = JSON.parse(storedOrders) as LegacyPurchaseOrderInput[]
     const normalizedOrders = parsedOrders.map(normalizePurchaseOrder)
+
+    if (normalizedOrders.length === 0) {
+      return defaultPurchaseOrders.map(normalizePurchaseOrder)
+    }
 
     savePurchaseOrders(normalizedOrders)
 

@@ -1,5 +1,11 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 
+import {
+  demoYarnCheckRequests,
+  demoYarnDeliveryBatches,
+  demoYarnStockMovements,
+  demoYarnSupplierOrders,
+} from "@/mock/demo-data"
 import type {
   YarnCheckRequest,
   YarnSupplierOrder,
@@ -16,14 +22,19 @@ const KEYS = {
   stockMovements: "linkin-yarn-stock-movements",
 } as const
 
-function load<T>(key: string): T[] {
-  if (typeof window === "undefined") return []
+function load<T>(key: string, fallback: T[]): T[] {
+  if (typeof window === "undefined") return fallback
   try {
     const raw = window.localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as T[]) : []
+    if (!raw) {
+      return fallback
+    }
+
+    const parsed = JSON.parse(raw) as T[]
+    return parsed.length > 0 ? parsed : fallback
   } catch {
     window.localStorage.removeItem(key)
-    return []
+    return fallback
   }
 }
 
@@ -41,10 +52,10 @@ type YarnCheckState = {
 }
 
 const initialState: YarnCheckState = {
-  checkRequests: load<YarnCheckRequest>(KEYS.checkRequests),
-  supplierOrders: load<YarnSupplierOrder>(KEYS.supplierOrders),
-  deliveryBatches: load<YarnDeliveryBatch>(KEYS.deliveryBatches),
-  stockMovements: load<YarnStockMovement>(KEYS.stockMovements),
+  checkRequests: load<YarnCheckRequest>(KEYS.checkRequests, demoYarnCheckRequests),
+  supplierOrders: load<YarnSupplierOrder>(KEYS.supplierOrders, demoYarnSupplierOrders),
+  deliveryBatches: load<YarnDeliveryBatch>(KEYS.deliveryBatches, demoYarnDeliveryBatches),
+  stockMovements: load<YarnStockMovement>(KEYS.stockMovements, demoYarnStockMovements),
 }
 
 // ── Slice ────────────────────────────────────────────────────────────

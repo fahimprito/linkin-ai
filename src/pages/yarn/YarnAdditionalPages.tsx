@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
+import { demoSwatchCards } from "@/mock/demo-data"
 import { PageHeader } from "@/components/shared/page-header"
 import {
   RecordFormModal,
@@ -66,15 +67,20 @@ const swatchCardFields: ModalFormField[] = [
 
 function loadSwatchCards() {
   if (typeof window === "undefined") {
-    return [] as SwatchCardRecord[]
+    return demoSwatchCards as SwatchCardRecord[]
   }
 
   try {
     const raw = window.localStorage.getItem(SWATCH_STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as SwatchCardRecord[]) : []
+    if (!raw) {
+      return demoSwatchCards as SwatchCardRecord[]
+    }
+
+    const parsed = JSON.parse(raw) as SwatchCardRecord[]
+    return parsed.length > 0 ? parsed : (demoSwatchCards as SwatchCardRecord[])
   } catch {
     window.localStorage.removeItem(SWATCH_STORAGE_KEY)
-    return []
+    return demoSwatchCards as SwatchCardRecord[]
   }
 }
 

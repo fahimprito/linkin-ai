@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { FileUploadField } from "@/components/shared/file-upload-field"
+import { demoYarnInspectionReports } from "@/mock/demo-data"
 import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -45,15 +46,20 @@ const INSPECTION_STORAGE_KEY = "linkin-yarn-inspection-reports"
 
 function loadInspectionReports() {
   if (typeof window === "undefined") {
-    return [] as InspectionReport[]
+    return demoYarnInspectionReports as InspectionReport[]
   }
 
   try {
     const raw = window.localStorage.getItem(INSPECTION_STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as InspectionReport[]) : []
+    if (!raw) {
+      return demoYarnInspectionReports as InspectionReport[]
+    }
+
+    const parsed = JSON.parse(raw) as InspectionReport[]
+    return parsed.length > 0 ? parsed : (demoYarnInspectionReports as InspectionReport[])
   } catch {
     window.localStorage.removeItem(INSPECTION_STORAGE_KEY)
-    return []
+    return demoYarnInspectionReports as InspectionReport[]
   }
 }
 

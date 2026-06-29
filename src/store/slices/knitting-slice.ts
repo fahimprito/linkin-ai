@@ -1,5 +1,11 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 
+import {
+  demoKnittingDailyProgress,
+  demoKnittingIssueLogs,
+  demoKnittingProductionPlans,
+  demoKnittingRequisitions,
+} from "@/mock/demo-data"
 import type {
   KnittingDailyProgress,
   KnittingProductionPlan,
@@ -14,17 +20,22 @@ const KEYS = {
   dailyProgress: "linkin-knitting-daily-progress",
 } as const
 
-function load<T>(key: string): T[] {
+function load<T>(key: string, fallback: T[]): T[] {
   if (typeof window === "undefined") {
-    return []
+    return fallback
   }
 
   try {
     const rawValue = window.localStorage.getItem(key)
-    return rawValue ? (JSON.parse(rawValue) as T[]) : []
+    if (!rawValue) {
+      return fallback
+    }
+
+    const parsed = JSON.parse(rawValue) as T[]
+    return parsed.length > 0 ? parsed : fallback
   } catch {
     window.localStorage.removeItem(key)
-    return []
+    return fallback
   }
 }
 
@@ -44,10 +55,19 @@ type KnittingState = {
 }
 
 const initialState: KnittingState = {
-  requisitions: load<KnittingYarnRequisition>(KEYS.requisitions),
-  issueLogs: load<KnittingYarnIssueLog>(KEYS.issueLogs),
-  productionPlans: load<KnittingProductionPlan>(KEYS.productionPlans),
-  dailyProgress: load<KnittingDailyProgress>(KEYS.dailyProgress),
+  requisitions: load<KnittingYarnRequisition>(
+    KEYS.requisitions,
+    demoKnittingRequisitions
+  ),
+  issueLogs: load<KnittingYarnIssueLog>(KEYS.issueLogs, demoKnittingIssueLogs),
+  productionPlans: load<KnittingProductionPlan>(
+    KEYS.productionPlans,
+    demoKnittingProductionPlans
+  ),
+  dailyProgress: load<KnittingDailyProgress>(
+    KEYS.dailyProgress,
+    demoKnittingDailyProgress
+  ),
 }
 
 const knittingSlice = createSlice({

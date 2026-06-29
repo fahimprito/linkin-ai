@@ -3,53 +3,10 @@ import type {
   SupplierStatus,
   SupplierType,
 } from "@/types/modules"
+import { demoMerchandiseSuppliers } from "@/mock/demo-data"
 
 const SUPPLIERS_STORAGE_KEY = "linkin-ai-merchandise-suppliers"
-
-const defaultSuppliers: MerchandiseSupplier[] = [
-  {
-    id: "supplier-001",
-    supplierCode: "SUP-Y-001",
-    supplierName: "Delta Yarn",
-    contactPerson: "Rahim Uddin",
-    phone: "+8801711000001",
-    email: "delta@example.com",
-    address: "Gazipur, Dhaka",
-    supplierType: "Yarn",
-    leadTimeDays: 7,
-    notes: "Core yarn partner.",
-    status: "Active",
-    createdAt: "2026-06-01T08:00:00.000Z",
-  },
-  {
-    id: "supplier-002",
-    supplierCode: "SUP-A-001",
-    supplierName: "Trim Hub",
-    contactPerson: "Nabila Sultana",
-    phone: "+8801711000002",
-    email: "trimhub@example.com",
-    address: "Narayanganj, Dhaka",
-    supplierType: "Accessories",
-    leadTimeDays: 5,
-    notes: "Accessories and trims supplier.",
-    status: "Active",
-    createdAt: "2026-06-02T08:00:00.000Z",
-  },
-  {
-    id: "supplier-003",
-    supplierCode: "SUP-B-001",
-    supplierName: "Everest Fibers",
-    contactPerson: "Shuvo Roy",
-    phone: "+8801711000003",
-    email: "everest@example.com",
-    address: "Chattogram",
-    supplierType: "Both",
-    leadTimeDays: 10,
-    notes: "Handles special yarn and accessories programs.",
-    status: "Active",
-    createdAt: "2026-06-03T08:00:00.000Z",
-  },
-]
+const defaultSuppliers: MerchandiseSupplier[] = demoMerchandiseSuppliers
 
 function canUseStorage() {
   return typeof window !== "undefined"

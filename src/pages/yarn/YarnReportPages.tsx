@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
+import { demoSwatchCards, demoYarnInspectionReports } from "@/mock/demo-data"
 import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -42,16 +43,28 @@ const INSPECTION_STORAGE_KEY = "linkin-yarn-inspection-reports"
 const SWATCH_STORAGE_KEY = "linkin-yarn-swatch-cards"
 
 function loadRecords<T>(storageKey: string) {
+  const fallback =
+    storageKey === INSPECTION_STORAGE_KEY
+      ? (demoYarnInspectionReports as T[])
+      : storageKey === SWATCH_STORAGE_KEY
+        ? (demoSwatchCards as T[])
+        : ([] as T[])
+
   if (typeof window === "undefined") {
-    return [] as T[]
+    return fallback
   }
 
   try {
     const raw = window.localStorage.getItem(storageKey)
-    return raw ? (JSON.parse(raw) as T[]) : []
+    if (!raw) {
+      return fallback
+    }
+
+    const parsed = JSON.parse(raw) as T[]
+    return parsed.length > 0 ? parsed : fallback
   } catch {
     window.localStorage.removeItem(storageKey)
-    return [] as T[]
+    return fallback
   }
 }
 

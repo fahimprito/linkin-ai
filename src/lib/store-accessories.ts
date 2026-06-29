@@ -3,6 +3,11 @@ import type {
   StoreInventoryHistoryRecord,
   StoreInventoryRecord,
 } from "@/types/modules"
+import {
+  demoStoreAccessoryReceipts,
+  demoStoreInventoryHistory,
+  demoStoreInventoryRecords,
+} from "@/mock/demo-data"
 
 const RECEIPTS_KEY = "linkin-store-accessory-receipts"
 const INVENTORY_KEY = "linkin-store-inventory-records"
@@ -12,17 +17,22 @@ function canUseStorage() {
   return typeof window !== "undefined"
 }
 
-function load<T>(key: string) {
+function load<T>(key: string, fallback: T[]) {
   if (!canUseStorage()) {
-    return [] as T[]
+    return fallback
   }
 
   try {
     const raw = window.localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as T[]) : []
+    if (!raw) {
+      return fallback
+    }
+
+    const parsed = JSON.parse(raw) as T[]
+    return parsed.length > 0 ? parsed : fallback
   } catch {
     window.localStorage.removeItem(key)
-    return [] as T[]
+    return fallback
   }
 }
 
@@ -41,7 +51,7 @@ function computeCurrentStock(
 }
 
 export function getStoredAccessoryReceipts() {
-  return load<StoreAccessoryReceipt>(RECEIPTS_KEY)
+  return load<StoreAccessoryReceipt>(RECEIPTS_KEY, demoStoreAccessoryReceipts)
 }
 
 export function saveStoredAccessoryReceipts(records: StoreAccessoryReceipt[]) {
@@ -55,7 +65,7 @@ export function addAccessoryReceipt(receipt: StoreAccessoryReceipt) {
 }
 
 export function getStoredStoreInventoryRecords() {
-  return load<StoreInventoryRecord>(INVENTORY_KEY)
+  return load<StoreInventoryRecord>(INVENTORY_KEY, demoStoreInventoryRecords)
 }
 
 export function saveStoredStoreInventoryRecords(records: StoreInventoryRecord[]) {
@@ -67,7 +77,10 @@ export function saveStoredStoreInventoryRecords(records: StoreInventoryRecord[])
 }
 
 export function getStoredStoreInventoryHistory() {
-  return load<StoreInventoryHistoryRecord>(INVENTORY_HISTORY_KEY)
+  return load<StoreInventoryHistoryRecord>(
+    INVENTORY_HISTORY_KEY,
+    demoStoreInventoryHistory
+  )
 }
 
 export function saveStoredStoreInventoryHistory(records: StoreInventoryHistoryRecord[]) {

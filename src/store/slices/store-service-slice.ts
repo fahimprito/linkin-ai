@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 
+import { demoStoreIssueLogs, demoStoreRequisitions } from "@/mock/demo-data"
 import type {
   StoreIssueLog,
   StoreMaterialRequisition,
@@ -10,17 +11,22 @@ const KEYS = {
   issueLogs: "linkin-store-issue-logs",
 } as const
 
-function load<T>(key: string): T[] {
+function load<T>(key: string, fallback: T[]): T[] {
   if (typeof window === "undefined") {
-    return []
+    return fallback
   }
 
   try {
     const rawValue = window.localStorage.getItem(key)
-    return rawValue ? (JSON.parse(rawValue) as T[]) : []
+    if (!rawValue) {
+      return fallback
+    }
+
+    const parsed = JSON.parse(rawValue) as T[]
+    return parsed.length > 0 ? parsed : fallback
   } catch {
     window.localStorage.removeItem(key)
-    return []
+    return fallback
   }
 }
 
@@ -38,8 +44,11 @@ type StoreServiceState = {
 }
 
 const initialState: StoreServiceState = {
-  requisitions: load<StoreMaterialRequisition>(KEYS.requisitions),
-  issueLogs: load<StoreIssueLog>(KEYS.issueLogs),
+  requisitions: load<StoreMaterialRequisition>(
+    KEYS.requisitions,
+    demoStoreRequisitions
+  ),
+  issueLogs: load<StoreIssueLog>(KEYS.issueLogs, demoStoreIssueLogs),
 }
 
 const storeServiceSlice = createSlice({

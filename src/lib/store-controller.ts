@@ -4,6 +4,7 @@ import type {
   StoreControllerPoRecord,
   StoreInspectionStatus,
 } from "@/types/modules"
+import { demoStoreControllerRecords } from "@/mock/demo-data"
 
 const STORE_CONTROLLER_PO_KEY = "linkin-store-controller-po-records"
 
@@ -133,22 +134,25 @@ export function deriveStoreWorkflowStatus(
 
 export function getStoredStoreControllerRecords() {
   if (!canUseStorage()) {
-    return [] as StoreControllerPoRecord[]
+    return demoStoreControllerRecords
   }
 
   const raw = window.localStorage.getItem(STORE_CONTROLLER_PO_KEY)
   if (!raw) {
-    return [] as StoreControllerPoRecord[]
+    return demoStoreControllerRecords
   }
 
   try {
     const parsed = JSON.parse(raw) as Array<Partial<StoreControllerPoRecord>>
     const normalized = parsed.map(normalizeRecord).filter((record) => record.poId)
+    if (normalized.length === 0) {
+      return demoStoreControllerRecords
+    }
     saveStoredStoreControllerRecords(normalized)
     return normalized
   } catch {
     window.localStorage.removeItem(STORE_CONTROLLER_PO_KEY)
-    return [] as StoreControllerPoRecord[]
+    return demoStoreControllerRecords
   }
 }
 

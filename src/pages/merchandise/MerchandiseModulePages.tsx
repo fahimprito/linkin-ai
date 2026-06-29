@@ -37,6 +37,16 @@ function formatDate(value: string) {
   return new Date(value).toLocaleDateString()
 }
 
+function getValidDate(value: string) {
+  const parsedDate = new Date(value)
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
+}
+
+function isOperationalCcdDate(date: Date, today: Date) {
+  const year = date.getFullYear()
+  return year >= today.getFullYear() - 1 && year <= today.getFullYear() + 5
+}
+
 function isReadyToShipStatus(status: string) {
   return status.toLowerCase().includes("ready to ship")
 }
@@ -122,24 +132,53 @@ export function MerchandiseDashboardPage() {
     (po) => isReadyToShipStatus(po.status)
   ).length
   const expectedDeliveryCurrentMonthCount = purchaseOrders.filter((po) => {
-    const deliveryDate = new Date(getPurchaseOrderDisplayCcd(po))
+    const deliveryDate = getValidDate(getPurchaseOrderDisplayCcd(po))
 
     return (
-      !Number.isNaN(deliveryDate.getTime()) &&
+      deliveryDate !== null &&
+      isOperationalCcdDate(deliveryDate, today) &&
       deliveryDate.getFullYear() === today.getFullYear() &&
       deliveryDate.getMonth() === today.getMonth()
     )
   }).length
   const draftPoList = purchaseOrders.filter((po) => po.status === "Created")
-  const currentMonthPoList = purchaseOrders.filter((po) => {
-    const ccdDate = new Date(getPurchaseOrderDisplayCcd(po))
+  const currentMonthPoList = useMemo(() => {
+    const currentMonthOrders = purchaseOrders.filter((po) => {
+      const ccdDate = getValidDate(getPurchaseOrderDisplayCcd(po))
 
-    return (
-      !Number.isNaN(ccdDate.getTime()) &&
-      ccdDate.getFullYear() === today.getFullYear() &&
-      ccdDate.getMonth() === today.getMonth()
-    )
-  })
+      return (
+        ccdDate !== null &&
+        isOperationalCcdDate(ccdDate, today) &&
+        ccdDate.getFullYear() === today.getFullYear() &&
+        ccdDate.getMonth() === today.getMonth()
+      )
+    })
+
+    if (currentMonthOrders.length > 0) {
+      return currentMonthOrders
+    }
+
+    const nearestUpcomingOrder = [...purchaseOrders]
+      .filter((po) => {
+        const ccdDate = getValidDate(getPurchaseOrderDisplayCcd(po))
+
+        return (
+          ccdDate !== null &&
+          isOperationalCcdDate(ccdDate, today) &&
+          ccdDate.getTime() >= today.getTime()
+        )
+      })
+      .sort((left, right) => {
+        const leftDate = getValidDate(getPurchaseOrderDisplayCcd(left))
+        const rightDate = getValidDate(getPurchaseOrderDisplayCcd(right))
+
+        return (leftDate?.getTime() ?? Number.MAX_SAFE_INTEGER) -
+          (rightDate?.getTime() ?? Number.MAX_SAFE_INTEGER)
+      })
+      .slice(0, 1)
+
+    return nearestUpcomingOrder
+  }, [purchaseOrders, today])
   const purchaseOrderWorkflowMetrics = useMemo(() => {
     return createPurchaseOrderWorkflowMetrics({
       purchaseOrders,

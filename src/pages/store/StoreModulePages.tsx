@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { FileUploadField } from "@/components/shared/file-upload-field"
+import { demoStoreInspectionReports } from "@/mock/demo-data"
 import { PageHeader } from "@/components/shared/page-header"
 import {
   RecordFormModal,
@@ -121,15 +122,20 @@ const inventoryFields: ModalFormField[] = [
 
 function loadInspectionReports() {
   if (typeof window === "undefined") {
-    return [] as StoreInspectionReport[]
+    return demoStoreInspectionReports as StoreInspectionReport[]
   }
 
   try {
     const raw = window.localStorage.getItem(STORE_INSPECTION_STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as StoreInspectionReport[]) : []
+    if (!raw) {
+      return demoStoreInspectionReports as StoreInspectionReport[]
+    }
+
+    const parsed = JSON.parse(raw) as StoreInspectionReport[]
+    return parsed.length > 0 ? parsed : (demoStoreInspectionReports as StoreInspectionReport[])
   } catch {
     window.localStorage.removeItem(STORE_INSPECTION_STORAGE_KEY)
-    return []
+    return demoStoreInspectionReports as StoreInspectionReport[]
   }
 }
 

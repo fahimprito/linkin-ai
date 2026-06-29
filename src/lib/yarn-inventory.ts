@@ -1,3 +1,8 @@
+import {
+  demoYarnInventoryHistory,
+  demoYarnInventoryRecords,
+} from "@/mock/demo-data"
+
 export type YarnInventoryRecord = {
   id: string
   yarnName: string
@@ -26,17 +31,22 @@ export type YarnInventoryHistoryRecord = {
 const INVENTORY_KEY = "linkin-yarn-inventory-records"
 const INVENTORY_HISTORY_KEY = "linkin-yarn-inventory-history"
 
-function load<T>(key: string) {
+function load<T>(key: string, fallback: T[]) {
   if (typeof window === "undefined") {
-    return [] as T[]
+    return fallback
   }
 
   try {
     const raw = window.localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as T[]) : []
+    if (!raw) {
+      return fallback
+    }
+
+    const parsed = JSON.parse(raw) as T[]
+    return parsed.length > 0 ? parsed : fallback
   } catch {
     window.localStorage.removeItem(key)
-    return [] as T[]
+    return fallback
   }
 }
 
@@ -53,7 +63,7 @@ function computeCurrentStock(record: Pick<YarnInventoryRecord, "availableQty" | 
 }
 
 export function getStoredYarnInventoryRecords() {
-  return load<YarnInventoryRecord>(INVENTORY_KEY)
+  return load<YarnInventoryRecord>(INVENTORY_KEY, demoYarnInventoryRecords)
 }
 
 export function saveStoredYarnInventoryRecords(records: YarnInventoryRecord[]) {
@@ -65,7 +75,10 @@ export function saveStoredYarnInventoryRecords(records: YarnInventoryRecord[]) {
 }
 
 export function getStoredYarnInventoryHistory() {
-  return load<YarnInventoryHistoryRecord>(INVENTORY_HISTORY_KEY)
+  return load<YarnInventoryHistoryRecord>(
+    INVENTORY_HISTORY_KEY,
+    demoYarnInventoryHistory
+  )
 }
 
 export function saveStoredYarnInventoryHistory(records: YarnInventoryHistoryRecord[]) {
