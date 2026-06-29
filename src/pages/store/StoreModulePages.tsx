@@ -17,7 +17,7 @@ import {
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
 import {
-  adjustStoreInventoryAfterInspection,
+  applyStoreInspectionToInventory,
   getStoredAccessoryReceipts,
   getStoredStoreInventoryHistory,
   getStoredStoreInventoryRecords,
@@ -34,6 +34,7 @@ import {
 import {
   getPurchaseOrderDisplayItemName,
   getPurchaseOrderDisplayItemNameCode,
+  getResolvedPurchaseOrderBuyer,
 } from "@/lib/purchase-orders"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
@@ -49,6 +50,7 @@ type StoreInspectionReport = {
   id: string
   poId: string
   poNumber: string
+  buyer: string
   receiptId?: string
   batchNumber: string
   supplier: string
@@ -391,6 +393,7 @@ export function StoreInspectionPage() {
       defaultValues: {
         poId: "",
         poNumber: "",
+        buyer: "",
         receiptId: "",
         batchNumber: "",
         supplier: "",
@@ -439,6 +442,7 @@ export function StoreInspectionPage() {
 
       return [
         report.poNumber,
+        report.buyer,
         report.batchNumber,
         report.supplier,
         report.inspector,
@@ -455,6 +459,7 @@ export function StoreInspectionPage() {
     reset({
       poId: "",
       poNumber: "",
+      buyer: "",
       receiptId: "",
       batchNumber: "",
       supplier: "",
@@ -483,6 +488,7 @@ export function StoreInspectionPage() {
     reset({
       poId: report.poId,
       poNumber: report.poNumber,
+      buyer: report.buyer,
       receiptId: report.receiptId ?? "",
       batchNumber: report.batchNumber,
       supplier: report.supplier,
@@ -518,6 +524,10 @@ export function StoreInspectionPage() {
       return
     }
 
+    const resolvedBuyer = getResolvedPurchaseOrderBuyer(
+      matchedOrder ?? null,
+      purchaseOrders
+    )
     const approvedQty = values.result === "Pass" ? matchedReceipt.quantity : 0
     const rejectedQty = values.result === "Fail" ? matchedReceipt.quantity : 0
 
@@ -525,6 +535,7 @@ export function StoreInspectionPage() {
       ? {
           ...editingReport,
           ...values,
+          buyer: resolvedBuyer,
           reportFileName: reportFileName || undefined,
           approvedQty,
           rejectedQty,
@@ -532,16 +543,12 @@ export function StoreInspectionPage() {
       : {
           id: createInspectionReportId(),
           ...values,
+          buyer: resolvedBuyer,
           reportFileName: reportFileName || undefined,
           approvedQty,
           rejectedQty,
           createdAt: new Date().toISOString(),
         }
-
-    const previousRejectedQty =
-      editingReport?.result === "Fail" ? editingReport.rejectedQty : 0
-    const nextRejectedQty = nextRecord.result === "Fail" ? nextRecord.rejectedQty : 0
-    const rejectionDelta = previousRejectedQty - nextRejectedQty
 
     const nextReports = editingReport
       ? reports.map((report) => (report.id === editingReport.id ? nextRecord : report))
@@ -553,26 +560,26 @@ export function StoreInspectionPage() {
     const orderForMetrics =
       matchedOrder ?? getFallbackPurchaseOrder(matchedReceipt)
 
-    if (rejectionDelta !== 0) {
-      adjustStoreInventoryAfterInspection({
-        itemName:
-          getPurchaseOrderDisplayItemName(orderForMetrics) ||
-          getPurchaseOrderDisplayItemNameCode(orderForMetrics) ||
-          "Accessories",
-        lotNo: matchedReceipt.batchNumber,
-        supplier: matchedReceipt.supplier,
-        quantityDelta: rejectionDelta,
-        actionDate: values.inspectionDate,
-        notes:
-          values.result === "Fail"
-            ? `Rejected during store inspection: ${values.remarks}`
-            : `Restored after store inspection update: ${values.remarks}`,
-        poId: matchedReceipt.poId,
-        poNumber: matchedReceipt.poNumber,
-        actionLabel:
-          values.result === "Fail" ? "Rejected Accessories" : "Inspection Adjustment",
-      })
-    }
+    applyStoreInspectionToInventory({
+      itemName:
+        getPurchaseOrderDisplayItemName(orderForMetrics) ||
+        getPurchaseOrderDisplayItemNameCode(orderForMetrics) ||
+        "Accessories",
+      lotNo: matchedReceipt.batchNumber,
+      supplier: matchedReceipt.supplier,
+      checkedQty: matchedReceipt.quantity,
+      approvedQty,
+      rejectedQty,
+      actionDate: values.inspectionDate,
+      notes: values.remarks,
+      poId: matchedReceipt.poId,
+      poNumber: matchedReceipt.poNumber,
+      previousCheckedQty: editingReport ? matchedReceipt.quantity : 0,
+      previousApprovedQty:
+        editingReport?.result === "Pass" ? editingReport.approvedQty : 0,
+      previousRejectedQty:
+        editingReport?.result === "Fail" ? editingReport.rejectedQty : 0,
+    })
 
     const storeRecords = getStoredStoreControllerRecords()
     const existingStoreRecord = storeRecords.find(
@@ -668,7 +675,7 @@ export function StoreInspectionPage() {
         filters={["All Reports", "Pass", "Fail"]}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
-        searchPlaceholder="Search PO, batch, supplier, inspector"
+        searchPlaceholder="Search PO, buyer, batch, supplier, inspector"
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         compact
@@ -684,6 +691,7 @@ export function StoreInspectionPage() {
           compact
           columns={[
             { key: "poNumber", header: "PO Number", className: "min-w-[5.5rem]" },
+            { key: "buyer", header: "Buyer", className: "min-w-[5.5rem]" },
             { key: "batchNumber", header: "Batch Number", className: "min-w-[5rem]" },
             { key: "supplier", header: "Supplier", className: "min-w-[6rem]" },
             {
@@ -821,8 +829,21 @@ export function StoreInspectionPage() {
                 <input
                   id="store-inspection-po-number"
                   {...register("poNumber", { required: true })}
-                  placeholder="LK-2005"
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+                  readOnly
+                  placeholder="Auto-filled from selected batch"
+                  className="w-full rounded-2xl border border-input bg-muted px-4 py-3 text-sm outline-none"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="store-inspection-buyer" className="text-sm font-medium">
+                  Buyer
+                </label>
+                <input
+                  id="store-inspection-buyer"
+                  {...register("buyer")}
+                  readOnly
+                  className="w-full rounded-2xl border border-input bg-muted px-4 py-3 text-sm outline-none"
                 />
               </div>
 
@@ -833,15 +854,22 @@ export function StoreInspectionPage() {
                 <select
                   id="store-inspection-receipt-id"
                   {...register("receiptId")}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+                  disabled={Boolean(editingReport)}
+                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring disabled:cursor-not-allowed disabled:bg-muted"
                   onChange={(event) => {
                     const matchedReceipt = receipts.find(
                       (receipt) => receipt.id === event.target.value
                     )
                     setValue("receiptId", event.target.value)
                     if (matchedReceipt) {
+                      const linkedOrder =
+                        purchaseOrders.find((order) => order.id === matchedReceipt.poId) ?? null
                       setValue("poId", matchedReceipt.poId)
                       setValue("poNumber", matchedReceipt.poNumber)
+                      setValue(
+                        "buyer",
+                        getResolvedPurchaseOrderBuyer(linkedOrder, purchaseOrders)
+                      )
                       setValue("batchNumber", matchedReceipt.batchNumber)
                       setValue("supplier", matchedReceipt.supplier)
                     }
@@ -867,7 +895,8 @@ export function StoreInspectionPage() {
                 <input
                   id="store-inspection-supplier"
                   {...register("supplier", { required: true })}
-                  className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+                  readOnly
+                  className="w-full rounded-2xl border border-input bg-muted px-4 py-3 text-sm outline-none"
                 />
               </div>
 
@@ -988,6 +1017,7 @@ export function StoreInspectionPage() {
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {[
                 ["Supplier", viewingReport.supplier],
+                ["Buyer", viewingReport.buyer],
                 ["Quantity Verification", viewingReport.quantityVerification],
                 ["Color Match", viewingReport.colorMatch],
                 ["Size Verification", viewingReport.sizeVerification],

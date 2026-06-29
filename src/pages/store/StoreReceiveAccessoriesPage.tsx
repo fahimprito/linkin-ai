@@ -19,6 +19,7 @@ import {
   getPurchaseOrderDisplayNo,
   getPurchaseOrderDisplayQty,
   getPurchaseOrderDisplayStyle,
+  getResolvedPurchaseOrderBuyer,
 } from "@/lib/purchase-orders"
 import {
   addAccessoryReceipt,
@@ -45,6 +46,7 @@ import type {
 
 type ReceiveAccessoriesFormValues = {
   poNumber: string
+  buyer: string
   supplier: string
   batchNumber: string
   quantity: string
@@ -54,6 +56,7 @@ type ReceiveAccessoriesFormValues = {
 
 const receiveFields: ModalFormField[] = [
   { name: "poNumber", label: "PO Number", readOnly: true },
+  { name: "buyer", label: "Buyer", readOnly: true },
   { name: "supplier", label: "Supplier" },
   { name: "batchNumber", label: "Batch / Lot Number", placeholder: "LOT-001" },
   { name: "quantity", label: "Received Qty", type: "number", placeholder: "12000" },
@@ -162,6 +165,7 @@ export function StoreReceiveAccessoriesPage() {
   const { register, handleSubmit, reset } = useForm<ReceiveAccessoriesFormValues>({
     defaultValues: {
       poNumber: "",
+      buyer: "",
       supplier: "",
       batchNumber: "",
       quantity: "",
@@ -228,6 +232,7 @@ export function StoreReceiveAccessoriesPage() {
     setSelectedPoId(poId)
     reset({
       poNumber: getPurchaseOrderDisplayNo(order),
+      buyer: getResolvedPurchaseOrderBuyer(order, purchaseOrders),
       supplier:
         order.storeRecord?.supplier ||
         linkedSupplierOrder?.supplier ||
@@ -378,6 +383,7 @@ export function StoreReceiveAccessoriesPage() {
         id: createNotificationId(),
         title: `Accessories received: ${values.poNumber}`,
         description: `${quantity} accessories units have been received from ${values.supplier.trim()} and inventory was updated.`,
+        description: `${quantity} accessories units have been received from ${values.supplier.trim()} and reserved for inspection.`,
         time: "Just now",
         read: false,
         targetRoles: ["merchandising_user", "management_user", "super_admin"],
@@ -385,10 +391,12 @@ export function StoreReceiveAccessoriesPage() {
     )
     setIsCreateModalOpen(false)
     setSelectedPoId("")
-    toast.success(`Accessories received for ${values.poNumber}. Inventory updated.`)
+    toast.success(
+      `Accessories received for ${values.poNumber}. Inventory is now pending inspection.`
+    )
   }
 
-  const statusFlow = ["Assigned PO", "Received", "Stock Updated"]
+  const statusFlow = ["Assigned PO", "Received", "Pending Inspection"]
 
   return (
     <div className="space-y-6">
@@ -567,6 +575,7 @@ export function StoreReceiveAccessoriesPage() {
 
           reset({
             poNumber: getPurchaseOrderDisplayNo(order),
+            buyer: getResolvedPurchaseOrderBuyer(order, purchaseOrders),
             supplier:
               order.storeRecord?.supplier ||
               linkedSupplierOrder?.supplier ||

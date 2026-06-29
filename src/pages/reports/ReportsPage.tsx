@@ -126,11 +126,16 @@ export function ReportsPage() {
               render: (row) => String(getPurchaseOrderDisplayNo(row) || "—"),
             },
             {
+              key: "buyer",
+              header: "Buyer",
+              className: "min-w-[5.5rem]",
+              render: (row) => String(row.buyer || "—"),
+            },
+            {
               key: "styleName",
               header: "Style Name",
               className: "min-w-[7rem]",
-              render: (row) =>
-                String(getPurchaseOrderDisplayStyle(row) || "—"),
+              render: (row) => String(getPurchaseOrderDisplayStyle(row) || "—"),
             },
             {
               key: "styleNo",
@@ -165,7 +170,9 @@ export function ReportsPage() {
                 <div className="space-y-0.5 text-[10px] leading-4">
                   <p>Yarn: {(row.totalYarnKg ?? 0).toLocaleString()} kg</p>
                   <p>Fabric: {(row.totalFabricKg ?? 0).toLocaleString()} kg</p>
-                  <p>Accessories: {(row.totalAccessoriesQty ?? 0).toLocaleString()} pcs</p>
+                  <p>
+                    Accessories: {(row.totalAccessoriesQty ?? 0).toLocaleString()} pcs
+                  </p>
                 </div>
               ),
             },

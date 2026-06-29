@@ -17,6 +17,7 @@ import {
   getPurchaseOrderDisplayQty,
   getPurchaseOrderDisplayStyle,
   getPurchaseOrderDisplayYarn,
+  getResolvedPurchaseOrderBuyer,
 } from "@/lib/purchase-orders"
 import { upsertInventoryFromReceipt } from "@/lib/yarn-inventory"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
@@ -32,6 +33,7 @@ import type { PurchaseOrder, YarnSupplierOrder } from "@/types/modules"
 
 type DeliveryFormValues = {
   poNumber: string
+  buyer: string
   supplier: string
   batchNumber: string
   quantity: string
@@ -44,6 +46,12 @@ const deliveryFields: ModalFormField[] = [
     name: "poNumber",
     label: "PO Number",
     placeholder: "LK-2006",
+    readOnly: true,
+  },
+  {
+    name: "buyer",
+    label: "Buyer",
+    placeholder: "H&M",
     readOnly: true,
   },
   {
@@ -136,6 +144,7 @@ export function YarnDeliveryLogPage() {
   const { register, handleSubmit, reset } = useForm<DeliveryFormValues>({
     defaultValues: {
       poNumber: "",
+      buyer: "",
       supplier: "",
       batchNumber: "",
       quantity: "",
@@ -185,6 +194,7 @@ export function YarnDeliveryLogPage() {
     setSelectedPoId(poId)
     reset({
       poNumber: getPurchaseOrderDisplayNo(order),
+      buyer: getResolvedPurchaseOrderBuyer(order, purchaseOrders),
       supplier: linkedSupplierOrder?.supplier || order.supplier || "",
       batchNumber: `LOT-${String(nextBatchNum).padStart(3, "0")}`,
       quantity: "",
@@ -310,19 +320,21 @@ export function YarnDeliveryLogPage() {
       addNotification({
         id: createNotificationId(),
         title: `Yarn received: ${values.poNumber}`,
-        description: `${receivedQty} kg yarn has been received from ${values.supplier.trim()} and stock was updated.`,
+        description: `${receivedQty} kg yarn has been received from ${values.supplier.trim()} and reserved for inspection.`,
         time: "Just now",
         read: false,
         targetRoles: ["merchandising_user", "management_user", "super_admin"],
       })
     )
 
-    toast.success(`Yarn received for PO ${values.poNumber}. Stock updated.`)
+    toast.success(
+      `Yarn received for PO ${values.poNumber}. Inventory is now pending inspection.`
+    )
     setIsCreateModalOpen(false)
     setSelectedPoId("")
   }
 
-  const statusFlow = ["Assigned PO", "Received", "Stock Updated"]
+  const statusFlow = ["Assigned PO", "Received", "Pending Inspection"]
 
   return (
     <div className="space-y-6">
@@ -516,6 +528,7 @@ export function YarnDeliveryLogPage() {
 
           reset({
             poNumber: getPurchaseOrderDisplayNo(order),
+            buyer: getResolvedPurchaseOrderBuyer(order, purchaseOrders),
             supplier: linkedSupplierOrder?.supplier || order.supplier || "",
             batchNumber: `LOT-${String(existingBatches.length + 1).padStart(3, "0")}`,
             quantity: "",

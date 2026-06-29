@@ -140,6 +140,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         !normalizedSearch ||
         [
           getOrderDisplayNo(row),
+          row.buyer,
           getOrderDisplayStyle(row),
           row.styleNo,
           row.color,
@@ -174,6 +175,12 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         header: "PO Number",
         className: "min-w-[5.75rem]",
         render: (row) => getOrderDisplayNo(row),
+      },
+      {
+        key: "buyer",
+        header: "Buyer",
+        className: "min-w-[5.5rem]",
+        render: (row) => row.buyer || "—",
       },
       {
         key: "styleName",
@@ -288,7 +295,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         filters={filterOptions}
         activeFilter={activeStatusFilter}
         onFilterChange={setActiveStatusFilter}
-        searchPlaceholder="Search PO, style, style number, colors, item name"
+        searchPlaceholder="Search PO, buyer, style, style number, colors, item name"
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         compact

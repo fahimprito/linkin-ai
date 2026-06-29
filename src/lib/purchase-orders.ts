@@ -110,6 +110,60 @@ export function getPurchaseOrderDisplayShipmentSample(order: PurchaseOrder) {
   return order.shipmentSample || ""
 }
 
+export function getResolvedPurchaseOrderBuyer(
+  order: PurchaseOrder | null | undefined,
+  purchaseOrders: PurchaseOrder[]
+) {
+  if (order?.buyer?.trim()) {
+    return order.buyer.trim()
+  }
+
+  const styleNo = order?.styleNo?.trim().toLowerCase()
+  if (styleNo) {
+    const styleNoMatch = purchaseOrders.find(
+      (candidate) =>
+        candidate.id !== order?.id &&
+        candidate.styleNo?.trim().toLowerCase() === styleNo &&
+        candidate.buyer?.trim()
+    )
+
+    if (styleNoMatch?.buyer?.trim()) {
+      return styleNoMatch.buyer.trim()
+    }
+  }
+
+  const styleName = order ? getPurchaseOrderDisplayStyle(order).trim().toLowerCase() : ""
+  if (styleName) {
+    const styleMatch = purchaseOrders.find(
+      (candidate) =>
+        candidate.id !== order?.id &&
+        getPurchaseOrderDisplayStyle(candidate).trim().toLowerCase() === styleName &&
+        candidate.buyer?.trim()
+    )
+
+    if (styleMatch?.buyer?.trim()) {
+      return styleMatch.buyer.trim()
+    }
+  }
+
+  return ""
+}
+
+function backfillMissingBuyers(purchaseOrders: PurchaseOrder[]) {
+  return purchaseOrders.map((order) => {
+    const resolvedBuyer = getResolvedPurchaseOrderBuyer(order, purchaseOrders)
+
+    if (!resolvedBuyer || order.buyer === resolvedBuyer) {
+      return order
+    }
+
+    return {
+      ...order,
+      buyer: resolvedBuyer,
+    }
+  })
+}
+
 function normalizePurchaseOrder(
   order: LegacyPurchaseOrderInput,
   index: number
@@ -204,21 +258,23 @@ function normalizePurchaseOrder(
 
 export function getPurchaseOrders() {
   if (!canUseStorage()) {
-    return defaultPurchaseOrders.map(normalizePurchaseOrder)
+    return backfillMissingBuyers(defaultPurchaseOrders.map(normalizePurchaseOrder))
   }
 
   const storedOrders = window.localStorage.getItem(PURCHASE_ORDERS_STORAGE_KEY)
 
   if (!storedOrders) {
-    return defaultPurchaseOrders.map(normalizePurchaseOrder)
+    return backfillMissingBuyers(defaultPurchaseOrders.map(normalizePurchaseOrder))
   }
 
   try {
     const parsedOrders = JSON.parse(storedOrders) as LegacyPurchaseOrderInput[]
-    const normalizedOrders = parsedOrders.map(normalizePurchaseOrder)
+    const normalizedOrders = backfillMissingBuyers(
+      parsedOrders.map(normalizePurchaseOrder)
+    )
 
     if (normalizedOrders.length === 0) {
-      return defaultPurchaseOrders.map(normalizePurchaseOrder)
+      return backfillMissingBuyers(defaultPurchaseOrders.map(normalizePurchaseOrder))
     }
 
     savePurchaseOrders(normalizedOrders)
@@ -226,7 +282,7 @@ export function getPurchaseOrders() {
     return normalizedOrders
   } catch {
     window.localStorage.removeItem(PURCHASE_ORDERS_STORAGE_KEY)
-    return defaultPurchaseOrders.map(normalizePurchaseOrder)
+    return backfillMissingBuyers(defaultPurchaseOrders.map(normalizePurchaseOrder))
   }
 }
 

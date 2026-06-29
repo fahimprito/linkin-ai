@@ -116,10 +116,10 @@ export function upsertInventoryFromReceipt(input: {
             ...record,
             quality: input.quality,
             supplier: input.supplier,
-            availableQty: record.availableQty + input.quantity,
+            reservedQty: record.reservedQty + input.quantity,
             currentStock: computeCurrentStock({
-              availableQty: record.availableQty + input.quantity,
-              reservedQty: record.reservedQty,
+              availableQty: record.availableQty,
+              reservedQty: record.reservedQty + input.quantity,
               issuedQty: record.issuedQty,
             }),
             lastUpdated: input.actionDate,
@@ -137,12 +137,12 @@ export function upsertInventoryFromReceipt(input: {
         quality: input.quality,
         lotNo: input.lotNo,
         supplier: input.supplier,
-        availableQty: input.quantity,
-        reservedQty: 0,
+        availableQty: 0,
+        reservedQty: input.quantity,
         issuedQty: 0,
         currentStock: computeCurrentStock({
-          availableQty: input.quantity,
-          reservedQty: 0,
+          availableQty: 0,
+          reservedQty: input.quantity,
           issuedQty: 0,
         }),
         lastUpdated: input.actionDate,
@@ -161,7 +161,99 @@ export function upsertInventoryFromReceipt(input: {
       action: "Received Yarn",
       quantity: input.quantity,
       actionDate: input.actionDate,
-      notes: input.notes,
+      notes: input.notes || "Pending inspection",
+    },
+    ...history,
+  ]
+
+  saveStoredYarnInventoryRecords(nextRecords)
+  saveStoredYarnInventoryHistory(nextHistory)
+
+  return {
+    records: nextRecords,
+    history: nextHistory,
+  }
+}
+
+export function applyInspectionToInventory(input: {
+  yarnName: string
+  quality: string
+  lotNo: string
+  supplier: string
+  checkedQty: number
+  approvedQty: number
+  rejectedQty: number
+  actionDate: string
+  notes?: string
+  poId?: string
+  poNumber?: string
+  previousCheckedQty?: number
+  previousApprovedQty?: number
+  previousRejectedQty?: number
+}) {
+  const records = getStoredYarnInventoryRecords()
+  const history = getStoredYarnInventoryHistory()
+  const match = records.find(
+    (record) =>
+      record.lotNo === input.lotNo &&
+      record.supplier === input.supplier &&
+      record.yarnName === input.yarnName
+  )
+
+  if (!match) {
+    return {
+      records,
+      history,
+    }
+  }
+
+  const previousCheckedQty = input.previousCheckedQty ?? 0
+  const previousApprovedQty = input.previousApprovedQty ?? 0
+  const previousRejectedQty = input.previousRejectedQty ?? 0
+  const nextReservedQty = Math.max(
+    0,
+    match.reservedQty + previousCheckedQty - input.checkedQty
+  )
+  const nextAvailableQty = Math.max(
+    0,
+    match.availableQty - previousApprovedQty + input.approvedQty
+  )
+
+  const nextRecords = records.map((record) =>
+    record.id === match.id
+      ? {
+          ...record,
+          quality: input.quality,
+          supplier: input.supplier,
+          availableQty: nextAvailableQty,
+          reservedQty: nextReservedQty,
+          currentStock: computeCurrentStock({
+            availableQty: nextAvailableQty,
+            reservedQty: nextReservedQty,
+            issuedQty: record.issuedQty,
+          }),
+          lastUpdated: input.actionDate,
+          poId: input.poId ?? record.poId,
+          poNumber: input.poNumber ?? record.poNumber,
+        }
+      : record
+  )
+
+  const nextHistory = [
+    {
+      id: `inventory-history-${Date.now()}`,
+      inventoryId: match.id,
+      action:
+        input.approvedQty > 0 && input.rejectedQty > 0
+          ? "Inspection Updated"
+          : input.approvedQty > 0
+            ? "Inspection Accepted"
+            : "Inspection Rejected",
+      quantity: input.checkedQty,
+      actionDate: input.actionDate,
+      notes:
+        input.notes ||
+        `Approved: ${input.approvedQty}, Rejected: ${input.rejectedQty}`,
     },
     ...history,
   ]

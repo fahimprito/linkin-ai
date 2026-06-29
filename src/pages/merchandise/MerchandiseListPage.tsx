@@ -44,6 +44,7 @@ import {
 import type { CreatePurchaseOrderPayload, PurchaseOrder } from "@/types/modules"
 
 const purchaseOrderFields: ModalFormField[] = [
+  { name: "buyer", label: "Buyer", placeholder: "H&M" },
   { name: "styleName", label: "Style Name", placeholder: "Premium Knit Polo" },
   { name: "styleNo", label: "Style Number", placeholder: "ST-2201" },
   { name: "gauge", label: "Gauge", placeholder: "12" },
@@ -90,6 +91,7 @@ const purchaseOrderFields: ModalFormField[] = [
 ]
 
 const styleCreateReadOnlyFieldNames = new Set([
+  "buyer",
   "styleName",
   "styleNo",
   "gauge",
@@ -166,7 +168,7 @@ function getCreateFromStyleFormValues(
   order: PurchaseOrder
 ): CreatePurchaseOrderPayload {
   return {
-    buyer: "",
+    buyer: order.buyer ?? "",
     style: getPurchaseOrderDisplayStyle(order),
     design: "",
     quantity: 0,
@@ -373,6 +375,7 @@ export function MerchandiseListPage() {
     baseOrder?: PurchaseOrder | null
   ) => {
     const poNumber = values.poNumber?.trim() || ""
+    const buyer = values.buyer?.trim() || editingOrder?.buyer?.trim() || baseOrder?.buyer?.trim() || ""
     const styleName = values.styleName?.trim() || values.style?.trim() || ""
     const gauge = values.gauge?.trim() || ""
     const quality = values.quality?.trim() || values.yarn?.trim() || ""
@@ -389,6 +392,11 @@ export function MerchandiseListPage() {
     if (!poNumber) {
       toast.error("PO Number is required.")
       return
+    }
+
+    if (!buyer) {
+      toast.error("Buyer is required.")
+      return null
     }
 
     const hasDuplicatePoNumber = purchaseOrders.some(
@@ -424,7 +432,7 @@ export function MerchandiseListPage() {
 
     return {
       ...values,
-      buyer: editingOrder?.buyer ?? baseOrder?.buyer ?? "",
+      buyer,
       design: editingOrder?.design ?? baseOrder?.design ?? "",
       poNumber,
       style: styleName,

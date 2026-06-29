@@ -144,20 +144,17 @@ const yarnCheckSlice = createSlice({
     ) => {
       state.deliveryBatches = state.deliveryBatches.map((batch) =>
         batch.id === action.payload.id
-          ? batch.inspectionStatus === "Accepted" ||
-            batch.inspectionStatus === "Rejected"
-            ? batch
-            : {
-                ...batch,
-                inspectionStatus: action.payload.inspectionStatus,
-                inspectedBy: action.payload.inspectedBy ?? batch.inspectedBy,
-                inspectedAt: action.payload.inspectedAt ?? batch.inspectedAt,
-                testReportName:
-                  action.payload.testReportName ?? batch.testReportName,
-                rejectionReason:
-                  action.payload.rejectionReason ?? batch.rejectionReason,
-                remarks: action.payload.remarks ?? batch.remarks,
-              }
+          ? {
+              ...batch,
+              inspectionStatus: action.payload.inspectionStatus,
+              inspectedBy: action.payload.inspectedBy ?? batch.inspectedBy,
+              inspectedAt: action.payload.inspectedAt ?? batch.inspectedAt,
+              testReportName:
+                action.payload.testReportName ?? batch.testReportName,
+              rejectionReason:
+                action.payload.rejectionReason ?? batch.rejectionReason,
+              remarks: action.payload.remarks ?? batch.remarks,
+            }
           : batch
       )
       save(KEYS.deliveryBatches, state.deliveryBatches)

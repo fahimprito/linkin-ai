@@ -118,10 +118,10 @@ export function upsertStoreInventoryFromReceipt(input: {
             ...record,
             supplier: input.supplier,
             itemCode: input.itemCode ?? record.itemCode,
-            availableQty: record.availableQty + input.quantity,
+            reservedQty: record.reservedQty + input.quantity,
             currentStock: computeCurrentStock({
-              availableQty: record.availableQty + input.quantity,
-              reservedQty: record.reservedQty,
+              availableQty: record.availableQty,
+              reservedQty: record.reservedQty + input.quantity,
               issuedQty: record.issuedQty,
             }),
             lastUpdated: input.actionDate,
@@ -139,12 +139,12 @@ export function upsertStoreInventoryFromReceipt(input: {
         itemCode: input.itemCode,
         lotNo: input.lotNo,
         supplier: input.supplier,
-        availableQty: input.quantity,
-        reservedQty: 0,
+        availableQty: 0,
+        reservedQty: input.quantity,
         issuedQty: 0,
         currentStock: computeCurrentStock({
-          availableQty: input.quantity,
-          reservedQty: 0,
+          availableQty: 0,
+          reservedQty: input.quantity,
           issuedQty: 0,
         }),
         lastUpdated: input.actionDate,
@@ -163,7 +163,7 @@ export function upsertStoreInventoryFromReceipt(input: {
       action: "Received Accessories",
       quantity: input.quantity,
       actionDate: input.actionDate,
-      notes: input.notes,
+      notes: input.notes || "Pending inspection",
     },
     ...history,
   ]
@@ -177,24 +177,21 @@ export function upsertStoreInventoryFromReceipt(input: {
   }
 }
 
-export function adjustStoreInventoryAfterInspection(input: {
+export function applyStoreInspectionToInventory(input: {
   itemName: string
   lotNo: string
   supplier: string
-  quantityDelta: number
+  checkedQty: number
+  approvedQty: number
+  rejectedQty: number
   actionDate: string
   notes?: string
   poId?: string
   poNumber?: string
-  actionLabel: string
+  previousCheckedQty?: number
+  previousApprovedQty?: number
+  previousRejectedQty?: number
 }) {
-  if (!input.quantityDelta) {
-    return {
-      records: getStoredStoreInventoryRecords(),
-      history: getStoredStoreInventoryHistory(),
-    }
-  }
-
   const records = getStoredStoreInventoryRecords()
   const history = getStoredStoreInventoryHistory()
   const match = records.find(
@@ -211,15 +208,27 @@ export function adjustStoreInventoryAfterInspection(input: {
     }
   }
 
-  const nextAvailableQty = Math.max(0, match.availableQty + input.quantityDelta)
+  const previousCheckedQty = input.previousCheckedQty ?? 0
+  const previousApprovedQty = input.previousApprovedQty ?? 0
+  const previousRejectedQty = input.previousRejectedQty ?? 0
+  const nextReservedQty = Math.max(
+    0,
+    match.reservedQty + previousCheckedQty - input.checkedQty
+  )
+  const nextAvailableQty = Math.max(
+    0,
+    match.availableQty - previousApprovedQty + input.approvedQty
+  )
+
   const nextRecords = records.map((record) =>
     record.id === match.id
       ? {
           ...record,
           availableQty: nextAvailableQty,
+          reservedQty: nextReservedQty,
           currentStock: computeCurrentStock({
             availableQty: nextAvailableQty,
-            reservedQty: record.reservedQty,
+            reservedQty: nextReservedQty,
             issuedQty: record.issuedQty,
           }),
           lastUpdated: input.actionDate,
@@ -233,10 +242,17 @@ export function adjustStoreInventoryAfterInspection(input: {
     {
       id: `store-inventory-history-${Date.now()}`,
       inventoryId: match.id,
-      action: input.actionLabel,
-      quantity: Math.abs(input.quantityDelta),
+      action:
+        input.approvedQty > 0 && input.rejectedQty > 0
+          ? "Inspection Updated"
+          : input.approvedQty > 0
+            ? "Inspection Approved"
+            : "Inspection Rejected",
+      quantity: input.checkedQty,
       actionDate: input.actionDate,
-      notes: input.notes,
+      notes:
+        input.notes ||
+        `Approved: ${input.approvedQty}, Rejected: ${input.rejectedQty}, Previous Rejected: ${previousRejectedQty}`,
     },
     ...history,
   ]
