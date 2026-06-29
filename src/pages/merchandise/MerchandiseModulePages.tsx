@@ -31,7 +31,7 @@ import { getStoredStoreInventoryRecords } from "@/lib/store-accessories"
 import { getStoredStoreControllerRecords } from "@/lib/store-controller"
 import { ModuleSettingsPage } from "@/pages/shared/ModuleSettingsPage"
 import { useAppSelector } from "@/store/hooks"
-import type { StoreInspectionStatus } from "@/types/modules"
+import type { PurchaseOrder, StoreInspectionStatus } from "@/types/modules"
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString()
@@ -49,6 +49,21 @@ function isOperationalCcdDate(date: Date, today: Date) {
 
 function isReadyToShipStatus(status: string) {
   return status.toLowerCase().includes("ready to ship")
+}
+
+function ensureMinimumRows(
+  primaryRows: PurchaseOrder[],
+  fallbackRows: PurchaseOrder[],
+  minimumRows = 3
+) {
+  if (primaryRows.length >= minimumRows) {
+    return primaryRows
+  }
+
+  const primaryIds = new Set(primaryRows.map((row) => row.id))
+  const additionalRows = fallbackRows.filter((row) => !primaryIds.has(row.id))
+
+  return [...primaryRows, ...additionalRows].slice(0, minimumRows)
 }
 
 type MerchandiseStoreInventoryRow = {
@@ -141,7 +156,14 @@ export function MerchandiseDashboardPage() {
       deliveryDate.getMonth() === today.getMonth()
     )
   }).length
-  const draftPoList = purchaseOrders.filter((po) => po.status === "Created")
+  const draftPoList = useMemo(() => {
+    const createdOrders = purchaseOrders.filter((po) => po.status === "Created")
+    const recentOrders = [...purchaseOrders].sort((left, right) =>
+      right.createdAt.localeCompare(left.createdAt)
+    )
+
+    return ensureMinimumRows(createdOrders, recentOrders)
+  }, [purchaseOrders])
   const currentMonthPoList = useMemo(() => {
     const currentMonthOrders = purchaseOrders.filter((po) => {
       const ccdDate = getValidDate(getPurchaseOrderDisplayCcd(po))
@@ -154,11 +176,7 @@ export function MerchandiseDashboardPage() {
       )
     })
 
-    if (currentMonthOrders.length > 0) {
-      return currentMonthOrders
-    }
-
-    const nearestUpcomingOrder = [...purchaseOrders]
+    const nearestUpcomingOrders = [...purchaseOrders]
       .filter((po) => {
         const ccdDate = getValidDate(getPurchaseOrderDisplayCcd(po))
 
@@ -175,9 +193,15 @@ export function MerchandiseDashboardPage() {
         return (leftDate?.getTime() ?? Number.MAX_SAFE_INTEGER) -
           (rightDate?.getTime() ?? Number.MAX_SAFE_INTEGER)
       })
-      .slice(0, 1)
+    const recentOrders = [...purchaseOrders].sort((left, right) =>
+      right.createdAt.localeCompare(left.createdAt)
+    )
 
-    return nearestUpcomingOrder
+    return ensureMinimumRows(
+      currentMonthOrders,
+      [...nearestUpcomingOrders, ...recentOrders],
+      3
+    )
   }, [purchaseOrders, today])
   const purchaseOrderWorkflowMetrics = useMemo(() => {
     return createPurchaseOrderWorkflowMetrics({
