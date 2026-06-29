@@ -59,7 +59,11 @@ export function LoginPage() {
             </p>
           </div>
         </div>
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="mt-8 space-y-4"
+          autoComplete="on"
+        >
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium">
               Work email
@@ -67,6 +71,10 @@ export function LoginPage() {
             <input
               id="email"
               {...register("email", { required: true })}
+              type="email"
+              autoComplete="username"
+              inputMode="email"
+              spellCheck={false}
               className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
             />
           </div>
@@ -79,6 +87,8 @@ export function LoginPage() {
                 id="password"
                 type={isPasswordVisible ? "text" : "password"}
                 {...register("password", { required: true })}
+                autoComplete="current-password"
+                spellCheck={false}
                 className="w-full rounded-2xl border border-input bg-background px-4 py-3 pr-12 text-sm outline-none transition focus:border-ring"
               />
               <button
