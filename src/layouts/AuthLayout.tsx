@@ -1,5 +1,7 @@
 import { Outlet } from "react-router"
 
+import brainSystemLogo from "@/assets/image/brain-system-logo.jpeg"
+
 export function AuthLayout() {
   return (
     <div className="grid min-h-svh lg:grid-cols-[1.15fr_0.85fr]">
@@ -31,10 +33,15 @@ export function AuthLayout() {
           </div>
         </div>
       </section>
-      <section className="flex items-center justify-center bg-background px-4 py-10">
+      <section className="relative flex items-center justify-center bg-secondary/60 px-4 py-10 pb-24">
         <div className="w-full max-w-md">
           <Outlet />
         </div>
+        <img
+          src={brainSystemLogo}
+          alt="Brain System developer logo"
+          className="pointer-events-none absolute bottom-4 right-4 h-12 w-auto object-contain opacity-90 sm:bottom-6 sm:right-6 sm:h-14"
+        />
       </section>
     </div>
   )

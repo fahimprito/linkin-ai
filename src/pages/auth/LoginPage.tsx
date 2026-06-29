@@ -45,85 +45,92 @@ export function LoginPage() {
   }
 
   return (
-    <div className="rounded-[2rem] border border-border/70 bg-card p-7 shadow-lg">
-      <div className="flex items-center gap-3">
-        <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-          <LogIn className="size-5" />
-        </div>
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">Authentication</p>
-          <h1 className="text-2xl font-semibold">Sign in to KnitOps</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Use your work credentials to access the dashboard.
-          </p>
-        </div>
-      </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-4">
-        <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium">
-            Work email
-          </label>
-          <input
-            id="email"
-            {...register("email", { required: true })}
-            className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
-          />
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="password" className="text-sm font-medium">
-            Password
-          </label>
-          <div className="relative">
-            <input
-              id="password"
-              type={isPasswordVisible ? "text" : "password"}
-              {...register("password", { required: true })}
-              className="w-full rounded-2xl border border-input bg-background px-4 py-3 pr-12 text-sm outline-none transition focus:border-ring"
-            />
-            <button
-              type="button"
-              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-muted-foreground transition hover:text-foreground"
-              onClick={() => setIsPasswordVisible((current) => !current)}
-              aria-label={isPasswordVisible ? "Hide password" : "Show password"}
-            >
-              {isPasswordVisible ? (
-                <EyeOff className="size-4" />
-              ) : (
-                <Eye className="size-4" />
-              )}
-            </button>
+    <div className="space-y-4">
+      <div className="rounded-[2rem] border border-border/70 bg-card p-7 shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+            <LogIn className="size-5" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Authentication</p>
+            <h1 className="text-2xl font-semibold">Sign in to KnitOps</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Use your work credentials to access the dashboard.
+            </p>
           </div>
         </div>
-        <Button type="submit" className="w-full rounded-2xl" disabled={isLoading} size="lg">
-          {isLoading ? "Signing in..." : "Sign in"}
-        </Button>
-      </form>
-      <div className="mt-6 flex items-center justify-between text-sm">
-        <Link to="/forgot-password" className="text-primary hover:underline">
-          Forgot password?
-        </Link>
-        <span className="text-muted-foreground">{mockUsers.length} demo users available</span>
-      </div>
-      <div className="mt-6 rounded-[1.5rem] bg-secondary/60 p-4 text-xs leading-6 text-muted-foreground">
-        <p className="font-medium text-foreground">Demo accounts</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {mockUsers.map((user) => (
-            <button
-              key={user.id}
-              type="button"
-              className="rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs transition hover:border-primary/40 hover:text-foreground"
-              onClick={() => {
-                setValue("email", user.email, { shouldDirty: true })
-                setValue("password", user.password, { shouldDirty: true })
-              }}
-            >
-              {user.email}
-            </button>
-          ))}
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-sm font-medium">
+              Work email
+            </label>
+            <input
+              id="email"
+              {...register("email", { required: true })}
+              className="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-sm font-medium">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={isPasswordVisible ? "text" : "password"}
+                {...register("password", { required: true })}
+                className="w-full rounded-2xl border border-input bg-background px-4 py-3 pr-12 text-sm outline-none transition focus:border-ring"
+              />
+              <button
+                type="button"
+                className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-muted-foreground transition hover:text-foreground"
+                onClick={() => setIsPasswordVisible((current) => !current)}
+                aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+              >
+                {isPasswordVisible ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
+          </div>
+          <Button
+            type="submit"
+            className="w-full rounded-2xl"
+            disabled={isLoading}
+            size="lg"
+          >
+            {isLoading ? "Signing in..." : "Sign in"}
+          </Button>
+        </form>
+        <div className="mt-6 flex items-center justify-between text-sm">
+          <Link to="/forgot-password" className="text-primary hover:underline">
+            Forgot password?
+          </Link>
+          <span className="text-muted-foreground">{mockUsers.length} demo users available</span>
         </div>
-        <p className="mt-3">
-          Password: <span className="font-medium text-foreground">password123</span>
-        </p>
+        <div className="mt-6 rounded-[1.5rem] bg-secondary/60 p-4 text-xs leading-6 text-muted-foreground">
+          <p className="font-medium text-foreground">Demo accounts</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {mockUsers.map((user) => (
+              <button
+                key={user.id}
+                type="button"
+                className="rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs transition hover:border-primary/40 hover:text-foreground"
+                onClick={() => {
+                  setValue("email", user.email, { shouldDirty: true })
+                  setValue("password", user.password, { shouldDirty: true })
+                }}
+              >
+                {user.email}
+              </button>
+            ))}
+          </div>
+          <p className="mt-3">
+            Password: <span className="font-medium text-foreground">password123</span>
+          </p>
+        </div>
       </div>
     </div>
   )
