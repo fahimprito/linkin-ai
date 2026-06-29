@@ -9,9 +9,6 @@ import { NotFoundPage } from "@/pages/common/NotFoundPage"
 import { UnauthorizedPage } from "@/pages/common/UnauthorizedPage"
 import { ExecutiveDashboardPage } from "@/pages/dashboard/ExecutiveDashboardPage"
 import {
-  MerchandiseProductionUpdatesPage,
-} from "@/pages/forms/OperationsFormPages"
-import {
   DesignDashboardPage,
   DesignReportsPage,
   DesignSettingsPage,
@@ -20,6 +17,7 @@ import {
 } from "@/pages/design/DesignModulePages"
 import { MerchandiseListPage } from "@/pages/merchandise/MerchandiseListPage"
 import { MerchandiseMasterExcelPage } from "@/pages/merchandise/MerchandiseMasterExcelPage"
+import { MerchandiseProductionPage } from "@/pages/merchandise/MerchandiseProductionPage"
 import { MerchandiseSourcingPage } from "@/pages/merchandise/MerchandiseSourcingPage"
 import { MerchandiseSupplierPage } from "@/pages/merchandise/MerchandiseSupplierPage"
 import {
@@ -121,7 +119,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: "/merchandise/production",
-                element: <MerchandiseProductionUpdatesPage />,
+                element: <MerchandiseProductionPage />,
               },
               {
                 path: "/merchandise/inventory",
