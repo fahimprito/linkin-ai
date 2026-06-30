@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { StatusBadge } from "@/components/shared/status-badge"
+import { mockUsers } from "@/mock/auth"
 import { poStatusToStage } from "@/components/shared/stage-tracker"
 import {
   getOrderDisplayNo,
@@ -27,6 +28,7 @@ type ReportPageProps = {
 }
 
 type ManagementReportRow = PurchaseOrder & {
+  merchandiseName: string
   materialSummary: {
     yarnKg: number
     fabricKg: number
@@ -92,6 +94,9 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
   const supplierOrders = useAppSelector((state) => state.yarnCheck.supplierOrders)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeStatusFilter, setActiveStatusFilter] = useState("All Status")
+  const defaultMerchandiseName =
+    mockUsers.find((user) => user.role === "merchandising_user")?.name ??
+    "Merchandising Team"
 
   const workflowMetrics = useMemo(
     () =>
@@ -108,6 +113,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
     () =>
       purchaseOrders.map((order) => ({
         ...order,
+        merchandiseName: defaultMerchandiseName,
         materialSummary: {
           yarnKg: order.totalYarnKg ?? 0,
           fabricKg: order.totalFabricKg ?? 0,
@@ -124,7 +130,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         progress: getProgress(order.status),
         currentStage: buildCurrentStage(order.status),
       })),
-    [purchaseOrders, workflowMetrics]
+    [defaultMerchandiseName, purchaseOrders, workflowMetrics]
   )
 
   const filterOptions = useMemo(
@@ -140,6 +146,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         !normalizedSearch ||
         [
           getOrderDisplayNo(row),
+          row.merchandiseName,
           row.buyer,
           getOrderDisplayStyle(row),
           row.styleNo,
@@ -177,10 +184,16 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         render: (row) => getOrderDisplayNo(row),
       },
       {
+        key: "merchandiseName",
+        header: "Merchandise Name",
+        className: "min-w-[7rem]",
+        render: (row) => row.merchandiseName || "-",
+      },
+      {
         key: "buyer",
         header: "Buyer",
         className: "min-w-[5.5rem]",
-        render: (row) => row.buyer || "—",
+        render: (row) => row.buyer || "-",
       },
       {
         key: "styleName",
@@ -192,7 +205,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         key: "styleNo",
         header: "Style Number",
         className: "min-w-[5.75rem]",
-        render: (row) => row.styleNo || "—",
+        render: (row) => row.styleNo || "-",
       },
       {
         key: "quantity",
@@ -204,13 +217,13 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         key: "colors",
         header: "Colors",
         className: "min-w-[5.5rem]",
-        render: (row) => row.color || "—",
+        render: (row) => row.color || "-",
       },
       {
         key: "ccd",
         header: "CCD",
         className: "min-w-[5.75rem]",
-        render: (row) => getPurchaseOrderDisplayCcd(row) || "—",
+        render: (row) => getPurchaseOrderDisplayCcd(row) || "-",
       },
       {
         key: "materialSummary",
@@ -228,7 +241,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         key: "eta",
         header: "ETA",
         className: "min-w-[5.75rem]",
-        render: (row) => row.eta || "—",
+        render: (row) => row.eta || "-",
       },
       {
         key: "inventoryStatus",
@@ -246,13 +259,13 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         key: "ppStatus",
         header: "PP Status",
         className: "min-w-[5.75rem]",
-        render: (row) => getPurchaseOrderDisplayPpStatus(row) || "—",
+        render: (row) => getPurchaseOrderDisplayPpStatus(row) || "-",
       },
       {
         key: "shipmentSample",
         header: "Shipment Sample",
         className: "min-w-[6.25rem]",
-        render: (row) => getPurchaseOrderDisplayShipmentSample(row) || "—",
+        render: (row) => getPurchaseOrderDisplayShipmentSample(row) || "-",
       },
       {
         key: "progress",
@@ -295,7 +308,7 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
         filters={filterOptions}
         activeFilter={activeStatusFilter}
         onFilterChange={setActiveStatusFilter}
-        searchPlaceholder="Search PO, buyer, style, style number, colors, item name"
+        searchPlaceholder="Search PO, merchandise, buyer, style, style number, colors, item name"
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         compact

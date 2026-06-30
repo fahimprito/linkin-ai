@@ -4,6 +4,7 @@ import { Link } from "react-router"
 import { DataTable } from "@/components/shared/data-table"
 import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
+import { mockUsers } from "@/mock/auth"
 import { poStatusToStage } from "@/components/shared/stage-tracker"
 import {
   getPurchaseOrderDisplayCcd,
@@ -29,6 +30,9 @@ export function ReportsPage() {
   const deliveryBatches = useAppSelector((state) => state.yarnCheck.deliveryBatches)
   const stockMovements = useAppSelector((state) => state.yarnCheck.stockMovements)
   const supplierOrders = useAppSelector((state) => state.yarnCheck.supplierOrders)
+  const defaultMerchandiseName =
+    mockUsers.find((user) => user.role === "merchandising_user")?.name ??
+    "Merchandising Team"
   const workflowMetrics = createPurchaseOrderWorkflowMetrics({
     purchaseOrders,
     deliveryBatches,
@@ -123,25 +127,31 @@ export function ReportsPage() {
               key: "poNumber",
               header: "PO Number",
               className: "min-w-[5.75rem]",
-              render: (row) => String(getPurchaseOrderDisplayNo(row) || "—"),
+              render: (row) => String(getPurchaseOrderDisplayNo(row) || "-"),
             },
             {
-              key: "buyer",
+              key: "merchandiseName",
+              header: "Merchandise Name",
+              className: "min-w-[7rem]",
+              render: () => String(defaultMerchandiseName),
+            },
+            {
+              key: "buyerName",
               header: "Buyer",
               className: "min-w-[5.5rem]",
-              render: (row) => String(row.buyer || "—"),
+              render: (row) => String(row.buyer || "-"),
             },
             {
               key: "styleName",
               header: "Style Name",
               className: "min-w-[7rem]",
-              render: (row) => String(getPurchaseOrderDisplayStyle(row) || "—"),
+              render: (row) => String(getPurchaseOrderDisplayStyle(row) || "-"),
             },
             {
               key: "styleNo",
               header: "Style Number",
               className: "min-w-[5.75rem]",
-              render: (row) => String(row.styleNo || "—"),
+              render: (row) => String(row.styleNo || "-"),
             },
             {
               key: "quantity",
@@ -154,13 +164,13 @@ export function ReportsPage() {
               key: "color",
               header: "Colors",
               className: "min-w-[5.5rem]",
-              render: (row) => String(row.color || "—"),
+              render: (row) => String(row.color || "-"),
             },
             {
               key: "deliveryDate",
               header: "CCD",
               className: "min-w-[5.75rem]",
-              render: (row) => String(getPurchaseOrderDisplayCcd(row) || "—"),
+              render: (row) => String(getPurchaseOrderDisplayCcd(row) || "-"),
             },
             {
               key: "materialSummary",
@@ -184,7 +194,7 @@ export function ReportsPage() {
                 String(
                   workflowMetrics.yarnSupplierByPo[String(row.id)] ||
                     row.supplier ||
-                    "—"
+                    "-"
                 ),
             },
             {
@@ -195,7 +205,7 @@ export function ReportsPage() {
                 String(
                   workflowMetrics.yarnEtaByPo[String(row.id)] ||
                     row.yarnEta ||
-                    "—"
+                    "-"
                 ),
             },
             {
