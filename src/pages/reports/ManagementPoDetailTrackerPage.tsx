@@ -25,6 +25,7 @@ import type { PurchaseOrder } from "@/types/modules"
 
 type ReportPageProps = {
   title: string
+  includeDemoRows?: boolean
 }
 
 type ManagementReportRow = PurchaseOrder & {
@@ -83,7 +84,18 @@ function selectOptions(values: string[], label: string) {
   ]
 }
 
-function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
+const demoMerchandiseNames = [
+  "Showmik Roy",
+  "Showmik Roy",
+  "Naiem hossain",
+  "Naiem hossain",
+  "Naiem hossain",
+] as const
+
+function ManagementPoDetailTrackerReport({
+  title,
+  includeDemoRows = false,
+}: ReportPageProps) {
   const purchaseOrders = useAppSelector(
     (state) => state.merchandise.purchaseOrders
   )
@@ -110,10 +122,15 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
   )
 
   const reportRows = useMemo<ManagementReportRow[]>(
-    () =>
-      purchaseOrders.map((order) => ({
+    () => {
+      const buildReportRow = (
+        order: PurchaseOrder,
+        merchandiseName: string,
+        rowId?: string
+      ): ManagementReportRow => ({
         ...order,
-        merchandiseName: defaultMerchandiseName,
+        id: rowId ?? order.id,
+        merchandiseName,
         materialSummary: {
           yarnKg: order.totalYarnKg ?? 0,
           fabricKg: order.totalFabricKg ?? 0,
@@ -129,8 +146,31 @@ function ManagementPoDetailTrackerReport({ title }: ReportPageProps) {
           : workflowMetrics.yarnInspectionStatusByPo[order.id] ?? "Pending",
         progress: getProgress(order.status),
         currentStage: buildCurrentStage(order.status),
-      })),
-    [defaultMerchandiseName, purchaseOrders, workflowMetrics]
+      })
+
+      const baseRows = purchaseOrders.map((order) =>
+        buildReportRow(order, defaultMerchandiseName)
+      )
+
+      const demoRows = demoMerchandiseNames.flatMap((merchandiseName, index) => {
+        const sourceOrder = purchaseOrders[index % purchaseOrders.length]
+
+        if (!sourceOrder) {
+          return []
+        }
+
+        return [
+          buildReportRow(
+            sourceOrder,
+            merchandiseName,
+            `${sourceOrder.id}-management-demo-${index + 1}`
+          ),
+        ]
+      })
+
+      return includeDemoRows ? [...baseRows, ...demoRows] : baseRows
+    },
+    [defaultMerchandiseName, includeDemoRows, purchaseOrders, workflowMetrics]
   )
 
   const filterOptions = useMemo(
@@ -331,5 +371,10 @@ export function MerchandiseManagementReportPage() {
 }
 
 export function ManagementPoDetailTrackerPage() {
-  return <ManagementPoDetailTrackerReport title="PO Detail Tracker" />
+  return (
+    <ManagementPoDetailTrackerReport
+      title="PO Detail Tracker"
+      includeDemoRows
+    />
+  )
 }
