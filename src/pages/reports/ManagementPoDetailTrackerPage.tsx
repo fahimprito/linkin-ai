@@ -21,26 +21,7 @@ import {
 import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflow-metrics"
 import { workflowProgressByStatus } from "@/lib/workflow-status"
 import { useAppSelector } from "@/store/hooks"
-import type { PurchaseOrder } from "@/types/modules"
-
-type ReportPageProps = {
-  title: string
-  includeDemoRows?: boolean
-}
-
-type ManagementReportRow = PurchaseOrder & {
-  merchandiseName: string
-  materialSummary: {
-    yarnKg: number
-    fabricKg: number
-    accessoriesQty: number
-  }
-  eta: string
-  inventoryStatus: string
-  inspectionStatus: string
-  progress: number
-  currentStage: string
-}
+import type { ManagementReportRow, ReportPageProps } from "@/types/reports"
 
 function normalizeText(value: string | undefined) {
   return value?.trim().toLowerCase() ?? ""
@@ -124,7 +105,7 @@ function ManagementPoDetailTrackerReport({
   const reportRows = useMemo<ManagementReportRow[]>(
     () => {
       const buildReportRow = (
-        order: PurchaseOrder,
+        order: ManagementReportRow,
         merchandiseName: string,
         rowId?: string
       ): ManagementReportRow => ({
@@ -149,7 +130,7 @@ function ManagementPoDetailTrackerReport({
       })
 
       const baseRows = purchaseOrders.map((order) =>
-        buildReportRow(order, defaultMerchandiseName)
+        buildReportRow(order as ManagementReportRow, defaultMerchandiseName)
       )
 
       const demoRows = demoMerchandiseNames.flatMap((merchandiseName, index) => {
@@ -161,7 +142,7 @@ function ManagementPoDetailTrackerReport({
 
         return [
           buildReportRow(
-            sourceOrder,
+            sourceOrder as ManagementReportRow,
             merchandiseName,
             `${sourceOrder.id}-management-demo-${index + 1}`
           ),
@@ -378,3 +359,5 @@ export function ManagementPoDetailTrackerPage() {
     />
   )
 }
+
+

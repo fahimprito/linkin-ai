@@ -22,3 +22,5 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
 
   return <Outlet />
 }
+
+

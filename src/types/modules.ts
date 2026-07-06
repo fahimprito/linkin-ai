@@ -273,3 +273,4 @@ export type GenericModuleSummary = {
   metrics: DashboardMetric[]
   records: Array<Record<string, string>>
 }
+

@@ -265,3 +265,5 @@ export function applyStoreInspectionToInventory(input: {
     history: nextHistory,
   }
 }
+
+

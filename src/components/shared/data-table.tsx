@@ -1,39 +1,14 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import type {
+  DataTableColumn,
+  DataTableHeaderCell,
+  DataTableHeaderRow,
+  DataTableProps,
+} from "@/types/data-table"
 
-export type DataTableColumn<T> = {
-  key: keyof T | string
-  header: string
-  className?: string
-  stickyClassName?: string
-  stickyShadowClassName?: string
-  render?: (row: T, rowIndex: number) => React.ReactNode
-}
-
-export type DataTableHeaderCell = {
-  key: string
-  label: string
-  colSpan?: number
-  rowSpan?: number
-  className?: string
-  labelClassName?: string
-  stickyClassName?: string
-  stickyShadowClassName?: string
-}
-
-export type DataTableHeaderRow = {
-  key: string
-  cells: DataTableHeaderCell[]
-  className?: string
-}
-
-type DataTableProps<T extends object> = {
-  columns: DataTableColumn<T>[]
-  data: T[]
-  headerRows?: DataTableHeaderRow[]
-  compact?: boolean
-}
+export type { DataTableColumn, DataTableHeaderCell, DataTableHeaderRow } from "@/types/data-table"
 
 function getCellValue<T extends object>(row: T, key: DataTableColumn<T>["key"]) {
   if (typeof key === "string" && key in row) {
@@ -50,8 +25,7 @@ export function DataTable<T extends object>({
   compact = false,
 }: DataTableProps<T>) {
   const scrollContainerRef = React.useRef<HTMLDivElement | null>(null)
-  const [showStickyShadow, setShowStickyShadow] =
-    React.useState(true)
+  const [showStickyShadow, setShowStickyShadow] = React.useState(true)
   const resolvedHeaderRows: DataTableHeaderRow[] =
     headerRows ??
     [
@@ -158,7 +132,7 @@ export function DataTable<T extends object>({
                       column.stickyClassName,
                       showStickyShadow && column.stickyShadowClassName,
                       column.stickyClassName &&
-                      (rowIndex % 2 === 0 ? "z-10 bg-background/95" : "z-10 bg-card"),
+                        (rowIndex % 2 === 0 ? "z-10 bg-background/95" : "z-10 bg-card"),
                       columnIndex === columns.length - 1 && "border-r-0",
                       rowIndex === data.length - 1 && "border-b-0",
                       column.className
@@ -177,3 +151,5 @@ export function DataTable<T extends object>({
     </div>
   )
 }
+
+

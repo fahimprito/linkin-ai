@@ -12,6 +12,7 @@ import type {
   KnittingYarnIssueLog,
   KnittingYarnRequisition,
 } from "@/types/production"
+import type { KnittingState } from "@/types/state"
 
 const KEYS = {
   requisitions: "linkin-knitting-requisitions",
@@ -45,13 +46,6 @@ function save<T>(key: string, records: T[]) {
   }
 
   window.localStorage.setItem(key, JSON.stringify(records))
-}
-
-type KnittingState = {
-  requisitions: KnittingYarnRequisition[]
-  issueLogs: KnittingYarnIssueLog[]
-  productionPlans: KnittingProductionPlan[]
-  dailyProgress: KnittingDailyProgress[]
 }
 
 const initialState: KnittingState = {
@@ -128,3 +122,4 @@ export const {
 } = knittingSlice.actions
 
 export default knittingSlice.reducer
+

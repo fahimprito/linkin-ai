@@ -1,4 +1,4 @@
-ï»¿import {
+import {
   CalendarCheck2,
   ClipboardList,
   Factory,
@@ -489,11 +489,11 @@ export function MerchandiseStoreInventoryPage() {
             storeRecord?.supplier ||
             accessoriesOrder?.supplier ||
             relatedInventoryRecords[0]?.supplier ||
-            "â€”",
-          eta: storeRecord?.eta || accessoriesOrder?.expectedArrival || "â€”",
+            "—",
+          eta: storeRecord?.eta || accessoriesOrder?.expectedArrival || "—",
           inspectionStatus,
           inventoryStatus,
-          remarks: storeRecord?.remarks || "â€”",
+          remarks: storeRecord?.remarks || "—",
         }
       })
   }, [purchaseOrders, storeControllerRecords, storeInventoryRecords, supplierOrders])
@@ -700,3 +700,5 @@ export function MerchandiseSettingsPage() {
     />
   )
 }
+
+

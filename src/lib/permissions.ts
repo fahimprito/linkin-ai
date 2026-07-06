@@ -222,3 +222,5 @@ export function getDefaultRoute(
 ) {
   return getNavigationForUser(userRole, permissions)[0]?.to ?? "/login"
 }
+
+

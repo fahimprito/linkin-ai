@@ -4,27 +4,13 @@ import { logout, setSession } from "@/features/auth/auth-slice"
 import { loadSession } from "@/lib/session"
 import { mockUsers } from "@/mock/auth"
 import { mockNotifications } from "@/mock/notifications"
-import type { UserRole } from "@/types/auth"
+import type {
+  NotificationItem,
+  NotificationRecipients,
+  NotificationState,
+} from "@/types/notifications"
 
 const NOTIFICATIONS_STORAGE_KEY = "linkin-ai-admin-notifications"
-
-export type NotificationItem = {
-  id: string
-  title: string
-  description: string
-  time: string
-  read: boolean
-}
-
-export type NotificationRecipients = {
-  targetRoles?: UserRole[]
-  targetUserIds?: string[]
-}
-
-type NotificationState = {
-  activeUserId: string | null
-  items: NotificationItem[]
-}
 
 function getNotificationsStorageKey(userId: string) {
   return `${NOTIFICATIONS_STORAGE_KEY}:${userId}`
@@ -158,3 +144,5 @@ const notificationSlice = createSlice({
 export const { addNotification, markAllRead } = notificationSlice.actions
 
 export default notificationSlice.reducer
+
+

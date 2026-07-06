@@ -1,4 +1,4 @@
-﻿import { DataTable } from "@/components/shared/data-table"
+import { DataTable } from "@/components/shared/data-table"
 import { LoadingState } from "@/components/shared/loading-state"
 import { MetricCard } from "@/components/shared/metric-card"
 import { PageHeader } from "@/components/shared/page-header"
@@ -54,4 +54,6 @@ export function ModuleOverviewPage(props: ModuleOverviewPageProps) {
     </div>
   )
 }
+
+
 

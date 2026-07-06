@@ -134,3 +134,5 @@ export function countTodayEntries<T extends DatedEntry>(
     isSameCalendarDay(entry[dateKey], today)
   ).length
 }
+
+

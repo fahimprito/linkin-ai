@@ -110,3 +110,4 @@ export type StoreIssueLog = {
   remarks?: string
   createdAt: string
 }
+

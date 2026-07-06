@@ -1,4 +1,4 @@
-﻿import { DataTable } from "@/components/shared/data-table"
+import { DataTable } from "@/components/shared/data-table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PageHeader } from "@/components/shared/page-header"
 import { useAppSelector } from "@/store/hooks"
@@ -50,4 +50,6 @@ export function StoreIssueLogTable(props: StoreIssueLogTableProps) {
     </div>
   )
 }
+
+
 

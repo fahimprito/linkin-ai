@@ -7,14 +7,17 @@ import {
   demoYarnSupplierOrders,
 } from "@/mock/demo-data"
 import type {
-  YarnCheckRequest,
-  YarnSupplierOrder,
-  YarnDeliveryBatch,
   YarnBatchInspectionStatus,
+  YarnCheckRequest,
+  YarnDeliveryBatch,
+  YarnSupplierOrder,
 } from "@/types/modules"
 import type { YarnStockMovement } from "@/types/production"
+import type {
+  BatchInspectionUpdatePayload,
+  YarnCheckState,
+} from "@/types/state"
 
-// ── localStorage helpers ─────────────────────────────────────────────
 const KEYS = {
   checkRequests: "linkin-yarn-check-requests",
   supplierOrders: "linkin-yarn-supplier-orders",
@@ -43,14 +46,6 @@ function save<T>(key: string, data: T[]) {
   window.localStorage.setItem(key, JSON.stringify(data))
 }
 
-// ── State ────────────────────────────────────────────────────────────
-type YarnCheckState = {
-  checkRequests: YarnCheckRequest[]
-  supplierOrders: YarnSupplierOrder[]
-  deliveryBatches: YarnDeliveryBatch[]
-  stockMovements: YarnStockMovement[]
-}
-
 const initialState: YarnCheckState = {
   checkRequests: load<YarnCheckRequest>(KEYS.checkRequests, demoYarnCheckRequests),
   supplierOrders: load<YarnSupplierOrder>(KEYS.supplierOrders, demoYarnSupplierOrders),
@@ -58,12 +53,10 @@ const initialState: YarnCheckState = {
   stockMovements: load<YarnStockMovement>(KEYS.stockMovements, demoYarnStockMovements),
 }
 
-// ── Slice ────────────────────────────────────────────────────────────
 const yarnCheckSlice = createSlice({
   name: "yarnCheck",
   initialState,
   reducers: {
-    // ── Yarn Check Requests ────────────────────────────────────────
     addCheckRequest: (state, action: PayloadAction<YarnCheckRequest>) => {
       state.checkRequests.unshift(action.payload)
       save(KEYS.checkRequests, state.checkRequests)
@@ -82,8 +75,6 @@ const yarnCheckSlice = createSlice({
       )
       save(KEYS.checkRequests, state.checkRequests)
     },
-
-    // ── Supplier Orders ────────────────────────────────────────────
     addSupplierOrder: (state, action: PayloadAction<YarnSupplierOrder>) => {
       state.supplierOrders.unshift(action.payload)
       save(KEYS.supplierOrders, state.supplierOrders)
@@ -120,8 +111,6 @@ const yarnCheckSlice = createSlice({
       )
       save(KEYS.supplierOrders, state.supplierOrders)
     },
-
-    // ── Delivery Batches ───────────────────────────────────────────
     addDeliveryBatch: (state, action: PayloadAction<YarnDeliveryBatch>) => {
       state.deliveryBatches.unshift(action.payload)
       save(KEYS.deliveryBatches, state.deliveryBatches)
@@ -132,15 +121,7 @@ const yarnCheckSlice = createSlice({
     },
     updateBatchInspectionStatus: (
       state,
-      action: PayloadAction<{
-        id: string
-        inspectionStatus: YarnBatchInspectionStatus
-        inspectedBy?: string
-        inspectedAt?: string
-        testReportName?: string
-        rejectionReason?: string
-        remarks?: string
-      }>
+      action: PayloadAction<BatchInspectionUpdatePayload>
     ) => {
       state.deliveryBatches = state.deliveryBatches.map((batch) =>
         batch.id === action.payload.id
@@ -174,3 +155,4 @@ export const {
 } = yarnCheckSlice.actions
 
 export default yarnCheckSlice.reducer
+

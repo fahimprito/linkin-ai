@@ -1,4 +1,4 @@
-﻿import { useState } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -159,7 +159,7 @@ export function KnittingRequisitionPage() {
                     <div>
                       <p className="font-semibold">{po.poNumber}</p>
                       <p className="text-sm text-muted-foreground">
-                        {po.buyer} Â· {po.style}
+                        {po.buyer} · {po.style}
                       </p>
                     </div>
                     <StatusBadge value={po.status} />
@@ -252,4 +252,6 @@ export function KnittingRequisitionPage() {
     </div>
   )
 }
+
+
 

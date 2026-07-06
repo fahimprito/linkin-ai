@@ -5,6 +5,7 @@ import type {
   StoreIssueLog,
   StoreMaterialRequisition,
 } from "@/types/production"
+import type { StoreServiceState } from "@/types/state"
 
 const KEYS = {
   requisitions: "linkin-store-requisitions",
@@ -36,11 +37,6 @@ function save<T>(key: string, records: T[]) {
   }
 
   window.localStorage.setItem(key, JSON.stringify(records))
-}
-
-type StoreServiceState = {
-  requisitions: StoreMaterialRequisition[]
-  issueLogs: StoreIssueLog[]
 }
 
 const initialState: StoreServiceState = {
@@ -90,3 +86,4 @@ export const {
 } = storeServiceSlice.actions
 
 export default storeServiceSlice.reducer
+

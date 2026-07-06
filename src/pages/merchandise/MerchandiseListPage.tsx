@@ -1023,3 +1023,5 @@ export function MerchandiseListPage() {
     </div>
   )
 }
+
+

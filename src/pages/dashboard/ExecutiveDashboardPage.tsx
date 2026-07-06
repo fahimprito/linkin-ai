@@ -1,4 +1,4 @@
-﻿import { ArrowRight, ClipboardList, Layers3, PackageSearch } from "lucide-react"
+import { ArrowRight, ClipboardList, Layers3, PackageSearch } from "lucide-react"
 
 import { DataTable } from "@/components/shared/data-table"
 import { LoadingState } from "@/components/shared/loading-state"
@@ -266,4 +266,6 @@ export function ExecutiveDashboardPage() {
     </div>
   )
 }
+
+
 

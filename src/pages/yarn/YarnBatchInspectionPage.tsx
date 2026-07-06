@@ -20,65 +20,10 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { updatePoStatus } from "@/store/slices/merchandise-slice"
 import { addNotification } from "@/store/slices/notification-slice"
 import { updateBatchInspectionStatus } from "@/store/slices/yarn-check-slice"
-
-type ChecklistValue = "Pass" | "Fail"
-type FinalResult = "Accept" | "Reject"
-
-type YarnInspectionReport = {
-  id: string
-  poId: string
-  poNumber: string
-  styleNo: string
-  buyer: string
-  batchId?: string
-  batchNumber: string
-  supplier: string
-  color: string
-  yarnCount: string
-  receivedQty: number
-  checkedQty: number
-  strength: ChecklistValue
-  elasticityCheck: ChecklistValue
-  cleanliness: ChecklistValue
-  shadeMatch: ChecklistValue
-  moistureCheck: ChecklistValue
-  quantityVerificationCheck: ChecklistValue
-  criticalWindingProblem: number
-  majorWindingProblem: number
-  minorWindingProblem: number
-  criticalCrossedYarn: number
-  majorCrossedYarn: number
-  minorCrossedYarn: number
-  criticalUnevenDyeing: number
-  majorUnevenDyeing: number
-  minorUnevenDyeing: number
-  criticalDustMarks: number
-  majorDustMarks: number
-  minorDustMarks: number
-  criticalSpotYarn: number
-  majorSpotYarn: number
-  minorSpotYarn: number
-  criticalForeignYarn: number
-  majorForeignYarn: number
-  minorForeignYarn: number
-  criticalKnot: number
-  majorKnot: number
-  minorKnot: number
-  criticalThickThin: number
-  majorThickThin: number
-  minorThickThin: number
-  overallObservation: string
-  reservationComments: string
-  finalResult: FinalResult
-  inspector: string
-  inspectionDate: string
-  testReportName?: string
-  createdAt: string
-}
-
-type InspectionFormValues = Omit<YarnInspectionReport, "id" | "createdAt" | "testReportName"> & {
-  testReportName?: string
-}
+import type {
+  InspectionFormValues,
+  YarnInspectionReport,
+} from "@/types/forms.yarn"
 
 const INSPECTION_STORAGE_KEY = "linkin-yarn-inspection-reports"
 
@@ -1052,3 +997,7 @@ export function YarnBatchInspectionPage() {
     </div>
   )
 }
+
+
+
+

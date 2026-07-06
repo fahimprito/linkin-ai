@@ -57,3 +57,5 @@ export function saveSession(session: Session) {
 export function clearSession() {
   localStorage.removeItem(SESSION_STORAGE_KEY)
 }
+
+

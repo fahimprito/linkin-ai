@@ -1,4 +1,4 @@
-﻿import { useState } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -17,17 +17,7 @@ import {
   addSupplierOrder,
   updateCheckRequestStatus,
 } from "@/store/slices/yarn-check-slice"
-
-type SupplierOrderFormValues = {
-  poId: string
-  poNumber: string
-  yarnCheckRequestId: string
-  supplier: string
-  yarnType: string
-  color: string
-  orderedQty: string
-  expectedArrival: string
-}
+import type { SupplierOrderFormValues } from "@/types/forms.yarn"
 
 function createSupplierOrderId() {
   return `yso-${Date.now()}`
@@ -193,7 +183,7 @@ export function YarnSupplierOrderPage() {
                     <div>
                       <p className="font-semibold">{req.poNumber}</p>
                       <p className="text-sm text-muted-foreground">
-                        {req.buyer} Â· {req.style}
+                        {req.buyer} · {req.style}
                       </p>
                     </div>
                     <StatusBadge value={req.status} />
@@ -215,7 +205,7 @@ export function YarnSupplierOrderPage() {
                   )}
                   {hasOrder && (
                     <p className="mt-4 text-center text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                      âœ“ Order placed
+                      ✓ Order placed
                     </p>
                   )}
                 </div>
@@ -300,4 +290,8 @@ export function YarnSupplierOrderPage() {
     </div>
   )
 }
+
+
+
+
 

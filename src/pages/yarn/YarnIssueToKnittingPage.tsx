@@ -1,4 +1,4 @@
-﻿import { useState } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -299,7 +299,7 @@ export function YarnIssueToKnittingPage() {
                     <div>
                       <p className="font-semibold">{requisition.poNumber}</p>
                       <p className="text-sm text-muted-foreground">
-                        {requisition.buyer} Â· {requisition.style}
+                        {requisition.buyer} · {requisition.style}
                       </p>
                     </div>
                     <StatusBadge value={requisition.status} />
@@ -412,4 +412,6 @@ export function YarnIssueToKnittingPage() {
     </div>
   )
 }
+
+
 

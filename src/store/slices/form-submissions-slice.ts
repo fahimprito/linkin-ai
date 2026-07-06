@@ -6,10 +6,7 @@ import {
   type StoredFormRecord,
 } from "@/lib/form-submissions"
 import { allFormStorageKeys } from "@/lib/form-registry"
-
-type FormSubmissionsState = {
-  recordsByKey: Record<string, StoredFormRecord[]>
-}
+import type { FormSubmissionsState } from "@/types/state"
 
 function buildInitialState(): FormSubmissionsState {
   return {
@@ -86,3 +83,4 @@ export const {
 } = formSubmissionsSlice.actions
 
 export default formSubmissionsSlice.reducer
+
