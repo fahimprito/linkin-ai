@@ -26,7 +26,22 @@ const quickLinks = [
   {
     title: "Pre-Booking Bal to Utilize",
     description: "Review month-wise 2026 pre-booking balance by buyer and GG.",
-    to: "/management/buyer-gg-wise-pre-booking-2026",
+    to: "/management/buyer-gg-wise-pre-booking",
+  },
+  {
+    title: "Order Summary",
+    description: "Review grouped order booking quantities for 2026.",
+    to: "/management/order-booking-summary",
+  },
+  {
+    title: "Buyer.GG Wise CFMD Qty",
+    description: "Review confirmed quantity summary by buyer and gauge.",
+    to: "/management/buyer-gg-wise-cfmd-qty",
+  },
+  {
+    title: "BWSL&DISL Prod Summery",
+    description: "Review 2026 production summary for management monitoring.",
+    to: "/management/bwsl-disl-prod-summery",
   },
 ]
 
@@ -268,6 +283,8 @@ export function ReportsPage() {
     </div>
   )
 }
+
+
 
 
 

@@ -9,6 +9,9 @@ import {
   Gauge,
   Handshake,
   Layers3,
+  NotebookText,
+  PackageCheck,
+  Factory,
   List,
   Palette,
   ScanSearch,
@@ -57,7 +60,11 @@ export const dashboardNavigation: NavigationItem[] = [
       { label: "PO List", to: "/merchandise", icon: List },
       { label: "Sourcing", to: "/merchandise/sourcing", icon: ShoppingBag },
       { label: "Supplier", to: "/merchandise/supplier", icon: ShoppingBag },
-      { label: "Production", to: "/merchandise/production", icon: ClipboardList },
+      {
+        label: "Production",
+        to: "/merchandise/production",
+        icon: ClipboardList,
+      },
       {
         label: "Inventory",
         to: "/merchandise/inventory",
@@ -120,7 +127,11 @@ export const dashboardNavigation: NavigationItem[] = [
     children: [
       { label: "Dashboard", to: "/store", icon: Gauge },
       { label: "PO List", to: "/store/po-list", icon: ClipboardList },
-      { label: "Receive Accessories", to: "/store/receive-accessories", icon: Truck },
+      {
+        label: "Receive Accessories",
+        to: "/store/receive-accessories",
+        icon: Truck,
+      },
       { label: "Inspection", to: "/store/inspection", icon: FileSearch },
       { label: "Inventory", to: "/store/inventory", icon: Boxes },
       { label: "Reports", to: "/store/reports", icon: Truck },
@@ -137,8 +148,23 @@ export const dashboardNavigation: NavigationItem[] = [
       { label: "PO Tracker", to: "/management/po-tracker", icon: ScanSearch },
       {
         label: "Pre-Booking Bal to Utilize",
-        to: "/management/buyer-gg-wise-pre-booking-2026",
+        to: "/management/buyer-gg-wise-pre-booking",
         icon: Layers3,
+      },
+      {
+        label: "Order Summary",
+        to: "/management/order-booking-summary",
+        icon: NotebookText,
+      },
+      {
+        label: "Buyer.GG Wise CFMD Qty",
+        to: "/management/buyer-gg-wise-cfmd-qty",
+        icon: PackageCheck,
+      },
+      {
+        label: "BWSL&DISL Prod Summery",
+        to: "/management/bwsl-disl-prod-summery",
+        icon: Factory,
       },
     ],
   },
@@ -156,29 +182,15 @@ function flattenNavigationChildren(
   parentItem: NavigationItem,
   children: NavigationChildItem[]
 ): NavigationItem[] {
-  return children.flatMap((child) => {
-    if (child.children?.length) {
-      return [
-        {
-          ...parentItem,
-          label: child.label,
-          to: child.to,
-          icon: child.icon ?? parentItem.icon,
-          children: child.children,
-        },
-      ]
-    }
+  const { children: _parentChildren, ...baseItem } = parentItem
 
-    return [
-      {
-        ...parentItem,
-        label: child.label,
-        to: child.to,
-        icon: child.icon ?? parentItem.icon,
-        children: undefined,
-      },
-    ]
-  })
+  return children.map((child) => ({
+    ...baseItem,
+    label: child.label,
+    to: child.to,
+    icon: child.icon ?? parentItem.icon,
+    ...(child.children?.length ? { children: child.children } : {}),
+  }))
 }
 
 export function hasModuleAccess(
@@ -213,7 +225,6 @@ export function getNavigationForUser(
       return [
         {
           ...item,
-          children: undefined,
         },
       ]
     }
@@ -228,10 +239,4 @@ export function getDefaultRoute(
 ) {
   return getNavigationForUser(userRole, permissions)[0]?.to ?? "/login"
 }
-
-
-
-
-
-
 

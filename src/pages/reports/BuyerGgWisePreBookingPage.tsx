@@ -310,11 +310,10 @@ export function BuyerGgWisePreBookingPage() {
   const [editingRecord, setEditingRecord] = useState<BuyerGgWisePreBookingRecord | null>(null)
   const [recordPendingDelete, setRecordPendingDelete] =
     useState<BuyerGgWisePreBookingRecord | null>(null)
-  const { control, register, handleSubmit, reset, setValue } = useForm<PreBookingFormValues>({
+  const { control, register, handleSubmit, reset } = useForm<PreBookingFormValues>({
     defaultValues: getDefaultValues(),
   })
   const watchedFormValues = useWatch({ control })
-
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -324,13 +323,7 @@ export function BuyerGgWisePreBookingPage() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records))
   }, [records])
 
-  useEffect(() => {
-    const nextTotalQty = calculateTotalQty(watchedFormValues)
-
-    if ((watchedFormValues.totalQty ?? "") !== nextTotalQty) {
-      setValue("totalQty", nextTotalQty, { shouldDirty: true })
-    }
-  }, [setValue, watchedFormValues])
+  const liveTotalQty = useMemo(() => calculateTotalQty(watchedFormValues), [watchedFormValues])
 
   const visibleFormFields = useMemo(() => {
     const sharedFields = formFields.filter(
@@ -352,9 +345,14 @@ export function BuyerGgWisePreBookingPage() {
     return [
       ...sharedFields,
       ...formFields.filter((field) => monthColumns.some((month) => month.key === field.name)),
-      ...formFields.filter((field) => field.name === "totalQty"),
+      ...formFields
+        .filter((field) => field.name === "totalQty")
+        .map((field) => ({
+          ...field,
+          value: liveTotalQty,
+        })),
     ]
-  }, [watchedFormValues.rowType])
+  }, [liveTotalQty, watchedFormValues.rowType])
 
   const filterOptions = useMemo(
     () => [
@@ -453,7 +451,7 @@ export function BuyerGgWisePreBookingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Pre-Booking Bal to Utilize"
+        title="BUYER/GG WISE PRE-BOOKING PER MONTH BALANCE TO UTILIZE AGAINST YEAR 2026"
         actions={
           <Button type="button" className="rounded-2xl" onClick={openCreateModal}>
             <Plus className="size-4" />
@@ -484,11 +482,10 @@ export function BuyerGgWisePreBookingPage() {
                   {monthColumns.map((month, index) => (
                     <th
                       key={month.key}
-                      className={`border-b border-r border-border/80 px-2 py-2.5 text-center font-semibold ${
-                        index % 2 === 0
+                      className={`border-b border-r border-border/80 px-2 py-2.5 text-center font-semibold ${index % 2 === 0
                           ? "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-200"
                           : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
-                      }`}
+                        }`}
                     >
                       {month.label}
                     </th>
@@ -649,5 +646,6 @@ export function BuyerGgWisePreBookingPage() {
     </div>
   )
 }
+
 
 

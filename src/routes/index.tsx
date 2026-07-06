@@ -28,13 +28,17 @@ import {
   MerchandiseShipmentPage,
 } from "@/pages/merchandise/MerchandiseModulePages"
 import { UserProfilePage } from "@/pages/profile/UserProfilePage"
+import { BuyerGgWiseCfmdQtyPage } from "@/pages/reports/BuyerGgWiseCfmdQtyPage"
+import { BuyerGgWisePreBookingPage } from "@/pages/reports/BuyerGgWisePreBookingPage"
+import { BwslDislProdSummeryPage } from "@/pages/reports/BwslDislProdSummeryPage"
 import {
   ManagementPoDetailTrackerPage,
   MerchandiseManagementReportPage,
 } from "@/pages/reports/ManagementPoDetailTrackerPage"
-import { BuyerGgWisePreBookingPage } from "@/pages/reports/BuyerGgWisePreBookingPage"
+import { OrderSummaryPage } from "@/pages/reports/OrderSummaryPage"
 import { ReportsPage } from "@/pages/reports/ReportsPage"
 import { DefaultRedirect } from "@/routes/default-redirect"
+import { ProtectedRoute } from "@/routes/protected-route"
 import { StoreControlPage } from "@/pages/store/StoreControlPage"
 import {
   StoreAccessoriesInspectionReportPage,
@@ -57,7 +61,6 @@ import {
   YarnTestReportPage,
 } from "@/pages/yarn/YarnReportPages"
 import { YarnInventoryPage } from "@/pages/yarn/YarnModulePages"
-import { ProtectedRoute } from "@/routes/protected-route"
 
 export const router = createBrowserRouter([
   {
@@ -331,8 +334,20 @@ export const router = createBrowserRouter([
                 element: <ManagementPoDetailTrackerPage />,
               },
               {
-                path: "/management/buyer-gg-wise-pre-booking-2026",
+                path: "/management/buyer-gg-wise-pre-booking",
                 element: <BuyerGgWisePreBookingPage />,
+              },
+              {
+                path: "/management/order-booking-summary",
+                element: <OrderSummaryPage />,
+              },
+              {
+                path: "/management/buyer-gg-wise-cfmd-qty",
+                element: <BuyerGgWiseCfmdQtyPage />,
+              },
+              {
+                path: "/management/bwsl-disl-prod-summery",
+                element: <BwslDislProdSummeryPage />,
               },
               {
                 path: "/reports",
@@ -343,8 +358,20 @@ export const router = createBrowserRouter([
                 element: <Navigate to="/management/po-tracker" replace />,
               },
               {
-                path: "/reports/buyer-gg-wise-pre-booking-2026",
-                element: <Navigate to="/management/buyer-gg-wise-pre-booking-2026" replace />,
+                path: "/reports/buyer-gg-wise-pre-booking",
+                element: <Navigate to="/management/buyer-gg-wise-pre-booking" replace />,
+              },
+              {
+                path: "/reports/order-booking-summary",
+                element: <Navigate to="/management/order-booking-summary" replace />,
+              },
+              {
+                path: "/reports/buyer-gg-wise-cfmd-qty",
+                element: <Navigate to="/management/buyer-gg-wise-cfmd-qty" replace />,
+              },
+              {
+                path: "/reports/bwsl-disl-prod-summery",
+                element: <Navigate to="/management/bwsl-disl-prod-summery" replace />,
               },
             ],
           },
@@ -361,6 +388,7 @@ export const router = createBrowserRouter([
     element: <NotFoundPage />,
   },
 ])
+
 
 
 

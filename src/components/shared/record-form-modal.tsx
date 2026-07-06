@@ -11,6 +11,7 @@ export type ModalFormField = {
   disabled?: boolean
   readOnly?: boolean
   required?: boolean
+  value?: string
 }
 
 type RecordFormModalProps<T extends FieldValues> = {
@@ -87,6 +88,7 @@ export function RecordFormModal<T extends FieldValues>({
                         : ""
                     }`}
                     rows={4}
+                    value={field.value}
                     disabled={field.disabled}
                     readOnly={field.readOnly}
                   />
@@ -100,6 +102,7 @@ export function RecordFormModal<T extends FieldValues>({
                         : ""
                     }`}
                     defaultValue=""
+                    value={field.value}
                     disabled={field.disabled}
                   >
                     <option value="" disabled>
@@ -112,12 +115,12 @@ export function RecordFormModal<T extends FieldValues>({
                           : option
 
                       return (
-                      <option
-                        key={resolvedOption.value}
-                        value={resolvedOption.value}
-                      >
-                        {resolvedOption.label}
-                      </option>
+                        <option
+                          key={resolvedOption.value}
+                          value={resolvedOption.value}
+                        >
+                          {resolvedOption.label}
+                        </option>
                       )
                     })}
                   </select>
@@ -127,6 +130,7 @@ export function RecordFormModal<T extends FieldValues>({
                     type={field.type ?? "text"}
                     {...register(field.name as Path<T>, { required: field.required ?? true })}
                     placeholder={field.placeholder}
+                    value={field.value}
                     className={`${commonClassName} ${
                       field.disabled || field.readOnly
                         ? "cursor-not-allowed bg-muted text-muted-foreground"
@@ -165,5 +169,3 @@ export function RecordFormModal<T extends FieldValues>({
     </div>
   )
 }
-
-
