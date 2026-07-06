@@ -10,6 +10,7 @@ export type ModalFormField = {
   options?: Array<string | { label: string; value: string }>
   disabled?: boolean
   readOnly?: boolean
+  required?: boolean
 }
 
 type RecordFormModalProps<T extends FieldValues> = {
@@ -78,7 +79,7 @@ export function RecordFormModal<T extends FieldValues>({
                 {field.type === "textarea" ? (
                   <textarea
                     id={field.name}
-                    {...register(field.name as Path<T>, { required: true })}
+                    {...register(field.name as Path<T>, { required: field.required ?? true })}
                     placeholder={field.placeholder}
                     className={`${commonClassName} ${
                       field.disabled || field.readOnly
@@ -92,7 +93,7 @@ export function RecordFormModal<T extends FieldValues>({
                 ) : field.type === "select" ? (
                   <select
                     id={field.name}
-                    {...register(field.name as Path<T>, { required: true })}
+                    {...register(field.name as Path<T>, { required: field.required ?? true })}
                     className={`${commonClassName} ${
                       field.disabled || field.readOnly
                         ? "cursor-not-allowed bg-muted text-muted-foreground"
@@ -124,7 +125,7 @@ export function RecordFormModal<T extends FieldValues>({
                   <input
                     id={field.name}
                     type={field.type ?? "text"}
-                    {...register(field.name as Path<T>, { required: true })}
+                    {...register(field.name as Path<T>, { required: field.required ?? true })}
                     placeholder={field.placeholder}
                     className={`${commonClassName} ${
                       field.disabled || field.readOnly
@@ -164,3 +165,5 @@ export function RecordFormModal<T extends FieldValues>({
     </div>
   )
 }
+
+

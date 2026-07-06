@@ -32,6 +32,7 @@ import {
   ManagementPoDetailTrackerPage,
   MerchandiseManagementReportPage,
 } from "@/pages/reports/ManagementPoDetailTrackerPage"
+import { BuyerGgWisePreBookingPage } from "@/pages/reports/BuyerGgWisePreBookingPage"
 import { ReportsPage } from "@/pages/reports/ReportsPage"
 import { DefaultRedirect } from "@/routes/default-redirect"
 import { StoreControlPage } from "@/pages/store/StoreControlPage"
@@ -330,12 +331,20 @@ export const router = createBrowserRouter([
                 element: <ManagementPoDetailTrackerPage />,
               },
               {
+                path: "/management/buyer-gg-wise-pre-booking-2026",
+                element: <BuyerGgWisePreBookingPage />,
+              },
+              {
                 path: "/reports",
                 element: <Navigate to="/management" replace />,
               },
               {
                 path: "/reports/po-tracker",
                 element: <Navigate to="/management/po-tracker" replace />,
+              },
+              {
+                path: "/reports/buyer-gg-wise-pre-booking-2026",
+                element: <Navigate to="/management/buyer-gg-wise-pre-booking-2026" replace />,
               },
             ],
           },
@@ -352,3 +361,6 @@ export const router = createBrowserRouter([
     element: <NotFoundPage />,
   },
 ])
+
+
+

@@ -23,6 +23,11 @@ const quickLinks = [
     description: "Track management-facing PO progress in one place.",
     to: "/management/po-tracker",
   },
+  {
+    title: "Pre-Booking Bal to Utilize",
+    description: "Review month-wise 2026 pre-booking balance by buyer and GG.",
+    to: "/management/buyer-gg-wise-pre-booking-2026",
+  },
 ]
 
 export function ReportsPage() {
@@ -263,5 +268,10 @@ export function ReportsPage() {
     </div>
   )
 }
+
+
+
+
+
 
 

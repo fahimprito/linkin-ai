@@ -8,6 +8,7 @@ import {
   FileSearch,
   Gauge,
   Handshake,
+  Layers3,
   List,
   Palette,
   ScanSearch,
@@ -134,6 +135,11 @@ export const dashboardNavigation: NavigationItem[] = [
     children: [
       { label: "Dashboard", to: "/management", icon: Gauge },
       { label: "PO Tracker", to: "/management/po-tracker", icon: ScanSearch },
+      {
+        label: "Pre-Booking Bal to Utilize",
+        to: "/management/buyer-gg-wise-pre-booking-2026",
+        icon: Layers3,
+      },
     ],
   },
 ]
@@ -222,5 +228,10 @@ export function getDefaultRoute(
 ) {
   return getNavigationForUser(userRole, permissions)[0]?.to ?? "/login"
 }
+
+
+
+
+
 
 
