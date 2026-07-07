@@ -1,6 +1,3 @@
-import { ArrowRight } from "lucide-react"
-import { Link } from "react-router"
-
 import { DataTable } from "@/components/shared/data-table"
 import { PageHeader } from "@/components/shared/page-header"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -16,34 +13,6 @@ import { createPurchaseOrderWorkflowMetrics } from "@/lib/purchase-order-workflo
 import { workflowProgressByStatus } from "@/lib/workflow-status"
 import { useAppSelector } from "@/store/hooks"
 import type { PurchaseOrder } from "@/types/modules"
-
-const quickLinks = [
-  {
-    title: "PO Detail Tracker",
-    description: "Track management-facing PO progress in one place.",
-    to: "/management/po-tracker",
-  },
-  {
-    title: "Pre-Booking Bal to Utilize",
-    description: "Review month-wise 2026 pre-booking balance by buyer and GG.",
-    to: "/management/buyer-gg-wise-pre-booking",
-  },
-  {
-    title: "Order Summary",
-    description: "Review grouped order booking quantities for 2026.",
-    to: "/management/order-booking-summary",
-  },
-  {
-    title: "Buyer.GG Wise CFMD Qty",
-    description: "Review confirmed quantity summary by buyer and gauge.",
-    to: "/management/buyer-gg-wise-cfmd-qty",
-  },
-  {
-    title: "BWSL&DISL Prod Summery",
-    description: "Review 2026 production summary for management monitoring.",
-    to: "/management/bwsl-disl-prod-summery",
-  },
-]
 
 export function ReportsPage() {
   const purchaseOrders = useAppSelector((state) => state.merchandise.purchaseOrders)
@@ -109,26 +78,6 @@ export function ReportsPage() {
           <p className="text-xs text-muted-foreground">Pending Review</p>
           <p className="mt-1 text-2xl font-semibold">{pendingReview}</p>
         </div>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-3">
-        {quickLinks.map((item) => (
-          <Link
-            key={item.to}
-            to={item.to}
-            className="rounded-[1.5rem] border border-border/80 bg-card p-5 shadow-sm transition hover:border-primary/30 hover:bg-accent/30"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold">{item.title}</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {item.description}
-                </p>
-              </div>
-              <ArrowRight className="mt-0.5 size-4 text-muted-foreground" />
-            </div>
-          </Link>
-        ))}
       </section>
 
       <section className="space-y-3">
