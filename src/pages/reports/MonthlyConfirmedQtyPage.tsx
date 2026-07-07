@@ -27,33 +27,87 @@ function formatMin(value: number) {
   return `${new Intl.NumberFormat("en-US").format(value)} MIN`
 }
 
+function isNumericGg(value: string) {
+  return /^\d+$/.test(value.trim())
+}
+
+function pushRowToGroup(group: MonthlyConfirmedQtyGroup, row: MonthlyConfirmedQtyRow) {
+  const orderQty = parseNumericValue(row.orderQty, "Pcs")
+  const totalMin = parseNumericValue(row.totalMinPerOrdStyle, "MIN")
+
+  group.rows.push(row)
+  group.totalOrderQty += orderQty
+  group.totalMin += totalMin
+  group.averageMin = group.totalOrderQty > 0 ? Math.round(group.totalMin / group.totalOrderQty) : 0
+}
+
 function getGroupedRows(rows: MonthlyConfirmedQtyRow[]) {
-  const groups = new Map<string, MonthlyConfirmedQtyGroup>()
+  const groups: MonthlyConfirmedQtyGroup[] = []
+  const groupMap = new Map<string, MonthlyConfirmedQtyGroup>()
+  const pendingRows: MonthlyConfirmedQtyRow[] = []
+  let currentGroup: MonthlyConfirmedQtyGroup | undefined
 
   rows.forEach((row) => {
-    const key = row.gg || "N/A"
-    const current = groups.get(key)
-    const orderQty = parseNumericValue(row.orderQty, "Pcs")
-    const totalMin = parseNumericValue(row.totalMinPerOrdStyle, "MIN")
+    const gg = row.gg?.trim() || ""
 
-    if (current) {
-      current.rows.push(row)
-      current.totalOrderQty += orderQty
-      current.totalMin += totalMin
-      current.averageMin = current.totalOrderQty > 0 ? Math.round(current.totalMin / current.totalOrderQty) : 0
+    if (isNumericGg(gg)) {
+      let targetGroup = groupMap.get(gg)
+
+      if (!targetGroup) {
+        targetGroup = {
+          gg,
+          rows: [],
+          totalOrderQty: 0,
+          totalMin: 0,
+          averageMin: 0,
+        }
+
+        groups.push(targetGroup)
+        groupMap.set(gg, targetGroup)
+      }
+
+      if (pendingRows.length > 0) {
+        pendingRows.splice(0).forEach((pendingRow) => {
+          pushRowToGroup(targetGroup!, pendingRow)
+        })
+      }
+
+      pushRowToGroup(targetGroup, row)
+      currentGroup = targetGroup
       return
     }
 
-    groups.set(key, {
-      gg: key,
-      rows: [row],
-      totalOrderQty: orderQty,
-      totalMin,
-      averageMin: orderQty > 0 ? Math.round(totalMin / orderQty) : 0,
-    })
+    if (currentGroup) {
+      pushRowToGroup(currentGroup, row)
+      return
+    }
+
+    pendingRows.push(row)
   })
 
-  return Array.from(groups.values())
+  if (pendingRows.length > 0) {
+    if (groups[0]) {
+      pendingRows.forEach((pendingRow) => {
+        pushRowToGroup(groups[0], pendingRow)
+      })
+    } else {
+      const fallbackGroup: MonthlyConfirmedQtyGroup = {
+        gg: "Other",
+        rows: [],
+        totalOrderQty: 0,
+        totalMin: 0,
+        averageMin: 0,
+      }
+
+      pendingRows.forEach((pendingRow) => {
+        pushRowToGroup(fallbackGroup, pendingRow)
+      })
+
+      groups.push(fallbackGroup)
+    }
+  }
+
+  return groups
 }
 
 export function MonthlyConfirmedQtyPage() {
