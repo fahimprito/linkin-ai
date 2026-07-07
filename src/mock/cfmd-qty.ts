@@ -299,4 +299,381 @@ export const buyerGgWiseCfmdQty2026: BuyerGgWiseCfmdQtyGroup[] = [
       },
     ],
   },
+  {
+    id: "aretex",
+    serial: "11",
+    buyerName: "ARETEX (FAISAL/SAAD)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          mar: 1000,
+          apr: 3585,
+          may: 10760,
+          jun: 35859,
+          sep: 15667,
+        },
+        totalQty: 66871,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          jan: 3000,
+          feb: 1300,
+          mar: 34049,
+          apr: 40107,
+          may: 34337,
+          jun: 110980,
+          aug: 32787,
+          sep: 77261,
+          oct: 4650,
+        },
+        totalQty: 338471,
+      },
+    ],
+  },
+  {
+    id: "r-brand",
+    serial: "12",
+    buyerName: "R BRAND (FAISAL/SAAD)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          jun: 3095,
+        },
+        totalQty: 3095,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          jun: 5640,
+        },
+        totalQty: 5640,
+      },
+    ],
+  },
+  {
+    id: "bugatti",
+    serial: "13",
+    buyerName: "BUGATTI (MAHMUD)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          jul: 1400,
+        },
+        totalQty: 1400,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          feb: 15717,
+          mar: 6302,
+          apr: 3072,
+          may: 24056,
+          jun: 63028,
+          jul: 16614,
+          sep: 46498,
+        },
+        totalQty: 175287,
+      },
+    ],
+  },
+  {
+    id: "colombus",
+    serial: "14",
+    buyerName: "COLOMBUS (MAHMUD)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          apr: 2650,
+          jun: 350,
+        },
+        totalQty: 3000,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          jan: 440,
+          mar: 68200,
+          apr: 51409,
+          may: 1250,
+          jun: 4250,
+          aug: 24467,
+          oct: 31600,
+        },
+        totalQty: 181616,
+      },
+    ],
+  },
+  {
+    id: "celio",
+    serial: "15",
+    buyerName: "CELIO (FAKRUL/TOMAL)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          apr: 21176,
+          may: 13464,
+          jul: 20656,
+          aug: 17184,
+          sep: 10709,
+        },
+        totalQty: 83189,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          jan: 18746,
+          mar: 31242,
+          apr: 21770,
+          may: 92288,
+          jun: 58156,
+          jul: 120058,
+          aug: 34000,
+          sep: 63241,
+        },
+        totalQty: 439501,
+      },
+    ],
+  },
+  {
+    id: "gms-tomal",
+    serial: "16",
+    buyerName: "GMS (FAKRUL/TOMAL)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          mar: 3074,
+          apr: 14992,
+          may: 46793,
+          jun: 45202,
+          jul: 67414,
+          aug: 5003,
+          sep: 1806,
+        },
+        totalQty: 229364,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          jan: 1948,
+          feb: 1922,
+          mar: 20896,
+          may: 1910,
+          aug: 96200,
+        },
+        totalQty: 122876,
+      },
+    ],
+  },
+  {
+    id: "bonobo-tomal",
+    serial: "17",
+    buyerName: "BONOBO (FAKRUL/TOMAL)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          jan: 2580,
+          feb: 1020,
+          jul: 2820,
+          aug: 22575,
+          sep: 21910,
+        },
+        totalQty: 50905,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          jan: 10995,
+          feb: 4475,
+          mar: 16255,
+          apr: 15605,
+          may: 26035,
+          jun: 31490,
+          jul: 38475,
+          aug: 29165,
+          sep: 3500,
+        },
+        totalQty: 175995,
+      },
+    ],
+  },
+  {
+    id: "galeria",
+    serial: "18",
+    buyerName: "GALERIA (MAHBUB)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          jul: 18794,
+        },
+        totalQty: 18794,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          apr: 6000,
+          jun: 5400,
+        },
+        totalQty: 11400,
+      },
+    ],
+  },
+  {
+    id: "cupcake-tesco",
+    serial: "19",
+    buyerName: "CUPCAKE (TESCO) (MAHBUB)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          jan: 8456,
+        },
+        totalQty: 8456,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {},
+        totalQty: 0,
+      },
+    ],
+  },
+  {
+    id: "katag",
+    serial: "20",
+    buyerName: "KATAG (MAHBUB)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          may: 12941,
+          jul: 4778,
+        },
+        totalQty: 17719,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          may: 31400,
+          jun: 5250,
+          jul: 10000,
+        },
+        totalQty: 46650,
+      },
+    ],
+  },
+  {
+    id: "stormtech",
+    serial: "21",
+    buyerName: "STORMTECH (MAHBUB)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {},
+        totalQty: 0,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {},
+        totalQty: 0,
+      },
+    ],
+  },
+  {
+    id: "mgf-premium",
+    serial: "22",
+    buyerName: "MGF (PREMIUM BRNDS) (MAHBUB/PYAL)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          jan: 17291,
+          feb: 8125,
+          mar: 11040,
+          apr: 10721,
+          may: 49515,
+          jun: 45780,
+          jul: 43142,
+          aug: 100914,
+          sep: 103755,
+        },
+        totalQty: 390283,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          jan: 63966,
+          feb: 76749,
+          mar: 9181,
+          apr: 15928,
+          may: 23488,
+          jun: 15913,
+          jul: 6281,
+          sep: 8826,
+        },
+        totalQty: 220332,
+      },
+    ],
+  },
+  {
+    id: "mgf-vs-pink",
+    serial: "23",
+    buyerName: "MGF (VS-PINK) (SHAFIQ/MIZAN)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          jan: 44656,
+          may: 20549,
+          jun: 7225,
+          jul: 83958,
+          aug: 63086,
+          oct: 25018,
+        },
+        totalQty: 244492,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          jan: 9633,
+          apr: 7348,
+          may: 6259,
+          jul: 7390,
+        },
+        totalQty: 30630,
+      },
+    ],
+  },
+  {
+    id: "el-ganso",
+    serial: "24",
+    buyerName: "EL GANSO (SHAFIQ)",
+    rows: [
+      {
+        gauge: "3/5/7 GG",
+        months: {
+          jul: 20540,
+          aug: 7160,
+        },
+        totalQty: 27700,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          jun: 28660,
+          jul: 42628,
+          aug: 10152,
+          sep: 20500,
+        },
+        totalQty: 101940,
+      },
+    ],
+  },
 ]
