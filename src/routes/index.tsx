@@ -35,6 +35,7 @@ import {
   ManagementPoDetailTrackerPage,
   MerchandiseManagementReportPage,
 } from "@/pages/reports/ManagementPoDetailTrackerPage"
+import { MonthlyConfirmedQtyPage } from "@/pages/reports/MonthlyConfirmedQtyPage"
 import { OrderSummaryPage } from "@/pages/reports/OrderSummaryPage"
 import { ReportsPage } from "@/pages/reports/ReportsPage"
 import { DefaultRedirect } from "@/routes/default-redirect"
@@ -350,6 +351,10 @@ export const router = createBrowserRouter([
                 element: <BwslDislProdSummeryPage />,
               },
               {
+                path: "/management/month-wise-confirmed-qty",
+                element: <MonthlyConfirmedQtyPage />,
+              },
+              {
                 path: "/reports",
                 element: <Navigate to="/management" replace />,
               },
@@ -373,6 +378,10 @@ export const router = createBrowserRouter([
                 path: "/reports/bwsl-disl-prod-summery",
                 element: <Navigate to="/management/bwsl-disl-prod-summery" replace />,
               },
+              {
+                path: "/reports/month-wise-confirmed-qty",
+                element: <Navigate to="/management/month-wise-confirmed-qty" replace />,
+              },
             ],
           },
           {
@@ -388,7 +397,3 @@ export const router = createBrowserRouter([
     element: <NotFoundPage />,
   },
 ])
-
-
-
-

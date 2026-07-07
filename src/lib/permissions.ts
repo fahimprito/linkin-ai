@@ -2,6 +2,7 @@ import {
   BarChart3,
   Boxes,
   Cable,
+  CalendarDays,
   CheckCircle,
   ClipboardList,
   Package,
@@ -166,6 +167,11 @@ export const dashboardNavigation: NavigationItem[] = [
         to: "/management/bwsl-disl-prod-summery",
         icon: Factory,
       },
+      {
+        label: "Month Wise Confirmed Qty",
+        to: "/management/month-wise-confirmed-qty",
+        icon: CalendarDays,
+      },
     ],
   },
 ]
@@ -239,4 +245,3 @@ export function getDefaultRoute(
 ) {
   return getNavigationForUser(userRole, permissions)[0]?.to ?? "/login"
 }
-
