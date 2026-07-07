@@ -19,5 +19,19 @@ export type ManagementReportRow = PurchaseOrder & {
   currentStage: string
 }
 
+export type BwslDislProductionSummaryRow = {
+  month: string
+  knitting: string
+  linking: string
+  packing: string
+  remarks?: string
+}
 
-
+export type BwslDislProductionSummaryTotal = {
+  label: string
+  knitting: string
+  linking: string
+  packing: string
+  remarks?: string
+  rowClassName?: string
+}
