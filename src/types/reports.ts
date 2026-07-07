@@ -35,3 +35,32 @@ export type BwslDislProductionSummaryTotal = {
   remarks?: string
   rowClassName?: string
 }
+
+export type BwslDislGaugeSectionSummaryRow = {
+  month: string
+  knitting141299: string
+  knitting357: string
+  knittingTotal: string
+  linking141299: string
+  linking357: string
+  linkingTotal: string
+  pack141299: string
+  pack357: string
+  packTotal: string
+  remarks?: string
+}
+
+export type BwslDislGaugeSectionSummaryTotal = {
+  label: string
+  knitting141299: string
+  knitting357: string
+  knittingTotal: string
+  linking141299: string
+  linking357: string
+  linkingTotal: string
+  pack141299: string
+  pack357: string
+  packTotal: string
+  remarks?: string
+  rowClassName?: string
+}
