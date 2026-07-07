@@ -22,8 +22,8 @@ export type BuyerGgWiseCfmdQtyNote = {
 
 export type BuyerGgWiseCfmdQtyRow = {
   gauge: string
-  months: Partial<Record<CfmdMonthKey, string>>
-  totalQty: string
+  months: Partial<Record<CfmdMonthKey, number | null>>
+  totalQty: number | null
   note?: BuyerGgWiseCfmdQtyNote
 }
 
@@ -44,17 +44,17 @@ export type BuyerGgWiseCfmdQtyRecord = {
   noteText: string
   noteFrom: CfmdMonthKey | ""
   noteTo: CfmdMonthKey | ""
-  jan: string
-  feb: string
-  mar: string
-  apr: string
-  may: string
-  jun: string
-  jul: string
-  aug: string
-  sep: string
-  oct: string
-  nov: string
-  dec: string
-  totalQty: string
+  jan: number | null
+  feb: number | null
+  mar: number | null
+  apr: number | null
+  may: number | null
+  jun: number | null
+  jul: number | null
+  aug: number | null
+  sep: number | null
+  oct: number | null
+  nov: number | null
+  dec: number | null
+  totalQty: number | null
 }

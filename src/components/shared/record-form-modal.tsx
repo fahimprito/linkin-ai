@@ -1,4 +1,4 @@
-import type { FieldValues, Path, UseFormRegister } from "react-hook-form"
+import type { FieldValues, Path, RegisterOptions, UseFormRegister } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
 
@@ -11,7 +11,8 @@ export type ModalFormField = {
   disabled?: boolean
   readOnly?: boolean
   required?: boolean
-  value?: string
+  value?: string | number
+  registerOptions?: RegisterOptions
 }
 
 type RecordFormModalProps<T extends FieldValues> = {
@@ -51,16 +52,9 @@ export function RecordFormModal<T extends FieldValues>({
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold">{title}</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {description}
-            </p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-2xl"
-            onClick={onClose}
-          >
+          <Button type="button" variant="outline" className="rounded-2xl" onClick={onClose}>
             Close
           </Button>
         </div>
@@ -68,6 +62,10 @@ export function RecordFormModal<T extends FieldValues>({
           {fields.map((field) => {
             const commonClassName =
               "w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm outline-none transition focus:border-ring"
+            const registerResult = register(field.name as Path<T>, {
+              required: field.required ?? true,
+              ...field.registerOptions,
+            })
 
             return (
               <div
@@ -80,7 +78,7 @@ export function RecordFormModal<T extends FieldValues>({
                 {field.type === "textarea" ? (
                   <textarea
                     id={field.name}
-                    {...register(field.name as Path<T>, { required: field.required ?? true })}
+                    {...registerResult}
                     placeholder={field.placeholder}
                     className={`${commonClassName} ${
                       field.disabled || field.readOnly
@@ -95,7 +93,7 @@ export function RecordFormModal<T extends FieldValues>({
                 ) : field.type === "select" ? (
                   <select
                     id={field.name}
-                    {...register(field.name as Path<T>, { required: field.required ?? true })}
+                    {...registerResult}
                     className={`${commonClassName} ${
                       field.disabled || field.readOnly
                         ? "cursor-not-allowed bg-muted text-muted-foreground"
@@ -110,15 +108,10 @@ export function RecordFormModal<T extends FieldValues>({
                     </option>
                     {field.options?.map((option) => {
                       const resolvedOption =
-                        typeof option === "string"
-                          ? { label: option, value: option }
-                          : option
+                        typeof option === "string" ? { label: option, value: option } : option
 
                       return (
-                        <option
-                          key={resolvedOption.value}
-                          value={resolvedOption.value}
-                        >
+                        <option key={resolvedOption.value} value={resolvedOption.value}>
                           {resolvedOption.label}
                         </option>
                       )
@@ -128,7 +121,7 @@ export function RecordFormModal<T extends FieldValues>({
                   <input
                     id={field.name}
                     type={field.type ?? "text"}
-                    {...register(field.name as Path<T>, { required: field.required ?? true })}
+                    {...registerResult}
                     placeholder={field.placeholder}
                     value={field.value}
                     className={`${commonClassName} ${
@@ -144,20 +137,10 @@ export function RecordFormModal<T extends FieldValues>({
             )
           })}
           <div className="flex items-center justify-end gap-3 md:col-span-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-2xl"
-              onClick={onReset}
-            >
+            <Button type="button" variant="outline" className="rounded-2xl" onClick={onReset}>
               Reset
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-2xl"
-              onClick={onClose}
-            >
+            <Button type="button" variant="outline" className="rounded-2xl" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" className="rounded-2xl">

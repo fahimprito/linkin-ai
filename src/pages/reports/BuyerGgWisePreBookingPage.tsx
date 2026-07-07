@@ -41,6 +41,17 @@ const monthOptions = monthColumns.map((month) => ({
   value: month.key,
 }))
 
+const numberFieldOptions = {
+  setValueAs: (value: string) => {
+    if (value === "" || value == null) {
+      return null
+    }
+
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  },
+}
+
 const formFields: ModalFormField[] = [
   {
     name: "rowType",
@@ -78,12 +89,15 @@ const formFields: ModalFormField[] = [
   ...monthColumns.map<ModalFormField>((month) => ({
     name: month.key,
     label: month.label,
-    placeholder: "0 PCS",
+    type: "number",
+    placeholder: "0",
     required: false,
+    registerOptions: numberFieldOptions,
   })),
   {
     name: "totalQty",
     label: "Total Qty",
+    type: "number",
     placeholder: "Auto calculated",
     required: false,
     readOnly: true,
@@ -111,19 +125,19 @@ function flattenPreBookingGroups(groups: BuyerGgWisePreBookingGroup[]) {
       noteText: row.note?.text ?? "",
       noteFrom: row.note?.from ?? "",
       noteTo: row.note?.to ?? "",
-      jan: row.note ? "" : row.months.jan ?? "",
-      feb: row.note ? "" : row.months.feb ?? "",
-      mar: row.note ? "" : row.months.mar ?? "",
-      apr: row.note ? "" : row.months.apr ?? "",
-      may: row.note ? "" : row.months.may ?? "",
-      jun: row.note ? "" : row.months.jun ?? "",
-      jul: row.note ? "" : row.months.jul ?? "",
-      aug: row.note ? "" : row.months.aug ?? "",
-      sep: row.note ? "" : row.months.sep ?? "",
-      oct: row.note ? "" : row.months.oct ?? "",
-      nov: row.note ? "" : row.months.nov ?? "",
-      dec: row.note ? "" : row.months.dec ?? "",
-      totalQty: row.note ? "" : row.totalQty,
+      jan: row.note ? null : (row.months.jan ?? null),
+      feb: row.note ? null : (row.months.feb ?? null),
+      mar: row.note ? null : (row.months.mar ?? null),
+      apr: row.note ? null : (row.months.apr ?? null),
+      may: row.note ? null : (row.months.may ?? null),
+      jun: row.note ? null : (row.months.jun ?? null),
+      jul: row.note ? null : (row.months.jul ?? null),
+      aug: row.note ? null : (row.months.aug ?? null),
+      sep: row.note ? null : (row.months.sep ?? null),
+      oct: row.note ? null : (row.months.oct ?? null),
+      nov: row.note ? null : (row.months.nov ?? null),
+      dec: row.note ? null : (row.months.dec ?? null),
+      totalQty: row.note ? null : row.totalQty,
     }))
   )
 }
@@ -138,19 +152,19 @@ function getDefaultValues(): PreBookingFormValues {
     noteText: "",
     noteFrom: "",
     noteTo: "",
-    jan: "",
-    feb: "",
-    mar: "",
-    apr: "",
-    may: "",
-    jun: "",
-    jul: "",
-    aug: "",
-    sep: "",
-    oct: "",
-    nov: "",
-    dec: "",
-    totalQty: "",
+    jan: null,
+    feb: null,
+    mar: null,
+    apr: null,
+    may: null,
+    jun: null,
+    jul: null,
+    aug: null,
+    sep: null,
+    oct: null,
+    nov: null,
+    dec: null,
+    totalQty: null,
   }
 }
 
@@ -186,60 +200,70 @@ function getBuyerGroupKey(value: string) {
   return normalizeBuyerName(value).toLowerCase()
 }
 
-function parseQtyValue(value: string) {
-  const match = value.trim().match(/^([\d,]+)\s*PCS$/i)
-
-  if (!match) {
-    return 0
+function normalizeNumber(value: number | string | null | undefined) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value
   }
 
-  const parsed = Number(match[1].replace(/,/g, ""))
-  return Number.isFinite(parsed) ? parsed : 0
+  if (typeof value === "string") {
+    const normalizedValue = value.trim()
+
+    if (!normalizedValue) {
+      return null
+    }
+
+    const parsed = Number(normalizedValue.replace(/,/g, "").replace(/\s*PCS$/i, ""))
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
+  return null
 }
 
-function formatQtyValue(value: number) {
-  if (value <= 0) {
+function formatQtyValue(value: number | null | undefined) {
+  const normalizedValue = normalizeNumber(value)
+
+  if (normalizedValue == null) {
     return ""
   }
 
-  return `${new Intl.NumberFormat("en-US").format(value)} PCS`
+  return `${new Intl.NumberFormat("en-US").format(normalizedValue)} PCS`
 }
 
 function calculateTotalQty(values: Partial<PreBookingFormValues>) {
   if (values.rowType === "note") {
-    return ""
+    return null
   }
 
-  const total = monthColumns.reduce((sum, month) => {
-    return sum + parseQtyValue(values[month.key] ?? "")
+  return monthColumns.reduce((sum, month) => {
+    return sum + (normalizeNumber(values[month.key]) ?? 0)
   }, 0)
-
-  return formatQtyValue(total)
 }
 
-function isHighlightedMonthValue(value: string) {
-  const normalized = value.trim().toLowerCase()
-  return Boolean(normalized && normalized !== "0 pcs")
+function isHighlightedMonthValue(value: number | null | undefined) {
+  const normalizedValue = normalizeNumber(value)
+  return normalizedValue != null && normalizedValue > 0
 }
 
 function monthIndex(key: PreBookingMonthKey | "") {
   return monthColumns.findIndex((month) => month.key === key)
 }
 
-function renderStandardValue(value: string) {
-  if (!value) {
+function renderStandardValue(value: number | null | undefined) {
+  const normalizedValue = normalizeNumber(value)
+
+  if (normalizedValue == null) {
     return <span className="text-muted-foreground/40">-</span>
   }
 
-  if (isHighlightedMonthValue(value)) {
+  if (isHighlightedMonthValue(normalizedValue)) {
     return (
       <span className="inline-flex rounded-lg bg-cyan-50 px-1.5 py-1 text-[11px] font-bold text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-200">
-        {value}
+        {formatQtyValue(normalizedValue)}
       </span>
     )
   }
 
-  return <span className="text-[11px] font-semibold text-slate-500">{value}</span>
+  return <span className="text-[11px] font-semibold text-slate-500">0 PCS</span>
 }
 
 function getNoteSpan(row: DisplayRecord) {
@@ -297,11 +321,32 @@ function getInitialRecords() {
 
   try {
     const parsed = JSON.parse(stored) as BuyerGgWisePreBookingRecord[]
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : defaultMockRecords
+
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return defaultMockRecords
+    }
+
+    return parsed.map((record) => ({
+      ...record,
+      jan: normalizeNumber(record.jan),
+      feb: normalizeNumber(record.feb),
+      mar: normalizeNumber(record.mar),
+      apr: normalizeNumber(record.apr),
+      may: normalizeNumber(record.may),
+      jun: normalizeNumber(record.jun),
+      jul: normalizeNumber(record.jul),
+      aug: normalizeNumber(record.aug),
+      sep: normalizeNumber(record.sep),
+      oct: normalizeNumber(record.oct),
+      nov: normalizeNumber(record.nov),
+      dec: normalizeNumber(record.dec),
+      totalQty: normalizeNumber(record.totalQty),
+    }))
   } catch {
     return defaultMockRecords
   }
 }
+
 export function BuyerGgWisePreBookingPage() {
   const [records, setRecords] = useState<BuyerGgWisePreBookingRecord[]>(() => getInitialRecords())
   const [searchQuery, setSearchQuery] = useState("")
@@ -349,7 +394,7 @@ export function BuyerGgWisePreBookingPage() {
         .filter((field) => field.name === "totalQty")
         .map((field) => ({
           ...field,
-          value: liveTotalQty,
+          value: liveTotalQty ?? "",
         })),
     ]
   }, [liveTotalQty, watchedFormValues.rowType])
@@ -369,8 +414,7 @@ export function BuyerGgWisePreBookingPage() {
 
     return records.filter((record) => {
       const matchesBuyer =
-        activeFilter === "All Buyers" ||
-        normalizeBuyerName(record.buyerName) === activeFilter
+        activeFilter === "All Buyers" || normalizeBuyerName(record.buyerName) === activeFilter
 
       if (!matchesBuyer) {
         return false
@@ -380,7 +424,9 @@ export function BuyerGgWisePreBookingPage() {
         return true
       }
 
-      return Object.values(record).some((value) => String(value).toLowerCase().includes(normalizedSearch))
+      return Object.values(record).some((value) =>
+        String(value ?? "").toLowerCase().includes(normalizedSearch)
+      )
     })
   }, [activeFilter, records, searchQuery])
 
@@ -417,19 +463,19 @@ export function BuyerGgWisePreBookingPage() {
       noteText: normalizedRowType === "note" ? values.noteText.trim() : "",
       noteFrom: normalizedRowType === "note" ? values.noteFrom : "",
       noteTo: normalizedRowType === "note" ? values.noteTo : "",
-      jan: normalizedRowType === "note" ? "" : values.jan,
-      feb: normalizedRowType === "note" ? "" : values.feb,
-      mar: normalizedRowType === "note" ? "" : values.mar,
-      apr: normalizedRowType === "note" ? "" : values.apr,
-      may: normalizedRowType === "note" ? "" : values.may,
-      jun: normalizedRowType === "note" ? "" : values.jun,
-      jul: normalizedRowType === "note" ? "" : values.jul,
-      aug: normalizedRowType === "note" ? "" : values.aug,
-      sep: normalizedRowType === "note" ? "" : values.sep,
-      oct: normalizedRowType === "note" ? "" : values.oct,
-      nov: normalizedRowType === "note" ? "" : values.nov,
-      dec: normalizedRowType === "note" ? "" : values.dec,
-      totalQty: normalizedRowType === "note" ? "" : calculateTotalQty(values),
+      jan: normalizedRowType === "note" ? null : normalizeNumber(values.jan),
+      feb: normalizedRowType === "note" ? null : normalizeNumber(values.feb),
+      mar: normalizedRowType === "note" ? null : normalizeNumber(values.mar),
+      apr: normalizedRowType === "note" ? null : normalizeNumber(values.apr),
+      may: normalizedRowType === "note" ? null : normalizeNumber(values.may),
+      jun: normalizedRowType === "note" ? null : normalizeNumber(values.jun),
+      jul: normalizedRowType === "note" ? null : normalizeNumber(values.jul),
+      aug: normalizedRowType === "note" ? null : normalizeNumber(values.aug),
+      sep: normalizedRowType === "note" ? null : normalizeNumber(values.sep),
+      oct: normalizedRowType === "note" ? null : normalizeNumber(values.oct),
+      nov: normalizedRowType === "note" ? null : normalizeNumber(values.nov),
+      dec: normalizedRowType === "note" ? null : normalizeNumber(values.dec),
+      totalQty: normalizedRowType === "note" ? null : calculateTotalQty(values),
     }
 
     const nextRecord: BuyerGgWisePreBookingRecord = {
@@ -482,10 +528,11 @@ export function BuyerGgWisePreBookingPage() {
                   {monthColumns.map((month, index) => (
                     <th
                       key={month.key}
-                      className={`border-b border-r border-border/80 px-2 py-2.5 text-center font-semibold ${index % 2 === 0
+                      className={`border-b border-r border-border/80 px-2 py-2.5 text-center font-semibold ${
+                        index % 2 === 0
                           ? "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-200"
                           : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
-                        }`}
+                      }`}
                     >
                       {month.label}
                     </th>
@@ -502,17 +549,17 @@ export function BuyerGgWisePreBookingPage() {
 
                   return (
                     <tr key={row.id} className={rowIndex % 2 === 0 ? "bg-background/80" : "bg-card"}>
-                      <td className="border-r border-b border-border/70 px-2 py-2 align-top min-w-[3rem]">
+                      <td className="min-w-[3rem] border-r border-b border-border/70 px-2 py-2 align-top">
                         {row.displaySerial ? (
                           <span className="font-bold italic text-violet-700 dark:text-violet-300">{row.displaySerial}</span>
                         ) : null}
                       </td>
-                      <td className="border-r border-b border-border/70 px-2 py-2 align-top min-w-[8.5rem]">
+                      <td className="min-w-[8.5rem] border-r border-b border-border/70 px-2 py-2 align-top">
                         {row.displayBuyerName ? (
                           <span className="font-semibold text-amber-700 dark:text-amber-200">{row.displayBuyerName}</span>
                         ) : null}
                       </td>
-                      <td className="border-r border-b border-border/70 px-2 py-2 align-top min-w-[5rem]">
+                      <td className="min-w-[5rem] border-r border-b border-border/70 px-2 py-2 align-top">
                         <span className="inline-flex rounded-lg bg-cyan-100 px-1.5 py-1 text-[11px] font-bold text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-200">
                           {row.gauge}
                         </span>
@@ -524,16 +571,21 @@ export function BuyerGgWisePreBookingPage() {
                               <td
                                 key={`${row.id}-${month.key}`}
                                 colSpan={noteSpan}
-                                className="border-r border-b border-border/70 px-2 py-2 align-top min-w-[10rem]"
+                                className="min-w-[10rem] border-r border-b border-border/70 px-2 py-2 align-top"
                               >
-                                <span className="block text-[11px] leading-4 font-semibold italic text-red-600">
+                                <span className="block text-[11px] font-semibold italic leading-4 text-red-600">
                                   {row.noteText || "-"}
                                 </span>
                               </td>
                             )
                           }
 
-                          if (noteStartIndex !== -1 && noteEndIndex !== -1 && index > noteStartIndex && index <= noteEndIndex) {
+                          if (
+                            noteStartIndex !== -1 &&
+                            noteEndIndex !== -1 &&
+                            index > noteStartIndex &&
+                            index <= noteEndIndex
+                          ) {
                             return null
                           }
                         }
@@ -541,7 +593,7 @@ export function BuyerGgWisePreBookingPage() {
                         return (
                           <td
                             key={`${row.id}-${month.key}`}
-                            className="border-r border-b border-border/70 px-2 py-2 align-top min-w-[5.2rem]"
+                            className="min-w-[5.2rem] border-r border-b border-border/70 px-2 py-2 align-top"
                           >
                             {row.rowType === "note" ? (
                               <span className="text-muted-foreground/40">-</span>
@@ -551,10 +603,12 @@ export function BuyerGgWisePreBookingPage() {
                           </td>
                         )
                       })}
-                      <td className="border-r border-b border-border/70 px-2 py-2 align-top min-w-[7rem]">
-                        <span className="font-bold italic text-rose-700 dark:text-rose-300">{row.totalQty || "-"}</span>
+                      <td className="min-w-[7rem] border-r border-b border-border/70 px-2 py-2 align-top">
+                        <span className="font-bold italic text-rose-700 dark:text-rose-300">
+                          {formatQtyValue(row.totalQty) || "-"}
+                        </span>
                       </td>
-                      <td className="border-b border-border/70 px-2 py-2 align-top min-w-[8rem]">
+                      <td className="min-w-[8rem] border-b border-border/70 px-2 py-2 align-top">
                         <div className="flex items-center gap-1.5">
                           <Button
                             type="button"
@@ -646,6 +700,5 @@ export function BuyerGgWisePreBookingPage() {
     </div>
   )
 }
-
 
 
