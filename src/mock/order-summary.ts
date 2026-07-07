@@ -24,6 +24,29 @@ export type OrderSummaryMetricRow = {
   highlightMonths?: ReportMonth[]
 }
 
+export type BuyerWiseOrderSummaryMonth = {
+  qty?: string
+  min?: string
+}
+
+export type BuyerWiseOrderSummaryRow = {
+  serial: string
+  buyerName: string
+  buyerCellClassName?: string
+  months: Partial<Record<ReportMonth, BuyerWiseOrderSummaryMonth>>
+  yearlyQty: string
+  yearlyMin: string
+  yearlyAverage: string
+}
+
+export type BuyerWiseOrderSummaryFooterRow = {
+  label: string
+  months: Partial<Record<ReportMonth, string>>
+  yearlyTotal?: string
+  yearlyAverage?: string
+  highlightMonths?: ReportMonth[]
+}
+
 export const orderSummaryMonthGaugeRows: OrderSummaryMetricRow[] = [
   {
     label: "3 GG + Multi Qty/Month",
@@ -326,3 +349,615 @@ export const orderSummaryMonthGaugeRows: OrderSummaryMetricRow[] = [
     highlightMonths: ["Jun", "July"],
   },
 ]
+
+export const orderSummaryBuyerWiseRows: BuyerWiseOrderSummaryRow[] = [
+  {
+    serial: "1",
+    buyerName: "J&J (ORIGINALS+CORE) (IMTIAJ)",
+    buyerCellClassName: "bg-cyan-100/80 dark:bg-cyan-950/40",
+    months: {
+      Jan: { qty: "136298 PCS", min: "9946980 Min" },
+      Feb: { qty: "25854 PCS", min: "1879950 Min" },
+      Mar: { qty: "12816 PCS", min: "831672 Min" },
+      April: { qty: "6432 PCS", min: "326784 Min" },
+      Jun: { qty: "201969 PCS", min: "8577450 Min" },
+      July: { qty: "67364 PCS", min: "2676476 Min" },
+      Aug: { qty: "18208 PCS", min: "829964 Min" },
+    },
+    yearlyQty: "468941 PCS",
+    yearlyMin: "25069276 Min",
+    yearlyAverage: "53 Min",
+  },
+  {
+    serial: "2",
+    buyerName: "J&J (PREMIUM) (SHUPNIL/RIYADH)",
+    buyerCellClassName: "bg-cyan-100/80 dark:bg-cyan-950/40",
+    months: {
+      Jan: { qty: "165734 PCS", min: "11629180 Min" },
+      Feb: { qty: "191484 PCS", min: "11899752 Min" },
+      Mar: { qty: "75434 PCS", min: "4737752 Min" },
+      April: { qty: "420817 PCS", min: "27654496 Min" },
+      May: { qty: "8924 PCS", min: "558816 Min" },
+      Jun: { qty: "33336 PCS", min: "799710 Min" },
+      July: { qty: "109842 PCS", min: "3804978 Min" },
+      Aug: { qty: "56514 PCS", min: "1812042 Min" },
+      Sep: { qty: "9882 PCS", min: "0 Min" },
+    },
+    yearlyQty: "1071967 PCS",
+    yearlyMin: "62896726 Min",
+    yearlyAverage: "59 Min",
+  },
+  {
+    serial: "3",
+    buyerName: "J&J INITIAL PRE-BOOKING (KAMRUL)",
+    buyerCellClassName: "bg-slate-300/80 dark:bg-slate-800/80",
+    months: {
+      Jan: { qty: "0 PCS", min: "0 Min" },
+      Feb: { qty: "0 PCS", min: "0 Min" },
+      Mar: { qty: "0 PCS", min: "0 Min" },
+      April: { qty: "0 PCS", min: "0 Min" },
+      May: { qty: "0 PCS", min: "0 Min" },
+      Jun: { qty: "0 PCS", min: "0 Min" },
+      July: { qty: "56848 PCS", min: "3637512 Min" },
+      Aug: { qty: "123308 PCS", min: "7798944 Min" },
+      Sep: { qty: "194341 PCS", min: "9967050 Min" },
+      Oct: { qty: "369591 PCS", min: "19729550 Min" },
+      Nov: { qty: "400000 PCS", min: "20250000 Min" },
+      Dec: { qty: "370000 PCS", min: "18750000 Min" },
+    },
+    yearlyQty: "1514088 PCS",
+    yearlyMin: "80133056 Min",
+    yearlyAverage: "53 Min",
+  },
+  {
+    serial: "4",
+    buyerName: "JJXX (ATIQ)",
+    buyerCellClassName: "bg-cyan-100/80 dark:bg-cyan-950/40",
+    months: {
+      Jan: { qty: "43183 PCS", min: "2089904 Min" },
+      Feb: { qty: "23968 PCS", min: "1138844 Min" },
+      Mar: { qty: "88537 PCS", min: "4108070 Min" },
+      April: { qty: "3192 PCS", min: "156000 Min" },
+      May: { qty: "6171 PCS", min: "252600 Min" },
+      Jun: { qty: "27620 PCS", min: "1355958 Min" },
+      July: { qty: "51553 PCS", min: "2830328 Min" },
+      Aug: { qty: "3112 PCS", min: "164076 Min" },
+      Sep: { qty: "6310 PCS", min: "399812 Min" },
+    },
+    yearlyQty: "253646 PCS",
+    yearlyMin: "12495592 Min",
+    yearlyAverage: "49 Min",
+  },
+  {
+    serial: "5",
+    buyerName: "J&J (ESS & ESS INDIA) (MUSHFIQ)",
+    buyerCellClassName: "bg-cyan-100/80 dark:bg-cyan-950/40",
+    months: {
+      Jan: { qty: "29560 PCS", min: "1526328 Min" },
+      Feb: { qty: "159016 PCS", min: "7715461 Min" },
+      Mar: { qty: "328759 PCS", min: "13211634 Min" },
+      April: { qty: "2764 PCS", min: "109776 Min" },
+      May: { qty: "1530 PCS", min: "68850 Min" },
+      Jun: { qty: "32750 PCS", min: "1434406 Min" },
+      July: { qty: "11704 PCS", min: "602952 Min" },
+      Aug: { qty: "2040 PCS", min: "118320 Min" },
+    },
+    yearlyQty: "568123 PCS",
+    yearlyMin: "24787727 Min",
+    yearlyAverage: "44 Min",
+  },
+  {
+    serial: "6",
+    buyerName: "J&J (PRE-COLL+COLL+O/LET+INDIA) (ZIA/RUSSEL)",
+    buyerCellClassName: "bg-cyan-100/80 dark:bg-cyan-950/40",
+    months: {
+      Jan: { qty: "45168 PCS", min: "2269248 Min" },
+      Feb: { qty: "178845 PCS", min: "10827819 Min" },
+      Mar: { qty: "412136 PCS", min: "20354515 Min" },
+      April: { qty: "35336 PCS", min: "1400541 Min" },
+      Jun: { qty: "119116 PCS", min: "7796328 Min" },
+      July: { qty: "55020 PCS", min: "2888544 Min" },
+    },
+    yearlyQty: "845621 PCS",
+    yearlyMin: "45536995 Min",
+    yearlyAverage: "54 Min",
+  },
+  {
+    serial: "7",
+    buyerName: "J&J (REBEL+PRODUKT) (SHAZAL/MAHFUZ)",
+    buyerCellClassName: "bg-cyan-100/80 dark:bg-cyan-950/40",
+    months: {
+      Jan: { qty: "15106 PCS", min: "860693 Min" },
+      April: { qty: "138284 PCS", min: "7437489 Min" },
+      May: { qty: "76476 PCS", min: "2677254 Min" },
+      Jun: { qty: "36094 PCS", min: "1328996 Min" },
+      July: { qty: "51600 PCS", min: "2033916 Min" },
+      Aug: { qty: "1736 PCS", min: "121520 Min" },
+      Sep: { qty: "8000 PCS", min: "0 Min" },
+    },
+    yearlyQty: "327296 PCS",
+    yearlyMin: "14459868 Min",
+    yearlyAverage: "44 Min",
+  },
+  {
+    serial: "8",
+    buyerName: "VEROMODA (SHAZAL/MAHFUZ)",
+    buyerCellClassName: "bg-cyan-100/80 dark:bg-cyan-950/40",
+    months: {
+      Jan: { qty: "2229 PCS", min: "111450 Min" },
+      Feb: { qty: "3248 PCS", min: "232800 Min" },
+      Mar: { qty: "7934 PCS", min: "313382 Min" },
+      Jun: { qty: "50177 PCS", min: "2061354 Min" },
+      July: { qty: "27977 PCS", min: "1392101 Min" },
+      Aug: { qty: "5928 PCS", min: "0 Min" },
+      Sep: { qty: "2775 PCS", min: "188700 Min" },
+      Oct: { qty: "20409 PCS", min: "0 Min" },
+    },
+    yearlyQty: "120677 PCS",
+    yearlyMin: "4299787 Min",
+    yearlyAverage: "36 Min",
+  },
+  {
+    serial: "9",
+    buyerName: "OBJECT (FAROUK/PARVEJ)",
+    buyerCellClassName: "bg-yellow-100/80 dark:bg-yellow-950/40",
+    months: {
+      Jan: { qty: "1000 PCS", min: "50000 Min" },
+    },
+    yearlyQty: "1000 PCS",
+    yearlyMin: "50000 Min",
+    yearlyAverage: "50 Min",
+  },
+  {
+    serial: "10",
+    buyerName: "SELECTED (INDIA+O/LET) (FAROUK/PARVEJ)",
+    buyerCellClassName: "bg-yellow-100/80 dark:bg-yellow-950/40",
+    months: {
+      Jan: { qty: "25980 PCS", min: "2318902 Min" },
+      Feb: { qty: "2294 PCS", min: "176756 Min" },
+      Mar: { qty: "7340 PCS", min: "471590 Min" },
+      April: { qty: "1602 PCS", min: "83304 Min" },
+      May: { qty: "11515 PCS", min: "555720 Min" },
+      Jun: { qty: "27828 PCS", min: "2129383 Min" },
+      July: { qty: "5206 PCS", min: "312192 Min" },
+      Aug: { qty: "15923 PCS", min: "1311688 Min" },
+    },
+    yearlyQty: "97688 PCS",
+    yearlyMin: "7359535 Min",
+    yearlyAverage: "75 Min",
+  },
+  {
+    serial: "11",
+    buyerName: "TERRANOVA (FAROUK/PARVEJ)",
+    buyerCellClassName: "bg-yellow-100/80 dark:bg-yellow-950/40",
+    months: {
+      Jan: { qty: "5422 PCS", min: "447300 Min" },
+      Mar: { qty: "181591 PCS", min: "10859109 Min" },
+      April: { qty: "335928 PCS", min: "16614678 Min" },
+      May: { qty: "36409 PCS", min: "1463598 Min" },
+      Jun: { qty: "22740 PCS", min: "1140744 Min" },
+      July: { qty: "80949 PCS", min: "4988359 Min" },
+      Aug: { qty: "40000 PCS", min: "2000000 Min" },
+      Sep: { qty: "35063 PCS", min: "3530620 Min" },
+      Oct: { qty: "26748 PCS", min: "1473870 Min" },
+    },
+    yearlyQty: "764850 PCS",
+    yearlyMin: "42518278 Min",
+    yearlyAverage: "56 Min",
+  },
+  {
+    serial: "12",
+    buyerName: "SCROLL (FAROUK/PARVEJ)",
+    buyerCellClassName: "bg-yellow-100/80 dark:bg-yellow-950/40",
+    months: {
+      Jan: { qty: "4870 PCS", min: "258110 Min" },
+      July: { qty: "20660 PCS", min: "1156960 Min" },
+      Sep: { qty: "23480 PCS", min: "1429760 Min" },
+      Oct: { qty: "4200 PCS", min: "294000 Min" },
+    },
+    yearlyQty: "53210 PCS",
+    yearlyMin: "3138830 Min",
+    yearlyAverage: "59 Min",
+  },
+  {
+    serial: "13",
+    buyerName: "ELCORTE (LITON NAG/EMDAD)",
+    buyerCellClassName: "bg-slate-200/90 dark:bg-slate-800/80",
+    months: {
+      Jan: { qty: "3000 PCS", min: "120000 Min" },
+      Feb: { qty: "8000 PCS", min: "744000 Min" },
+      Mar: { qty: "106795 PCS", min: "7373570 Min" },
+      April: { qty: "208800 PCS", min: "16077500 Min" },
+      May: { qty: "118065 PCS", min: "8224975 Min" },
+      Jun: { qty: "236152 PCS", min: "15549790 Min" },
+      July: { qty: "90665 PCS", min: "7019850 Min" },
+      Aug: { qty: "174700 PCS", min: "10660500 Min" },
+      Sep: { qty: "100000 PCS", min: "6000000 Min" },
+    },
+    yearlyQty: "1046177 PCS",
+    yearlyMin: "71770185 Min",
+    yearlyAverage: "69 Min",
+  },
+  {
+    serial: "14",
+    buyerName: "ONLY+ONLY & SONS (UZZAL/RAIHANUR)",
+    buyerCellClassName: "bg-yellow-100/80 dark:bg-yellow-950/40",
+    months: {
+      Jan: { qty: "93716 PCS", min: "5041347 Min" },
+      Feb: { qty: "79118 PCS", min: "3750264 Min" },
+      Mar: { qty: "47277 PCS", min: "2689596 Min" },
+      April: { qty: "17195 PCS", min: "7167539 Min" },
+      May: { qty: "329605 PCS", min: "1314771 Min" },
+      Jun: { qty: "354245 PCS", min: "16253594 Min" },
+      July: { qty: "241307 PCS", min: "11442933 Min" },
+      Aug: { qty: "45064 PCS", min: "2247010 Min" },
+      Sep: { qty: "200948 PCS", min: "10921148 Min" },
+      Oct: { qty: "28470 PCS", min: "1451970 Min" },
+    },
+    yearlyQty: "1590455 PCS",
+    yearlyMin: "74113772 Min",
+    yearlyAverage: "47 Min",
+  },
+  {
+    serial: "15",
+    buyerName: "ONLY INITIAL PRE-BOOKING (UZZAL)",
+    buyerCellClassName: "bg-slate-300/80 dark:bg-slate-800/80",
+    months: {
+      Mar: { qty: "0 PCS", min: "0 Min" },
+      April: { qty: "0 PCS", min: "0 Min" },
+      May: { qty: "0 PCS", min: "0 Min" },
+      Jun: { qty: "0 PCS", min: "0 Min" },
+      July: { qty: "0 PCS", min: "0 Min" },
+      Aug: { qty: "170100 PCS", min: "6804000 Min" },
+      Sep: { qty: "244052 PCS", min: "9762080 Min" },
+      Oct: { qty: "206530 PCS", min: "8261200 Min" },
+      Nov: { qty: "120000 PCS", min: "4800000 Min" },
+    },
+    yearlyQty: "740682 PCS",
+    yearlyMin: "29627280 Min",
+    yearlyAverage: "40 Min",
+  },
+  {
+    serial: "16",
+    buyerName: "KARIBAN (ARNOB)",
+    buyerCellClassName: "bg-slate-200/90 dark:bg-slate-800/80",
+    months: {},
+    yearlyQty: "0 PCS",
+    yearlyMin: "0 Min",
+    yearlyAverage: "#DIV/0!",
+  },
+  {
+    serial: "17",
+    buyerName: "CONTEMPO (ARNOB)",
+    buyerCellClassName: "bg-slate-200/90 dark:bg-slate-800/80",
+    months: {
+      Feb: { qty: "3337 PCS", min: "178432 Min" },
+      Mar: { qty: "5858 PCS", min: "386628 Min" },
+      April: { qty: "3212 PCS", min: "337260 Min" },
+      May: { qty: "11938 PCS", min: "680848 Min" },
+      Jun: { qty: "3001 PCS", min: "390130 Min" },
+      Aug: { qty: "10000 PCS", min: "1050000 Min" },
+    },
+    yearlyQty: "37346 PCS",
+    yearlyMin: "3023298 Min",
+    yearlyAverage: "81 Min",
+  },
+  {
+    serial: "18",
+    buyerName: "MGF (LANE BRYANT) (ARNOB)",
+    buyerCellClassName: "bg-slate-200/90 dark:bg-slate-800/80",
+    months: {
+      Jan: { qty: "5974 PCS", min: "489868 Min" },
+      Feb: { qty: "61199 PCS", min: "4739668 Min" },
+      April: { qty: "14851 PCS", min: "1269011 Min" },
+      May: { qty: "26187 PCS", min: "1928741 Min" },
+      Jun: { qty: "54484 PCS", min: "5153581 Min" },
+      July: { qty: "43048 PCS", min: "3614932 Min" },
+      Aug: { qty: "35227 PCS", min: "2685870 Min" },
+      Sep: { qty: "16549 PCS", min: "1680280 Min" },
+    },
+    yearlyQty: "257519 PCS",
+    yearlyMin: "21561951 Min",
+    yearlyAverage: "84 Min",
+  },
+  {
+    serial: "19",
+    buyerName: "ARETEX (FAISAL/SAAD)",
+    buyerCellClassName: "bg-lime-100/80 dark:bg-lime-950/40",
+    months: {
+      Jan: { qty: "3000 PCS", min: "225500 Min" },
+      Feb: { qty: "1300 PCS", min: "100900 Min" },
+      Mar: { qty: "35049 PCS", min: "2855301 Min" },
+      April: { qty: "43692 PCS", min: "3741277 Min" },
+      May: { qty: "45097 PCS", min: "3248614 Min" },
+      Jun: { qty: "146839 PCS", min: "11569747 Min" },
+      July: { qty: "0 PCS", min: "0 Min" },
+      Aug: { qty: "32787 PCS", min: "2555513 Min" },
+      Sep: { qty: "92928 PCS", min: "7377040 Min" },
+      Oct: { qty: "4650 PCS", min: "431850 Min" },
+    },
+    yearlyQty: "405342 PCS",
+    yearlyMin: "32105742 Min",
+    yearlyAverage: "79 Min",
+  },
+  {
+    serial: "20",
+    buyerName: "R BRAND (FAISAL/SAAD)",
+    buyerCellClassName: "bg-lime-100/80 dark:bg-lime-950/40",
+    months: {
+      Jun: { qty: "8735 PCS", min: "656430 Min" },
+    },
+    yearlyQty: "8735 PCS",
+    yearlyMin: "656430 Min",
+    yearlyAverage: "75 Min",
+  },
+  {
+    serial: "21",
+    buyerName: "BUGATTI (MAHMUD)",
+    buyerCellClassName: "bg-slate-200/90 dark:bg-slate-800/80",
+    months: {
+      Feb: { qty: "15717 PCS", min: "1319354 Min" },
+      Mar: { qty: "6302 PCS", min: "1018148 Min" },
+      April: { qty: "3072 PCS", min: "294912 Min" },
+      May: { qty: "24056 PCS", min: "2118439 Min" },
+      Jun: { qty: "63028 PCS", min: "2041470 Min" },
+      July: { qty: "18014 PCS", min: "1317868 Min" },
+      Sep: { qty: "46498 PCS", min: "4063362 Min" },
+    },
+    yearlyQty: "176687 PCS",
+    yearlyMin: "12173553 Min",
+    yearlyAverage: "69 Min",
+  },
+  {
+    serial: "22",
+    buyerName: "COLOMBUS (MAHMUD)",
+    buyerCellClassName: "bg-slate-200/90 dark:bg-slate-800/80",
+    months: {
+      Jan: { qty: "440 PCS", min: "28600 Min" },
+      Mar: { qty: "68200 PCS", min: "4851500 Min" },
+      April: { qty: "54059 PCS", min: "4854304 Min" },
+      May: { qty: "1250 PCS", min: "101250 Min" },
+      Jun: { qty: "4600 PCS", min: "276700 Min" },
+      Aug: { qty: "24467 PCS", min: "1733320 Min" },
+      Oct: { qty: "31600 PCS", min: "3689000 Min" },
+    },
+    yearlyQty: "184616 PCS",
+    yearlyMin: "15534674 Min",
+    yearlyAverage: "84 Min",
+  },
+  {
+    serial: "23",
+    buyerName: "CELIO (FAKRUL/TOMAL)",
+    buyerCellClassName: "bg-yellow-200/90 dark:bg-yellow-950/50",
+    months: {
+      Jan: { qty: "18746 PCS", min: "1031030 Min" },
+      Mar: { qty: "31242 PCS", min: "1947582 Min" },
+      April: { qty: "42946 PCS", min: "2583448 Min" },
+      May: { qty: "105752 PCS", min: "6570582 Min" },
+      Jun: { qty: "58156 PCS", min: "3504610 Min" },
+      July: { qty: "140714 PCS", min: "8541373 Min" },
+      Aug: { qty: "51184 PCS", min: "2932208 Min" },
+      Sep: { qty: "73950 PCS", min: "5242878 Min" },
+    },
+    yearlyQty: "522690 PCS",
+    yearlyMin: "32353711 Min",
+    yearlyAverage: "62 Min",
+  },
+  {
+    serial: "24",
+    buyerName: "GMS (FAKRUL/TOMAL)",
+    buyerCellClassName: "bg-yellow-200/90 dark:bg-yellow-950/50",
+    months: {
+      Jan: { qty: "1948 PCS", min: "95452 Min" },
+      Feb: { qty: "1922 PCS", min: "137470 Min" },
+      Mar: { qty: "23970 PCS", min: "2353792 Min" },
+      April: { qty: "14992 PCS", min: "1439232 Min" },
+      May: { qty: "48703 PCS", min: "3078388 Min" },
+      Jun: { qty: "45202 PCS", min: "2727870 Min" },
+      July: { qty: "67414 PCS", min: "4144406 Min" },
+      Aug: { qty: "146283 PCS", min: "12695130 Min" },
+      Sep: { qty: "1806 PCS", min: "111972 Min" },
+    },
+    yearlyQty: "352240 PCS",
+    yearlyMin: "26783712 Min",
+    yearlyAverage: "76 Min",
+  },
+]
+
+export const orderSummaryBuyerWiseFooterRows: BuyerWiseOrderSummaryFooterRow[] = [
+  {
+    label: "TTL QTY/MONTH",
+    months: {
+      Jan: "793959 PCS",
+      Feb: "849071 PCS",
+      Mar: "1480246 PCS",
+      April: "1575625 PCS",
+      May: "1063426 PCS",
+      Jun: "1679896 PCS",
+      July: "1473538 PCS",
+      Aug: "1203140 PCS",
+      Sep: "1461996 PCS",
+      Oct: "812198 PCS",
+      Nov: "520000 PCS",
+      Dec: "370000 PCS",
+    },
+    yearlyTotal: "13283095 PCS",
+    highlightMonths: ["Jun", "July"],
+  },
+  {
+    label: "TTL MIN/MONTH",
+    months: {
+      Jan: "50531708 Min",
+      Feb: "51008198 Min",
+      Mar: "81456926 Min",
+      April: "97393873 Min",
+      May: "59154190 Min",
+      Jun: "96181651 Min",
+      July: "84534407 Min",
+      Aug: "73764155 Min",
+      Sep: "88957866 Min",
+      Oct: "43731440 Min",
+      Nov: "25050000 Min",
+      Dec: "18750000 Min",
+    },
+    yearlyTotal: "770514414 Min",
+    yearlyAverage: "58 Min",
+    highlightMonths: ["Jun", "July"],
+  },
+  {
+    label: "AVE. MIN/MONTH",
+    months: {
+      Jan: "64 Min",
+      Feb: "60 Min",
+      Mar: "55 Min",
+      April: "62 Min",
+      May: "56 Min",
+      Jun: "57 Min",
+      July: "57 Min",
+      Aug: "61 Min",
+      Sep: "61 Min",
+      Oct: "54 Min",
+      Nov: "48 Min",
+      Dec: "51 Min",
+    },
+    yearlyTotal: "1106925 DZN",
+    highlightMonths: ["Jun", "July"],
+  },
+]
+
+export type OrderSummaryMonthlyStatusCapacityRow = {
+  label: string
+  monthlyCapacity: string
+  qtyCapacity: string
+}
+
+export type OrderSummaryMonthlyStatusRow = {
+  serial: string
+  month: string
+  totalQty: string
+  totalMin: string
+  leftOverMin: string
+  highlight?: boolean
+}
+
+export const orderSummaryMonthlyStatusCapacities: OrderSummaryMonthlyStatusCapacityRow[] = [
+  {
+    label: "3",
+    monthlyCapacity: "1029600 Min",
+    qtyCapacity: "25740 Pcs",
+  },
+  {
+    label: "MUL",
+    monthlyCapacity: "25568400 Min",
+    qtyCapacity: "589914 Pcs",
+  },
+  {
+    label: "9",
+    monthlyCapacity: "2676960 Min",
+    qtyCapacity: "55770 Pcs",
+  },
+  {
+    label: "12",
+    monthlyCapacity: "4908960 Min",
+    qtyCapacity: "772304 Pcs",
+  },
+  {
+    label: "G.T",
+    monthlyCapacity: "78283920 Min",
+    qtyCapacity: "1443728 Pcs",
+  },
+]
+
+export const orderSummaryMonthlyStatusRows: OrderSummaryMonthlyStatusRow[] = [
+  {
+    serial: "1",
+    month: "January",
+    totalQty: "793959 PCS",
+    totalMin: "50531708 Min",
+    leftOverMin: "-27752212 Min",
+  },
+  {
+    serial: "2",
+    month: "February",
+    totalQty: "849071 PCS",
+    totalMin: "51008198 Min",
+    leftOverMin: "-27275722 Min",
+  },
+  {
+    serial: "3",
+    month: "March",
+    totalQty: "1480246 PCS",
+    totalMin: "81456926 Min",
+    leftOverMin: "3173006 Min",
+  },
+  {
+    serial: "4",
+    month: "April",
+    totalQty: "1575625 PCS",
+    totalMin: "97393873 Min",
+    leftOverMin: "1910953 Min",
+  },
+  {
+    serial: "5",
+    month: "May",
+    totalQty: "1063426 PCS",
+    totalMin: "59154190 Min",
+    leftOverMin: "-19129730 Min",
+  },
+  {
+    serial: "6",
+    month: "June",
+    totalQty: "1679896 PCS",
+    totalMin: "96181651 Min",
+    leftOverMin: "17897731 Min",
+    highlight: true,
+  },
+  {
+    serial: "7",
+    month: "July",
+    totalQty: "1473538 PCS",
+    totalMin: "84534407 Min",
+    leftOverMin: "6250487 Min",
+    highlight: true,
+  },
+  {
+    serial: "8",
+    month: "Aug",
+    totalQty: "1203140 PCS",
+    totalMin: "73764155 Min",
+    leftOverMin: "-4519765 Min",
+  },
+  {
+    serial: "9",
+    month: "Sep",
+    totalQty: "1436978 PCS",
+    totalMin: "87370736 Min",
+    leftOverMin: "9086816 Min",
+  },
+  {
+    serial: "10",
+    month: "Oct",
+    totalQty: "837216 PCS",
+    totalMin: "45318570 Min",
+    leftOverMin: "-32965350 Min",
+  },
+  {
+    serial: "11",
+    month: "Nov",
+    totalQty: "520000 PCS",
+    totalMin: "25050000 Min",
+    leftOverMin: "-53233920 Min",
+  },
+  {
+    serial: "12",
+    month: "Dec",
+    totalQty: "370000 PCS",
+    totalMin: "18750000 Min",
+    leftOverMin: "-59533920 Min",
+  },
+]
+
+export const orderSummaryMonthlyStatusTotals = {
+  totalQty: "13283095 PCS",
+  totalMin: "770514414 Min",
+}
