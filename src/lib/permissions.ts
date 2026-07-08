@@ -59,6 +59,7 @@ export const dashboardNavigation: NavigationItem[] = [
     children: [
       { label: "Dashboard", to: "/merchandise/dashboard", icon: Gauge },
       { label: "PO List", to: "/merchandise", icon: List },
+      { label: "Pre-booking", to: "/merchandise/pre-booking", icon: Layers3 },
       { label: "Sourcing", to: "/merchandise/sourcing", icon: ShoppingBag },
       { label: "Supplier", to: "/merchandise/supplier", icon: ShoppingBag },
       {
@@ -245,3 +246,5 @@ export function getDefaultRoute(
 ) {
   return getNavigationForUser(userRole, permissions)[0]?.to ?? "/login"
 }
+
+

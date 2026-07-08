@@ -16,6 +16,7 @@ import {
   DesignStylePoPage,
 } from "@/pages/design/DesignModulePages"
 import { MerchandiseListPage } from "@/pages/merchandise/MerchandiseListPage"
+import { MerchandisePreBookingPage } from "@/pages/merchandise/MerchandisePreBookingPage"
 import { MerchandiseMasterExcelPage } from "@/pages/merchandise/MerchandiseMasterExcelPage"
 import { MerchandiseProductionPage } from "@/pages/merchandise/MerchandiseProductionPage"
 import { MerchandiseSourcingPage } from "@/pages/merchandise/MerchandiseSourcingPage"
@@ -113,6 +114,14 @@ export const router = createBrowserRouter([
               {
                 path: "/merchandise",
                 element: <MerchandiseListPage />,
+              },
+              {
+                path: "/merchandise/pre-booking",
+                element: <MerchandisePreBookingPage />,
+              },
+              {
+                path: "/pre-booking",
+                element: <Navigate to="/merchandise/pre-booking" replace />,
               },
               {
                 path: "/merchandise/sourcing",
@@ -397,3 +406,6 @@ export const router = createBrowserRouter([
     element: <NotFoundPage />,
   },
 ])
+
+
+
