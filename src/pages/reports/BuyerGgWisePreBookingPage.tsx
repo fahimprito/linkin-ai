@@ -317,18 +317,42 @@ function buildDisplayRecords(records: BuyerGgWisePreBookingRecord[]) {
 function normalizeSummaryGaugeLabel(gauge: string) {
   const normalizedGauge = gauge.trim().toUpperCase()
 
-  if (normalizedGauge === "3/5/7 GG") {
-    return "7 GG"
+  if (["3 GG", "5 GG", "7 GG", "3/5/7 GG"].includes(normalizedGauge)) {
+    return "3/5/7 GG"
   }
 
-  if (normalizedGauge === "9/12 GG") {
-    return "12 GG"
+  if (["9 GG", "12 GG", "9/12 GG"].includes(normalizedGauge)) {
+    return "9/12 GG"
   }
 
-  return gauge.trim()
+  return ""
 }
+
 function buildGaugeSummaryRows(records: BuyerGgWisePreBookingRecord[]) {
-  const grouped = new Map<string, GaugeSummaryRow>()
+  const createEmptyMonths = () =>
+    monthColumns.reduce<Record<PreBookingMonthKey, number>>((accumulator, month) => {
+      accumulator[month.key] = 0
+      return accumulator
+    }, {} as Record<PreBookingMonthKey, number>)
+
+  const grouped = new Map<string, GaugeSummaryRow>([
+    [
+      "3/5/7 GG",
+      {
+        gauge: "3/5/7 GG",
+        months: createEmptyMonths(),
+        totalQty: 0,
+      },
+    ],
+    [
+      "9/12 GG",
+      {
+        gauge: "9/12 GG",
+        months: createEmptyMonths(),
+        totalQty: 0,
+      },
+    ],
+  ])
 
   records.forEach((record) => {
     if (record.rowType === "note") {
@@ -336,29 +360,22 @@ function buildGaugeSummaryRows(records: BuyerGgWisePreBookingRecord[]) {
     }
 
     const gauge = normalizeSummaryGaugeLabel(record.gauge)
-    const existing = grouped.get(gauge)
-
-    if (existing) {
-      monthColumns.forEach((month) => {
-        existing.months[month.key] += normalizeNumber(record[month.key]) ?? 0
-      })
-      existing.totalQty += normalizeNumber(record.totalQty) ?? 0
+    if (!gauge) {
       return
     }
 
-    const months = monthColumns.reduce<Record<PreBookingMonthKey, number>>((accumulator, month) => {
-      accumulator[month.key] = normalizeNumber(record[month.key]) ?? 0
-      return accumulator
-    }, {} as Record<PreBookingMonthKey, number>)
+    const existing = grouped.get(gauge)
+    if (!existing) {
+      return
+    }
 
-    grouped.set(gauge, {
-      gauge,
-      months,
-      totalQty: normalizeNumber(record.totalQty) ?? 0,
+    monthColumns.forEach((month) => {
+      existing.months[month.key] += normalizeNumber(record[month.key]) ?? 0
     })
+    existing.totalQty += normalizeNumber(record.totalQty) ?? 0
   })
 
-  return Array.from(grouped.values())
+  return [grouped.get("3/5/7 GG")!, grouped.get("9/12 GG")!]
 }
 function getInitialRecords() {
   if (typeof window === "undefined") {
@@ -795,6 +812,7 @@ export function BuyerGgWisePreBookingPage() {
     </div>
   )
 }
+
 
 
 

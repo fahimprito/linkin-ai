@@ -110,6 +110,12 @@ type DisplayRecord = BuyerGgWiseCfmdQtyRecord & {
   displayBuyerName: string
 }
 
+type GaugeSummaryRow = {
+  gauge: "3/5/7 GG" | "9/12 GG"
+  months: Record<CfmdMonthKey, number>
+  totalQty: number
+}
+
 function createRecordId() {
   return `cfmd-qty-${Date.now()}`
 }
@@ -308,6 +314,69 @@ function buildDisplayRecords(records: BuyerGgWiseCfmdQtyRecord[]) {
   )
 }
 
+function normalizeSummaryGaugeLabel(gauge: string) {
+  const normalizedGauge = gauge.trim().toUpperCase()
+
+  if (["3 GG", "5 GG", "7 GG", "3/5/7 GG"].includes(normalizedGauge)) {
+    return "3/5/7 GG" as const
+  }
+
+  if (["9 GG", "12 GG", "9/12 GG"].includes(normalizedGauge)) {
+    return "9/12 GG" as const
+  }
+
+  return null
+}
+
+function createEmptyGaugeSummaryRow(
+  gauge: GaugeSummaryRow["gauge"]
+): GaugeSummaryRow {
+  return {
+    gauge,
+    months: {
+      jan: 0,
+      feb: 0,
+      mar: 0,
+      apr: 0,
+      may: 0,
+      jun: 0,
+      jul: 0,
+      aug: 0,
+      sep: 0,
+      oct: 0,
+      nov: 0,
+      dec: 0,
+    },
+    totalQty: 0,
+  }
+}
+
+function buildGaugeSummaryRows(records: BuyerGgWiseCfmdQtyRecord[]) {
+  const groupedSummary = {
+    "3/5/7 GG": createEmptyGaugeSummaryRow("3/5/7 GG"),
+    "9/12 GG": createEmptyGaugeSummaryRow("9/12 GG"),
+  } satisfies Record<GaugeSummaryRow["gauge"], GaugeSummaryRow>
+
+  records.forEach((record) => {
+    if (record.rowType === "note") {
+      return
+    }
+
+    const gaugeLabel = normalizeSummaryGaugeLabel(record.gauge)
+    if (!gaugeLabel) {
+      return
+    }
+
+    monthColumns.forEach((month) => {
+      groupedSummary[gaugeLabel].months[month.key] += normalizeNumber(record[month.key]) ?? 0
+    })
+
+    groupedSummary[gaugeLabel].totalQty += normalizeNumber(record.totalQty) ?? 0
+  })
+
+  return [groupedSummary["3/5/7 GG"], groupedSummary["9/12 GG"]]
+}
+
 function getInitialRecords() {
   if (typeof window === "undefined") {
     return defaultMockRecords
@@ -431,6 +500,7 @@ export function BuyerGgWiseCfmdQtyPage() {
   }, [activeFilter, records, searchQuery])
 
   const displayRecords = useMemo(() => buildDisplayRecords(filteredRecords), [filteredRecords])
+  const gaugeSummaryRows = useMemo(() => buildGaugeSummaryRows(filteredRecords), [filteredRecords])
 
   const openCreateModal = useCallback(() => {
     setEditingRecord(null)
@@ -497,7 +567,7 @@ export function BuyerGgWiseCfmdQtyPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="BUYER/GG WISE PRE-BOOKING PER MONTH BALANCE TO UTILIZE AGAINST YEAR 2026"
+        title="BUYER/GG WISE CFMD QTY AGAINST YEAR 2026"
         actions={
           <Button type="button" className="rounded-2xl" onClick={openCreateModal}>
             <Plus className="size-4" />
@@ -636,6 +706,48 @@ export function BuyerGgWiseCfmdQtyPage() {
                   )
                 })}
               </tbody>
+              {gaugeSummaryRows.length ? (
+                <tbody>
+                  <tr className="bg-slate-100 dark:bg-slate-900/80">
+                    <td
+                      colSpan={3}
+                      className="border-r border-b-2 border-t-2 border-border/80 px-2 py-2 text-center font-black uppercase tracking-wide text-slate-900 dark:text-slate-100"
+                    >
+                      GG Wise Calculation
+                    </td>
+                    {monthColumns.map((month) => (
+                      <td
+                        key={`summary-heading-${month.key}`}
+                        className="border-r border-b-2 border-t-2 border-border/80 px-2 py-2"
+                      />
+                    ))}
+                    <td className="border-r border-b-2 border-t-2 border-border/80 px-2 py-2" />
+                    <td className="border-b-2 border-t-2 border-border/80 px-2 py-2" />
+                  </tr>
+                  {gaugeSummaryRows.map((summaryRow) => (
+                    <tr key={`gauge-summary-${summaryRow.gauge}`} className="bg-slate-50/80 dark:bg-slate-950/50">
+                      <td className="border-r border-b border-border/70 px-2 py-2" colSpan={2} />
+                      <td className="border-r border-b border-border/70 px-2 py-2 text-center font-black italic text-cyan-700 dark:text-cyan-200">
+                        {summaryRow.gauge}
+                      </td>
+                      {monthColumns.map((month) => (
+                        <td
+                          key={`gauge-summary-${summaryRow.gauge}-${month.key}`}
+                          className="min-w-[5.2rem] border-r border-b border-border/70 px-2 py-2 text-center"
+                        >
+                          {renderStandardValue(summaryRow.months[month.key])}
+                        </td>
+                      ))}
+                      <td className="min-w-[7rem] border-r border-b border-border/70 px-2 py-2 text-center">
+                        <span className="font-bold italic text-rose-700 dark:text-rose-300">
+                          {formatQtyValue(summaryRow.totalQty) || "-"}
+                        </span>
+                      </td>
+                      <td className="border-b border-border/70 px-2 py-2" />
+                    </tr>
+                  ))}
+                </tbody>
+              ) : null}
             </table>
           </div>
         </div>
@@ -700,5 +812,14 @@ export function BuyerGgWiseCfmdQtyPage() {
     </div>
   )
 }
+
+
+
+
+
+
+
+
+
 
 
