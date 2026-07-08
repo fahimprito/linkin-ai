@@ -110,6 +110,12 @@ type DisplayRecord = BuyerGgWisePreBookingRecord & {
   displayBuyerName: string
 }
 
+type GaugeSummaryRow = {
+  gauge: string
+  months: Record<PreBookingMonthKey, number>
+  totalQty: number
+}
+
 function createRecordId() {
   return `pre-booking-${Date.now()}`
 }
@@ -308,6 +314,52 @@ function buildDisplayRecords(records: BuyerGgWisePreBookingRecord[]) {
   )
 }
 
+function normalizeSummaryGaugeLabel(gauge: string) {
+  const normalizedGauge = gauge.trim().toUpperCase()
+
+  if (normalizedGauge === "3/5/7 GG") {
+    return "7 GG"
+  }
+
+  if (normalizedGauge === "9/12 GG") {
+    return "12 GG"
+  }
+
+  return gauge.trim()
+}
+function buildGaugeSummaryRows(records: BuyerGgWisePreBookingRecord[]) {
+  const grouped = new Map<string, GaugeSummaryRow>()
+
+  records.forEach((record) => {
+    if (record.rowType === "note") {
+      return
+    }
+
+    const gauge = normalizeSummaryGaugeLabel(record.gauge)
+    const existing = grouped.get(gauge)
+
+    if (existing) {
+      monthColumns.forEach((month) => {
+        existing.months[month.key] += normalizeNumber(record[month.key]) ?? 0
+      })
+      existing.totalQty += normalizeNumber(record.totalQty) ?? 0
+      return
+    }
+
+    const months = monthColumns.reduce<Record<PreBookingMonthKey, number>>((accumulator, month) => {
+      accumulator[month.key] = normalizeNumber(record[month.key]) ?? 0
+      return accumulator
+    }, {} as Record<PreBookingMonthKey, number>)
+
+    grouped.set(gauge, {
+      gauge,
+      months,
+      totalQty: normalizeNumber(record.totalQty) ?? 0,
+    })
+  })
+
+  return Array.from(grouped.values())
+}
 function getInitialRecords() {
   if (typeof window === "undefined") {
     return defaultMockRecords
@@ -431,6 +483,7 @@ export function BuyerGgWisePreBookingPage() {
   }, [activeFilter, records, searchQuery])
 
   const displayRecords = useMemo(() => buildDisplayRecords(filteredRecords), [filteredRecords])
+  const gaugeSummaryRows = useMemo(() => buildGaugeSummaryRows(filteredRecords), [filteredRecords])
 
   const openCreateModal = useCallback(() => {
     setEditingRecord(null)
@@ -636,6 +689,48 @@ export function BuyerGgWisePreBookingPage() {
                   )
                 })}
               </tbody>
+              {gaugeSummaryRows.length ? (
+                <tbody>
+                  <tr className="bg-slate-100 dark:bg-slate-900/80">
+                    <td
+                      colSpan={3}
+                      className="border-r border-b-2 border-t-2 border-border/80 px-2 py-2 text-center font-black uppercase tracking-wide text-slate-900 dark:text-slate-100"
+                    >
+                      GG Wise Calculation
+                    </td>
+                    {monthColumns.map((month) => (
+                      <td
+                        key={`summary-heading-${month.key}`}
+                        className="border-r border-b-2 border-t-2 border-border/80 px-2 py-2"
+                      />
+                    ))}
+                    <td className="border-r border-b-2 border-t-2 border-border/80 px-2 py-2" />
+                    <td className="border-b-2 border-t-2 border-border/80 px-2 py-2" />
+                  </tr>
+                  {gaugeSummaryRows.map((summaryRow) => (
+                    <tr key={`gauge-summary-${summaryRow.gauge}`} className="bg-slate-50/80 dark:bg-slate-950/50">
+                      <td className="border-r border-b border-border/70 px-2 py-2" colSpan={2} />
+                      <td className="border-r border-b border-border/70 px-2 py-2 text-center font-black italic text-cyan-700 dark:text-cyan-200">
+                        {summaryRow.gauge}
+                      </td>
+                      {monthColumns.map((month) => (
+                        <td
+                          key={`gauge-summary-${summaryRow.gauge}-${month.key}`}
+                          className="min-w-[5.2rem] border-r border-b border-border/70 px-2 py-2 text-center"
+                        >
+                          {renderStandardValue(summaryRow.months[month.key])}
+                        </td>
+                      ))}
+                      <td className="min-w-[7rem] border-r border-b border-border/70 px-2 py-2 text-center">
+                        <span className="font-bold italic text-rose-700 dark:text-rose-300">
+                          {formatQtyValue(summaryRow.totalQty) || "-"}
+                        </span>
+                      </td>
+                      <td className="border-b border-border/70 px-2 py-2" />
+                    </tr>
+                  ))}
+                </tbody>
+              ) : null}
             </table>
           </div>
         </div>
@@ -700,5 +795,7 @@ export function BuyerGgWisePreBookingPage() {
     </div>
   )
 }
+
+
 
 

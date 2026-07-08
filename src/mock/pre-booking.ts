@@ -220,4 +220,89 @@ export const buyerGgWisePreBooking2026: BuyerGgWisePreBookingGroup[] = [
       },
     ],
   },
+  {
+    id: "joyjo",
+    serial: "8",
+    buyerName: "JOYJO",
+    buyerClassName: "bg-lime-50",
+    rows: [
+      {
+        gauge: "7 GG",
+        months: {
+          aug: 2800,
+          sep: 12500,
+          oct: 20000,
+        },
+        totalQty: 35300,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {},
+        totalQty: 0,
+      },
+    ],
+  },
+  {
+    id: "aretex-fh-walbusch",
+    serial: "16",
+    buyerName: "ARETEX(FH+WALBUSCH)",
+    buyerClassName: "bg-yellow-50",
+    rows: [
+      {
+        gauge: "7 GG",
+        months: {
+          may: 0,
+          jun: 0,
+          jul: 0,
+          aug: 0,
+          sep: 0,
+        },
+        totalQty: 0,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          may: 0,
+          jun: 0,
+          jul: 0,
+          aug: 0,
+          sep: 0,
+        },
+        totalQty: 0,
+      },
+    ],
+  },
+  {
+    id: "mgf",
+    serial: "17",
+    buyerName: "MGF",
+    buyerClassName: "bg-green-100",
+    rows: [
+      {
+        gauge: "7 GG",
+        months: {
+          jun: 0,
+          jul: 0,
+          aug: 0,
+          sep: 0,
+          oct: 40000,
+          nov: 50000,
+        },
+        totalQty: 90000,
+      },
+      {
+        gauge: "9/12 GG",
+        months: {
+          jun: 0,
+          jul: 0,
+          aug: 0,
+          sep: 0,
+          oct: 43580,
+          nov: 50000,
+        },
+        totalQty: 93580,
+      },
+    ],
+  },
 ]
+
