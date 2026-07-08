@@ -11,6 +11,7 @@ import {
 } from "@/components/shared/record-form-modal"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { merchandisePreBookingMockData } from "@/mock/merchandise-pre-booking"
 import type { MerchandisePreBookingRecord } from "@/types/merchandise-pre-booking"
 
@@ -31,6 +32,19 @@ type GroupedSection = {
   gg: string
   rows: MerchandisePreBookingRecord[]
   totalQty: number
+}
+
+type SummaryRow = {
+  gg: string
+  firstSlotCapacity: string
+  firstSlotConfirmedMinutes: string
+  firstLotReceived: string
+  secondSlotCapacity: string
+  secondSlotConfirmedMinutes: string
+  secondLotReceived: string
+  thirdSlotCapacity: string
+  thirdSlotConfirmedMinutes: string
+  thirdLotReceived: string
 }
 
 const formFields: ModalFormField[] = [
@@ -144,6 +158,24 @@ function toInputDate(value: string) {
   return parsed.toISOString().slice(0, 10)
 }
 
+function parseInspectionDate(value: string) {
+  if (!value) {
+    return null
+  }
+
+  const isoDate = toInputDate(value)
+  if (!isoDate) {
+    return null
+  }
+
+  const parsed = new Date(isoDate)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function formatPcs(value: number) {
+  return `${new Intl.NumberFormat("en-US").format(value)} PCS`
+}
+
 function getStoredPreBookings() {
   if (typeof window === "undefined") {
     return merchandisePreBookingMockData
@@ -195,6 +227,73 @@ function buildRecord(values: PreBookingFormValues, existingId?: string): Merchan
     remarks: values.remarks.trim(),
     createdAt: new Date().toISOString(),
   }
+}
+
+function getSlotIndex(inspectionDate: string) {
+  const parsed = parseInspectionDate(inspectionDate)
+  if (!parsed) {
+    return 2
+  }
+
+  const day = parsed.getDate()
+  if (day <= 10) {
+    return 0
+  }
+
+  if (day <= 20) {
+    return 1
+  }
+
+  return 2
+}
+
+function buildSummaryRows(records: MerchandisePreBookingRecord[]): SummaryRow[] {
+  const rows = ggOptions.map((gg) => {
+    const sectionRecords = records.filter((record) => record.gg === gg)
+    const slotQty = [0, 0, 0]
+
+    sectionRecords.forEach((record) => {
+      slotQty[getSlotIndex(record.inspectionDate)] += record.orderQty
+    })
+
+    return {
+      gg,
+      firstSlotCapacity: "0 MIN",
+      firstSlotConfirmedMinutes: "0 MIN",
+      firstLotReceived: formatPcs(slotQty[0]),
+      secondSlotCapacity: "0 MIN",
+      secondSlotConfirmedMinutes: "0 MIN",
+      secondLotReceived: formatPcs(slotQty[1]),
+      thirdSlotCapacity: "0 MIN",
+      thirdSlotConfirmedMinutes: "0 MIN",
+      thirdLotReceived: formatPcs(slotQty[2]),
+    }
+  })
+
+  const totals = rows.reduce(
+    (accumulator, row) => {
+      accumulator.first += Number(row.firstLotReceived.replace(/[^\d]/g, "")) || 0
+      accumulator.second += Number(row.secondLotReceived.replace(/[^\d]/g, "")) || 0
+      accumulator.third += Number(row.thirdLotReceived.replace(/[^\d]/g, "")) || 0
+      return accumulator
+    },
+    { first: 0, second: 0, third: 0 }
+  )
+
+  rows.push({
+    gg: "G.T",
+    firstSlotCapacity: "0 MIN",
+    firstSlotConfirmedMinutes: "0 MIN",
+    firstLotReceived: formatPcs(totals.first),
+    secondSlotCapacity: "0 MIN",
+    secondSlotConfirmedMinutes: "0 MIN",
+    secondLotReceived: formatPcs(totals.second),
+    thirdSlotCapacity: "0 MIN",
+    thirdSlotConfirmedMinutes: "0 MIN",
+    thirdLotReceived: formatPcs(totals.third),
+  })
+
+  return rows
 }
 
 export function MerchandisePreBookingPage() {
@@ -265,6 +364,13 @@ export function MerchandisePreBookingPage() {
       .filter((section) => section.rows.length > 0)
   }, [filteredRecords])
 
+  const totalVisibleQty = useMemo(
+    () => groupedSections.reduce((sum, section) => sum + section.totalQty, 0),
+    [groupedSections]
+  )
+
+  const summaryRows = useMemo(() => buildSummaryRows(filteredRecords), [filteredRecords])
+
   const openCreateModal = () => {
     setEditingRecord(null)
     reset(getDefaultFormValues())
@@ -311,10 +417,10 @@ export function MerchandisePreBookingPage() {
         return current.map((record) =>
           record.id === editingRecord.id
             ? {
-              ...record,
-              ...nextRecord,
-              createdAt: record.createdAt,
-            }
+                ...record,
+                ...nextRecord,
+                createdAt: record.createdAt,
+              }
             : record
         )
       }
@@ -355,141 +461,246 @@ export function MerchandisePreBookingPage() {
           description="Try another GG filter or search term, or add a new pre-booking entry."
         />
       ) : (
-        <section className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
-          <div className="border-b border-border/80 bg-slate-50 px-4 py-4 dark:bg-slate-900/80">
-            <div className="flex justify-center">
-              <div className="text-center">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500">
-                  Merchandise Pre-booking Register
-                </p>
-                <h2 className="mt-1 text-xl font-black tracking-wide text-slate-900 dark:text-slate-100">
-                  Buyer / GG Wise Pre-booking Overview
-                </h2>
-              </div>
-
+        <>
+          <section className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
+            <div className="border-b border-border/80 bg-slate-50 px-4 py-3 text-center dark:bg-slate-900/80">
+              <p className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-slate-100">
+                Highlight: Yellow Newly Inserted; Light Blue Amendment; Red Cancelled
+              </p>
             </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-[1200px] w-full border-separate border-spacing-0 text-xs">
-              <thead>
-                <tr className="bg-white dark:bg-slate-950">
-                  <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
-                    SL
-                  </th>
-                  <th className="border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
-                    Buyer Name
-                  </th>
-                  <th className="border-b border-r border-border/80 bg-sky-50 px-2 py-2 text-center font-semibold text-sky-700 dark:bg-sky-950/30 dark:text-sky-200">
-                    Style Name
-                  </th>
-                  <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
-                    GG
-                  </th>
-                  <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
-                    Order Qnty
-                  </th>
-                  <th className="border-b border-r border-border/80 bg-indigo-50 px-2 py-2 text-center font-semibold text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-200">
-                    Inspection Date
-                  </th>
-                  <th className="border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
-                    Remarks
-                  </th>
-                  <th className="border-b border-r border-border/80 bg-fuchsia-50 px-2 py-2 text-center font-semibold text-fuchsia-700 dark:bg-fuchsia-950/30 dark:text-fuchsia-200">
-                    Total GG Wise
-                  </th>
-                  <th className="border-b border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {groupedSections.map((section) => (
-                  <Fragment key={section.gg}>
-                    <tr className="bg-slate-50 dark:bg-slate-900/80">
-                      <td
-                        colSpan={tableColumnCount}
-                        className="border-b border-border/80 px-3 py-2 text-left font-bold tracking-wide text-slate-900 dark:text-slate-100"
-                      >
-                        {section.gg} GG Section
+            <div className="border-b border-border/80 bg-white px-4 py-4 text-center dark:bg-slate-950">
+              <h2 className="text-xl font-black italic tracking-wide text-slate-900 dark:text-slate-100">
+                Confirmed Minutes / Qty Summery Month of December
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-[1200px] border-separate border-spacing-0 text-xs">
+                <thead>
+                  <tr className="bg-white dark:bg-slate-950">
+                    <th className="border-r border-b border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+                      GG
+                    </th>
+                    <th className="border-r border-b border-border/80 bg-amber-50 px-2 py-2 text-center font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
+                      First Slot Date 1st to 10th Capacity 30%
+                    </th>
+                    <th className="border-r border-b border-border/80 bg-cyan-50 px-2 py-2 text-center font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
+                      1st Slot Confirmed GG Vise Orders Minute
+                    </th>
+                    <th className="border-r border-b border-border/80 bg-sky-50 px-2 py-2 text-center font-semibold text-sky-700 dark:bg-sky-950/30 dark:text-sky-200">
+                      First Lot Received
+                    </th>
+                    <th className="border-r border-b border-border/80 bg-amber-50 px-2 py-2 text-center font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
+                      Second Slot Date 11th to 20th Capacity 35%
+                    </th>
+                    <th className="border-r border-b border-border/80 bg-cyan-50 px-2 py-2 text-center font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
+                      2nd Slot Confirmed GG Vise Orders Minute
+                    </th>
+                    <th className="border-r border-b border-border/80 bg-sky-50 px-2 py-2 text-center font-semibold text-sky-700 dark:bg-sky-950/30 dark:text-sky-200">
+                      Second Lot Received
+                    </th>
+                    <th className="border-r border-b border-border/80 bg-amber-50 px-2 py-2 text-center font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
+                      Third Slot Date 21st to 30th Capacity 35%
+                    </th>
+                    <th className="border-r border-b border-border/80 bg-cyan-50 px-2 py-2 text-center font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
+                      3rd Slot Confirmed GG Vise Orders Minute
+                    </th>
+                    <th className="border-b border-border/80 bg-sky-50 px-2 py-2 text-center font-semibold text-sky-700 dark:bg-sky-950/30 dark:text-sky-200">
+                      Third Lot Received
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summaryRows.map((row, index) => (
+                    <tr
+                      key={`${row.gg}-${index}`}
+                      className={cn(
+                        "bg-background/80",
+                        row.gg === "G.T" && "bg-slate-100 font-bold dark:bg-slate-900/80"
+                      )}
+                    >
+                      <td className="border-r border-b border-border/70 px-2 py-2 text-center font-black text-slate-900 dark:text-slate-100">
+                        {row.gg}
+                      </td>
+                      <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-700 dark:text-slate-300">
+                        {row.firstSlotCapacity}
+                      </td>
+                      <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">
+                        {row.firstSlotConfirmedMinutes}
+                      </td>
+                      <td className="border-r border-b border-border/70 px-2 py-2 text-center font-bold text-slate-900 dark:text-slate-100">
+                        {row.firstLotReceived}
+                      </td>
+                      <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-700 dark:text-slate-300">
+                        {row.secondSlotCapacity}
+                      </td>
+                      <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">
+                        {row.secondSlotConfirmedMinutes}
+                      </td>
+                      <td className="border-r border-b border-border/70 px-2 py-2 text-center font-bold text-slate-900 dark:text-slate-100">
+                        {row.secondLotReceived}
+                      </td>
+                      <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-700 dark:text-slate-300">
+                        {row.thirdSlotCapacity}
+                      </td>
+                      <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">
+                        {row.thirdSlotConfirmedMinutes}
+                      </td>
+                      <td className="border-b border-border/70 px-2 py-2 text-center font-bold text-slate-900 dark:text-slate-100">
+                        {row.thirdLotReceived}
                       </td>
                     </tr>
-                    {section.rows.map((row, index) => (
-                      <tr
-                        key={row.id}
-                        className={index % 2 === 0 ? "bg-background/80" : "bg-card"}
-                      >
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-violet-700 dark:text-violet-300">
-                          {index + 1}
-                        </td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 font-medium text-slate-900 dark:text-slate-100">
-                          {row.buyerName}
-                        </td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 font-medium text-slate-900 dark:text-slate-100">
-                          {row.styleName || "-"}
-                        </td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">
-                          {row.gg}
-                        </td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">
-                          {row.orderQty.toLocaleString()} Pcs
-                        </td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">
-                          {row.inspectionDate}
-                        </td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">
-                          {row.remarks || "-"}
-                        </td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">
-                          {index === 0 ? `${section.gg} GG` : ""}
-                        </td>
-                        <td className="border-b border-border/70 px-2 py-2">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-7 w-7 cursor-pointer rounded-lg px-0"
-                              onClick={() => openEditModal(row)}
-                              aria-label="Edit pre-booking"
-                              title="Edit"
-                            >
-                              <Pencil className="size-3.5" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-7 w-7 cursor-pointer rounded-lg px-0 text-destructive hover:text-destructive"
-                              onClick={() => setRecordPendingDelete(row)}
-                              aria-label="Delete pre-booking"
-                              title="Delete"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </Button>
-                          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
+            <div className="border-b border-border/80 bg-slate-50 px-4 py-4 dark:bg-slate-900/80">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div className="text-left">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500">
+                    Merchandise Pre-booking Register
+                  </p>
+                  <h2 className="mt-1 text-xl font-black tracking-wide text-slate-900 dark:text-slate-100">
+                    Buyer / GG Wise Pre-booking Overview
+                  </h2>
+                  <p className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Pre-booking entries are grouped by GG and total quantity is calculated automatically for each section.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border/70 bg-white px-3 py-2 text-left shadow-sm dark:bg-slate-950">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    Visible Total Qty
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">
+                    {totalVisibleQty.toLocaleString()} Pcs
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-[1200px] border-separate border-spacing-0 text-xs">
+                <thead>
+                  <tr className="bg-white dark:bg-slate-950">
+                    <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+                      SL
+                    </th>
+                    <th className="border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
+                      Buyer Name
+                    </th>
+                    <th className="border-b border-r border-border/80 bg-sky-50 px-2 py-2 text-center font-semibold text-sky-700 dark:bg-sky-950/30 dark:text-sky-200">
+                      Style Name
+                    </th>
+                    <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+                      GG
+                    </th>
+                    <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
+                      Order Qnty
+                    </th>
+                    <th className="border-b border-r border-border/80 bg-indigo-50 px-2 py-2 text-center font-semibold text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-200">
+                      Inspection Date
+                    </th>
+                    <th className="border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
+                      Remarks
+                    </th>
+                    <th className="border-b border-r border-border/80 bg-fuchsia-50 px-2 py-2 text-center font-semibold text-fuchsia-700 dark:bg-fuchsia-950/30 dark:text-fuchsia-200">
+                      Total GG Wise
+                    </th>
+                    <th className="border-b border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groupedSections.map((section) => (
+                    <Fragment key={section.gg}>
+                      <tr className="bg-slate-50 dark:bg-slate-900/80">
+                        <td
+                          colSpan={tableColumnCount}
+                          className="border-b border-border/80 px-3 py-2 text-left font-bold tracking-wide text-slate-900 dark:text-slate-100"
+                        >
+                          {section.gg} GG Section
                         </td>
                       </tr>
-                    ))}
-                    <tr className="bg-slate-100 dark:bg-slate-900/80">
-                      <td className="border-r border-b-[3px] border-border/80 px-3 py-2 font-bold text-slate-900 dark:text-slate-100" colSpan={4}>
-                        {section.gg} GG Summary
-                      </td>
-                      <td className="border-r border-b-[3px] border-border/80 px-2 py-2 text-center font-black text-slate-900 dark:text-slate-100">
-                        {section.totalQty.toLocaleString()} Pcs
-                      </td>
-                      <td className="border-r border-b-[3px] border-border/80 px-2 py-2" colSpan={2} />
-                      <td className="border-r border-b-[3px] border-border/80 px-2 py-2 text-center font-black text-slate-900 dark:text-slate-100">
-                        {section.totalQty.toLocaleString()}
-                      </td>
-                      <td className="border-b-[3px] border-border/80 px-2 py-2" />
-                    </tr>
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                      {section.rows.map((row, index) => (
+                        <tr
+                          key={row.id}
+                          className={index % 2 === 0 ? "bg-background/80" : "bg-card"}
+                        >
+                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-violet-700 dark:text-violet-300">
+                            {index + 1}
+                          </td>
+                          <td className="border-r border-b border-border/70 px-2 py-2 font-medium text-slate-900 dark:text-slate-100">
+                            {row.buyerName}
+                          </td>
+                          <td className="border-r border-b border-border/70 px-2 py-2 font-medium text-slate-900 dark:text-slate-100">
+                            {row.styleName || "-"}
+                          </td>
+                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">
+                            {row.gg}
+                          </td>
+                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">
+                            {row.orderQty.toLocaleString()} Pcs
+                          </td>
+                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">
+                            {row.inspectionDate}
+                          </td>
+                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">
+                            {row.remarks || "-"}
+                          </td>
+                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">
+                            {index === 0 ? `${section.gg} GG` : ""}
+                          </td>
+                          <td className="border-b border-border/70 px-2 py-2">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 w-7 cursor-pointer rounded-lg px-0"
+                                onClick={() => openEditModal(row)}
+                                aria-label="Edit pre-booking"
+                                title="Edit"
+                              >
+                                <Pencil className="size-3.5" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 w-7 cursor-pointer rounded-lg px-0 text-destructive hover:text-destructive"
+                                onClick={() => setRecordPendingDelete(row)}
+                                aria-label="Delete pre-booking"
+                                title="Delete"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="bg-slate-100 dark:bg-slate-900/80">
+                        <td className="border-r border-b-[3px] border-border/80 px-3 py-2 font-bold text-slate-900 dark:text-slate-100" colSpan={4}>
+                          {section.gg} GG Summary
+                        </td>
+                        <td className="border-r border-b-[3px] border-border/80 px-2 py-2 text-center font-black text-slate-900 dark:text-slate-100">
+                          {section.totalQty.toLocaleString()} Pcs
+                        </td>
+                        <td className="border-r border-b-[3px] border-border/80 px-2 py-2" colSpan={2} />
+                        <td className="border-r border-b-[3px] border-border/80 px-2 py-2 text-center font-black text-slate-900 dark:text-slate-100">
+                          {section.totalQty.toLocaleString()}
+                        </td>
+                        <td className="border-b-[3px] border-border/80 px-2 py-2" />
+                      </tr>
+                    </Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
       )}
 
       <RecordFormModal
