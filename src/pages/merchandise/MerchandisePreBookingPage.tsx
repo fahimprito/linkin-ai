@@ -364,11 +364,6 @@ export function MerchandisePreBookingPage() {
       .filter((section) => section.rows.length > 0)
   }, [filteredRecords])
 
-  const totalVisibleQty = useMemo(
-    () => groupedSections.reduce((sum, section) => sum + section.totalQty, 0),
-    [groupedSections]
-  )
-
   const summaryRows = useMemo(() => buildSummaryRows(filteredRecords), [filteredRecords])
 
   const openCreateModal = () => {
@@ -417,10 +412,10 @@ export function MerchandisePreBookingPage() {
         return current.map((record) =>
           record.id === editingRecord.id
             ? {
-                ...record,
-                ...nextRecord,
-                createdAt: record.createdAt,
-              }
+              ...record,
+              ...nextRecord,
+              createdAt: record.createdAt,
+            }
             : record
         )
       }
@@ -463,18 +458,13 @@ export function MerchandisePreBookingPage() {
       ) : (
         <>
           <section className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
-            <div className="border-b border-border/80 bg-slate-50 px-4 py-3 text-center dark:bg-slate-900/80">
-              <p className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-slate-100">
-                Highlight: Yellow Newly Inserted; Light Blue Amendment; Red Cancelled
-              </p>
-            </div>
             <div className="border-b border-border/80 bg-white px-4 py-4 text-center dark:bg-slate-950">
               <h2 className="text-xl font-black italic tracking-wide text-slate-900 dark:text-slate-100">
-                Confirmed Minutes / Qty Summery Month of December
+                Confirmed Minutes / Qty Summery
               </h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-[1200px] border-separate border-spacing-0 text-xs">
+              <table className="min-w-full w-full border-separate border-spacing-0 text-xs">
                 <thead>
                   <tr className="bg-white dark:bg-slate-950">
                     <th className="border-r border-b border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
@@ -555,33 +545,20 @@ export function MerchandisePreBookingPage() {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
+          <section className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm mt-16">
             <div className="border-b border-border/80 bg-slate-50 px-4 py-4 dark:bg-slate-900/80">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                <div className="text-left">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500">
-                    Merchandise Pre-booking Register
-                  </p>
-                  <h2 className="mt-1 text-xl font-black tracking-wide text-slate-900 dark:text-slate-100">
-                    Buyer / GG Wise Pre-booking Overview
-                  </h2>
-                  <p className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Pre-booking entries are grouped by GG and total quantity is calculated automatically for each section.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-white px-3 py-2 text-left shadow-sm dark:bg-slate-950">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                    Visible Total Qty
-                  </p>
-                  <p className="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">
-                    {totalVisibleQty.toLocaleString()} Pcs
-                  </p>
-                </div>
+              <div className="flex flex-col items-center justify-center gap-2 text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500">
+                  Merchandise Pre-booking Register
+                </p>
+                <h2 className="text-xl font-black tracking-wide text-slate-900 dark:text-slate-100">
+                  Buyer / GG Wise Pre-booking Overview
+                </h2>
               </div>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-[1200px] border-separate border-spacing-0 text-xs">
+              <table className="min-w-full w-full border-separate border-spacing-0 text-xs">
                 <thead>
                   <tr className="bg-white dark:bg-slate-950">
                     <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
@@ -759,3 +736,5 @@ export function MerchandisePreBookingPage() {
     </div>
   )
 }
+
+
