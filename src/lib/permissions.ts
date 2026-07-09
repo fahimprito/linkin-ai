@@ -11,7 +11,6 @@ import {
   Handshake,
   Layers3,
   NotebookText,
-  PackageCheck,
   Factory,
   List,
   Palette,
@@ -149,19 +148,14 @@ export const dashboardNavigation: NavigationItem[] = [
       { label: "Dashboard", to: "/management", icon: Gauge },
       { label: "PO Tracker", to: "/management/po-tracker", icon: ScanSearch },
       {
-        label: "Pre-Booking Bal to Utilize",
-        to: "/management/buyer-gg-wise-pre-booking",
-        icon: Layers3,
+        label: "Booking + CFMD + Balance",
+        to: "/management/booking-cfmd-balance",
+        icon: Boxes,
       },
       {
         label: "Order Summary",
         to: "/management/order-booking-summary",
         icon: NotebookText,
-      },
-      {
-        label: "Buyer.GG Wise CFMD Qty",
-        to: "/management/buyer-gg-wise-cfmd-qty",
-        icon: PackageCheck,
       },
       {
         label: "BWSL&DISL Prod Summery",
@@ -172,11 +166,6 @@ export const dashboardNavigation: NavigationItem[] = [
         label: "Month Wise Confirmed Qty",
         to: "/management/month-wise-confirmed-qty",
         icon: CalendarDays,
-      },
-      {
-        label: "Booking + CFMD + Balance",
-        to: "/management/booking-cfmd-balance",
-        icon: Boxes,
       },
     ],
   },
@@ -251,6 +240,10 @@ export function getDefaultRoute(
 ) {
   return getNavigationForUser(userRole, permissions)[0]?.to ?? "/login"
 }
+
+
+
+
 
 
 

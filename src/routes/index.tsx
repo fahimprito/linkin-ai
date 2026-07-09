@@ -29,8 +29,6 @@ import {
   MerchandiseShipmentPage,
 } from "@/pages/merchandise/MerchandiseModulePages"
 import { UserProfilePage } from "@/pages/profile/UserProfilePage"
-import { BuyerGgWiseCfmdQtyPage } from "@/pages/reports/BuyerGgWiseCfmdQtyPage"
-import { BuyerGgWisePreBookingPage } from "@/pages/reports/BuyerGgWisePreBookingPage"
 import { BwslDislProdSummeryPage } from "@/pages/reports/BwslDislProdSummeryPage"
 import {
   ManagementPoDetailTrackerPage,
@@ -345,16 +343,8 @@ export const router = createBrowserRouter([
                 element: <ManagementPoDetailTrackerPage />,
               },
               {
-                path: "/management/buyer-gg-wise-pre-booking",
-                element: <BuyerGgWisePreBookingPage />,
-              },
-              {
                 path: "/management/order-booking-summary",
                 element: <OrderSummaryPage />,
-              },
-              {
-                path: "/management/buyer-gg-wise-cfmd-qty",
-                element: <BuyerGgWiseCfmdQtyPage />,
               },
               {
                 path: "/management/bwsl-disl-prod-summery",
@@ -367,38 +357,6 @@ export const router = createBrowserRouter([
               {
                 path: "/management/booking-cfmd-balance",
                 element: <InitialBookingCfmdBalancePage />,
-              },
-              {
-                path: "/reports",
-                element: <Navigate to="/management" replace />,
-              },
-              {
-                path: "/reports/po-tracker",
-                element: <Navigate to="/management/po-tracker" replace />,
-              },
-              {
-                path: "/reports/buyer-gg-wise-pre-booking",
-                element: <Navigate to="/management/buyer-gg-wise-pre-booking" replace />,
-              },
-              {
-                path: "/reports/order-booking-summary",
-                element: <Navigate to="/management/order-booking-summary" replace />,
-              },
-              {
-                path: "/reports/buyer-gg-wise-cfmd-qty",
-                element: <Navigate to="/management/buyer-gg-wise-cfmd-qty" replace />,
-              },
-              {
-                path: "/reports/bwsl-disl-prod-summery",
-                element: <Navigate to="/management/bwsl-disl-prod-summery" replace />,
-              },
-              {
-                path: "/reports/month-wise-confirmed-qty",
-                element: <Navigate to="/management/month-wise-confirmed-qty" replace />,
-              },
-              {
-                path: "/reports/booking-cfmd-balance",
-                element: <Navigate to="/management/booking-cfmd-balance" replace />,
               },
             ],
           },
@@ -415,6 +373,9 @@ export const router = createBrowserRouter([
     element: <NotFoundPage />,
   },
 ])
+
+
+
 
 
 

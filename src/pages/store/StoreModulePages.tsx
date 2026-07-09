@@ -530,25 +530,27 @@ export function StoreInspectionPage() {
     )
     const approvedQty = values.result === "Pass" ? matchedReceipt.quantity : 0
     const rejectedQty = values.result === "Fail" ? matchedReceipt.quantity : 0
+    const previousRejectedQty =
+      editingReport?.result === "Fail" ? editingReport.rejectedQty : 0
 
     const nextRecord: StoreInspectionReport = editingReport
       ? {
-          ...editingReport,
-          ...values,
-          buyer: resolvedBuyer,
-          reportFileName: reportFileName || undefined,
-          approvedQty,
-          rejectedQty,
-        }
+        ...editingReport,
+        ...values,
+        buyer: resolvedBuyer,
+        reportFileName: reportFileName || undefined,
+        approvedQty,
+        rejectedQty,
+      }
       : {
-          id: createInspectionReportId(),
-          ...values,
-          buyer: resolvedBuyer,
-          reportFileName: reportFileName || undefined,
-          approvedQty,
-          rejectedQty,
-          createdAt: new Date().toISOString(),
-        }
+        id: createInspectionReportId(),
+        ...values,
+        buyer: resolvedBuyer,
+        reportFileName: reportFileName || undefined,
+        approvedQty,
+        rejectedQty,
+        createdAt: new Date().toISOString(),
+      }
 
     const nextReports = editingReport
       ? reports.map((report) => (report.id === editingReport.id ? nextRecord : report))
@@ -578,7 +580,7 @@ export function StoreInspectionPage() {
       previousApprovedQty:
         editingReport?.result === "Pass" ? editingReport.approvedQty : 0,
       previousRejectedQty:
-        editingReport?.result === "Fail" ? editingReport.rejectedQty : 0,
+        previousRejectedQty,
     })
 
     const storeRecords = getStoredStoreControllerRecords()
@@ -596,11 +598,11 @@ export function StoreInspectionPage() {
       stockBalance:
         values.result === "Fail"
           ? Math.max(
-              0,
-              (existingStoreRecord?.stockBalance ?? 0) -
-                nextRejectedQty +
-                previousRejectedQty
-            )
+            0,
+            (existingStoreRecord?.stockBalance ?? 0) -
+            rejectedQty +
+            previousRejectedQty
+          )
           : existingStoreRecord?.stockBalance,
       remarks: values.remarks,
     })
@@ -616,11 +618,11 @@ export function StoreInspectionPage() {
       stockBalance:
         values.result === "Fail"
           ? Math.max(
-              0,
-              (existingStoreRecord?.stockBalance ?? 0) -
-                nextRejectedQty +
-                previousRejectedQty
-            )
+            0,
+            (existingStoreRecord?.stockBalance ?? 0) -
+            rejectedQty +
+            previousRejectedQty
+          )
           : existingStoreRecord?.stockBalance,
       remarks: values.remarks,
     })
@@ -762,25 +764,25 @@ export function StoreInspectionPage() {
 
                     return (
                       <>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl"
-                    onClick={() => setViewingReport(row as StoreInspectionReport)}
-                  >
-                    <Eye className="size-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl"
-                    onClick={() => openEditForm(row as StoreInspectionReport)}
-                    disabled={isReadOnly}
-                  >
-                    <Pencil className="size-3.5" />
-                  </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl"
+                          onClick={() => setViewingReport(row as StoreInspectionReport)}
+                        >
+                          <Eye className="size-3.5" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl"
+                          onClick={() => openEditForm(row as StoreInspectionReport)}
+                          disabled={isReadOnly}
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
                       </>
                     )
                   })()}
@@ -1176,30 +1178,30 @@ export function StoreInventoryPage() {
 
     const nextRecord: StoreInventoryRecord = editingRecord
       ? {
-          ...editingRecord,
-          itemName,
-          itemCode: values.itemCode.trim() || undefined,
-          supplier,
-          lotNo,
-          availableQty,
-          reservedQty,
-          issuedQty,
-          currentStock: computeCurrentStock({ availableQty, reservedQty, issuedQty }),
-          lastUpdated: values.lastUpdated,
-        }
+        ...editingRecord,
+        itemName,
+        itemCode: values.itemCode.trim() || undefined,
+        supplier,
+        lotNo,
+        availableQty,
+        reservedQty,
+        issuedQty,
+        currentStock: computeCurrentStock({ availableQty, reservedQty, issuedQty }),
+        lastUpdated: values.lastUpdated,
+      }
       : {
-          id: createInventoryRecordId(),
-          itemName,
-          itemCode: values.itemCode.trim() || undefined,
-          supplier,
-          lotNo,
-          availableQty,
-          reservedQty,
-          issuedQty,
-          currentStock: computeCurrentStock({ availableQty, reservedQty, issuedQty }),
-          lastUpdated: values.lastUpdated,
-          source: "manual",
-        }
+        id: createInventoryRecordId(),
+        itemName,
+        itemCode: values.itemCode.trim() || undefined,
+        supplier,
+        lotNo,
+        availableQty,
+        reservedQty,
+        issuedQty,
+        currentStock: computeCurrentStock({ availableQty, reservedQty, issuedQty }),
+        lastUpdated: values.lastUpdated,
+        source: "manual",
+      }
 
     const nextInventoryRecords = editingRecord
       ? inventoryRecords.map((record) => (record.id === editingRecord.id ? nextRecord : record))
@@ -1641,5 +1643,7 @@ export function StoreAccessoriesReceivingReportPage() {
     </div>
   )
 }
+
+
 
 
