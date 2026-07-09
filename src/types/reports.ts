@@ -101,4 +101,46 @@ export type MonthlyConfirmedQtyReport = {
   updatedOn: string
   highlightNote: string
   rows: MonthlyConfirmedQtyRow[]
+  footer?: {
+    slotWiseTitle?: string
+    slotWiseRows: MonthlyConfirmedQtySlotWiseRow[]
+    slotWiseTotals?: {
+      totalQty?: string
+      totalMin?: string
+    }
+    capacityRows: MonthlyConfirmedQtyCapacityRow[]
+    preBookingLeftRows?: MonthlyConfirmedQtyPreBookingLeftRow[]
+  }
+}
+
+export type MonthlyConfirmedQtySlotWiseRow = {
+  gg: string
+  firstSlotCapacity: string
+  firstSlotConfirmedMinute: string
+  firstLotReceived: string
+  secondSlotCapacity: string
+  secondSlotConfirmedMinute: string
+  secondLotReceived: string
+  thirdSlotCapacity: string
+  thirdSlotConfirmedMinute: string
+  thirdLotReceived: string
+}
+
+export type MonthlyConfirmedQtyCapacityRow = {
+  gg: string
+  qtyCapacity: string
+  orderReceivedQty: string
+  combinedOrderReceivedQty?: string
+  totalOrdersMinute: string
+  monthlyCapacity: string
+  balanceCapacity: string
+  groupLabel?: string
+  rowSpan?: number
+  hideCombinedOrderQty?: boolean
+  hideGroupedSummaryCells?: boolean
+}
+
+export type MonthlyConfirmedQtyPreBookingLeftRow = {
+  label: string
+  qty: string
 }

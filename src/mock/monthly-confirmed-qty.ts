@@ -1,6 +1,13 @@
-import type { MonthlyConfirmedQtyReport } from "@/types/reports"
+import type {
+  MonthlyConfirmedQtyCapacityRow,
+  MonthlyConfirmedQtyPreBookingLeftRow,
+  MonthlyConfirmedQtyReport,
+  MonthlyConfirmedQtyRow,
+  MonthlyConfirmedQtySlotWiseRow,
+} from "@/types/reports"
 
-export const monthlyConfirmedQtyReports: MonthlyConfirmedQtyReport[] = [
+
+const baseMonthlyConfirmedQtyReports: MonthlyConfirmedQtyReport[] = [
   {
     value: "january-2026",
     label: "January 2026",
@@ -318,6 +325,143 @@ export const monthlyConfirmedQtyReports: MonthlyConfirmedQtyReport[] = [
         unit: "",
       },
     ],
+    footer: {
+      slotWiseTitle: "SLOT WISE CFMD ORDER QTY + TOTAL MINUTES (PER SMPL)",
+      slotWiseRows: [
+        {
+          gg: "3",
+          firstSlotCapacity: "308880 MIN",
+          firstSlotConfirmedMinute: "0 MIN",
+          firstLotReceived: "0 PCS",
+          secondSlotCapacity: "360360 MIN",
+          secondSlotConfirmedMinute: "0 MIN",
+          secondLotReceived: "0 PCS",
+          thirdSlotCapacity: "360360 MIN",
+          thirdSlotConfirmedMinute: "0 MIN",
+          thirdLotReceived: "0 PCS",
+        },
+        {
+          gg: "5",
+          firstSlotCapacity: "7670520 MIN",
+          firstSlotConfirmedMinute: "2861960 MIN",
+          firstLotReceived: "59091 PCS",
+          secondSlotCapacity: "8948940 MIN",
+          secondSlotConfirmedMinute: "2817491 MIN",
+          secondLotReceived: "57582 PCS",
+          thirdSlotCapacity: "8948940 MIN",
+          thirdSlotConfirmedMinute: "2985303 MIN",
+          thirdLotReceived: "60735 PCS",
+        },
+        {
+          gg: "9",
+          firstSlotCapacity: "803094 MIN",
+          firstSlotConfirmedMinute: "281960 MIN",
+          firstLotReceived: "4028 PCS",
+          secondSlotCapacity: "936943 MIN",
+          secondSlotConfirmedMinute: "1657152 MIN",
+          secondLotReceived: "25086 PCS",
+          thirdSlotCapacity: "936943 MIN",
+          thirdSlotConfirmedMinute: "215452 MIN",
+          thirdLotReceived: "4948 PCS",
+        },
+        {
+          gg: "12",
+          firstSlotCapacity: "14702688 MIN",
+          firstSlotConfirmedMinute: "6587561 MIN",
+          firstLotReceived: "98868 PCS",
+          secondSlotCapacity: "17153136 MIN",
+          secondSlotConfirmedMinute: "22072361 MIN",
+          secondLotReceived: "321317 PCS",
+          thirdSlotCapacity: "17153136 MIN",
+          thirdSlotConfirmedMinute: "11052468 MIN",
+          thirdLotReceived: "162304 PCS",
+        },
+        {
+          gg: "G.T",
+          firstSlotCapacity: "23485182 MIN",
+          firstSlotConfirmedMinute: "9731481 MIN",
+          firstLotReceived: "161987 PCS",
+          secondSlotCapacity: "27399379 MIN",
+          secondSlotConfirmedMinute: "26547004 MIN",
+          secondLotReceived: "403985 PCS",
+          thirdSlotCapacity: "27399379 MIN",
+          thirdSlotConfirmedMinute: "14253223 MIN",
+          thirdLotReceived: "227987 PCS",
+        },
+      ],
+      slotWiseTotals: {
+        totalQty: "793959 PCS",
+        totalMin: "50531708 MIN",
+      },
+      capacityRows: [
+        {
+          gg: "3",
+          qtyCapacity: "25740 Pcs",
+          orderReceivedQty: "0 Pcs",
+          totalOrdersMinute: "0 MIN",
+          monthlyCapacity: "1029600 MIN",
+          balanceCapacity: "-1029600 MIN",
+        },
+        {
+          gg: "5",
+          qtyCapacity: "589914 Pcs",
+          orderReceivedQty: "39605 Pcs",
+          totalOrdersMinute: "8664754 MIN",
+          monthlyCapacity: "25568400 MIN",
+          balanceCapacity: "-16903646 MIN",
+        },
+        {
+          gg: "7",
+          qtyCapacity: "0 Pcs",
+          orderReceivedQty: "137803 Pcs",
+          totalOrdersMinute: "0 MIN",
+          monthlyCapacity: "0 MIN",
+          balanceCapacity: "0 MIN",
+        },
+        {
+          gg: "9",
+          qtyCapacity: "55770 Pcs",
+          orderReceivedQty: "34062 Pcs",
+          totalOrdersMinute: "2154564 MIN",
+          monthlyCapacity: "2676960 MIN",
+          balanceCapacity: "-522396 MIN",
+        },
+        {
+          gg: "12",
+          qtyCapacity: "772304 Pcs",
+          orderReceivedQty: "582489 Pcs",
+          totalOrdersMinute: "39712390 MIN",
+          monthlyCapacity: "49008960 MIN",
+          balanceCapacity: "-9286570 MIN",
+        },
+        {
+          gg: "G.T",
+          qtyCapacity: "1443728 Pcs",
+          orderReceivedQty: "793959 PCS",
+          totalOrdersMinute: "50531708 MIN",
+          monthlyCapacity: "78283920 MIN",
+          balanceCapacity: "-27752212 MIN",
+        },
+      ],
+      preBookingLeftRows: [
+        {
+          label: "FIX+MUL",
+          qty: "MUL 0 Pcs",
+        },
+        {
+          label: "TTL CFMD QTY",
+          qty: "793959 PCS",
+        },
+        {
+          label: "3/5/7 GG",
+          qty: "177408 Pcs",
+        },
+        {
+          label: "9/12 GG",
+          qty: "616551 Pcs",
+        },
+      ],
+    },
   },
   {
     value: "february-2026",
@@ -6949,3 +7093,308 @@ export const monthlyConfirmedQtyReports: MonthlyConfirmedQtyReport[] = [
     ],
   },
 ]
+
+const monthlyConfirmedQtyCapacityConfig: Record<string, { qtyCapacity: number; monthlyCapacity: number }> = {
+  "3": { qtyCapacity: 25740, monthlyCapacity: 1029600 },
+  "5": { qtyCapacity: 589914, monthlyCapacity: 25568400 },
+  "9": { qtyCapacity: 55770, monthlyCapacity: 2676960 },
+  "12": { qtyCapacity: 772304, monthlyCapacity: 49008960 },
+}
+
+function parseConfirmedQtyValue(value: string, suffix: string) {
+  return Number(value.replace(/,/g, "").replace(suffix, "").trim()) || 0
+}
+
+function formatConfirmedQtyPcs(value: number) {
+  return `${Math.round(value).toLocaleString("en-US")} PCS`
+}
+
+function formatConfirmedQtyMin(value: number) {
+  return `${Math.round(value).toLocaleString("en-US")} MIN`
+}
+
+function getInspectionDay(value: string) {
+  const match = value.match(/^(\d{1,2})-/)
+  return match ? Number(match[1]) : null
+}
+
+function getSlotKey(day: number | null) {
+  if (!day) {
+    return "first"
+  }
+
+  if (day <= 10) {
+    return "first"
+  }
+
+  if (day <= 20) {
+    return "second"
+  }
+
+  return "third"
+}
+
+function buildEmptySlotWiseRow(gg: string): MonthlyConfirmedQtySlotWiseRow {
+  return {
+    gg,
+    firstSlotCapacity: "0 MIN",
+    firstSlotConfirmedMinute: "0 MIN",
+    firstLotReceived: "0 PCS",
+    secondSlotCapacity: "0 MIN",
+    secondSlotConfirmedMinute: "0 MIN",
+    secondLotReceived: "0 PCS",
+    thirdSlotCapacity: "0 MIN",
+    thirdSlotConfirmedMinute: "0 MIN",
+    thirdLotReceived: "0 PCS",
+  }
+}
+
+function buildComputedMonthlyFooter(rows: MonthlyConfirmedQtyRow[]): NonNullable<MonthlyConfirmedQtyReport["footer"]> {
+  const numericGgs = Array.from(
+    new Set(
+      rows
+        .map((row) => row.gg.trim())
+        .filter((gg) => /^\d+$/.test(gg))
+    )
+  ).sort((left, right) => Number(left) - Number(right))
+
+  const qtyByGg = new Map<string, number>()
+  const minByGg = new Map<string, number>()
+  const slotQtyByGg = new Map<string, { first: number; second: number; third: number }>()
+  const slotMinByGg = new Map<string, { first: number; second: number; third: number }>()
+
+  rows.forEach((row) => {
+    const gg = row.gg.trim()
+    if (!/^\d+$/.test(gg)) {
+      return
+    }
+
+    const orderQty = parseConfirmedQtyValue(row.orderQty, "Pcs")
+    const totalMin = parseConfirmedQtyValue(row.totalMinPerOrdStyle, "MIN")
+    const slotKey = getSlotKey(getInspectionDay(row.proposedInspectionDate))
+
+    qtyByGg.set(gg, (qtyByGg.get(gg) ?? 0) + orderQty)
+    minByGg.set(gg, (minByGg.get(gg) ?? 0) + totalMin)
+
+    const qtySlots = slotQtyByGg.get(gg) ?? { first: 0, second: 0, third: 0 }
+    qtySlots[slotKey] += orderQty
+    slotQtyByGg.set(gg, qtySlots)
+
+    const minSlots = slotMinByGg.get(gg) ?? { first: 0, second: 0, third: 0 }
+    minSlots[slotKey] += totalMin
+    slotMinByGg.set(gg, minSlots)
+  })
+
+  const slotWiseRows = numericGgs.map((gg) => {
+    const config = monthlyConfirmedQtyCapacityConfig[gg]
+    const qtySlots = slotQtyByGg.get(gg) ?? { first: 0, second: 0, third: 0 }
+    const minSlots = slotMinByGg.get(gg) ?? { first: 0, second: 0, third: 0 }
+
+    if (!config) {
+      const row = buildEmptySlotWiseRow(gg)
+      row.firstSlotConfirmedMinute = formatConfirmedQtyMin(minSlots.first)
+      row.firstLotReceived = formatConfirmedQtyPcs(qtySlots.first)
+      row.secondSlotConfirmedMinute = formatConfirmedQtyMin(minSlots.second)
+      row.secondLotReceived = formatConfirmedQtyPcs(qtySlots.second)
+      row.thirdSlotConfirmedMinute = formatConfirmedQtyMin(minSlots.third)
+      row.thirdLotReceived = formatConfirmedQtyPcs(qtySlots.third)
+      return row
+    }
+
+    return {
+      gg,
+      firstSlotCapacity: formatConfirmedQtyMin(config.monthlyCapacity * 0.3),
+      firstSlotConfirmedMinute: formatConfirmedQtyMin(minSlots.first),
+      firstLotReceived: formatConfirmedQtyPcs(qtySlots.first),
+      secondSlotCapacity: formatConfirmedQtyMin(config.monthlyCapacity * 0.35),
+      secondSlotConfirmedMinute: formatConfirmedQtyMin(minSlots.second),
+      secondLotReceived: formatConfirmedQtyPcs(qtySlots.second),
+      thirdSlotCapacity: formatConfirmedQtyMin(config.monthlyCapacity * 0.35),
+      thirdSlotConfirmedMinute: formatConfirmedQtyMin(minSlots.third),
+      thirdLotReceived: formatConfirmedQtyPcs(qtySlots.third),
+    }
+  })
+
+  const totalQty = Array.from(qtyByGg.values()).reduce((sum, value) => sum + value, 0)
+  const totalMin = Array.from(minByGg.values()).reduce((sum, value) => sum + value, 0)
+  const configuredQtyCapacity = numericGgs.reduce(
+    (sum, gg) => sum + (monthlyConfirmedQtyCapacityConfig[gg]?.qtyCapacity ?? 0),
+    0
+  )
+  const configuredMonthlyCapacity = numericGgs.reduce(
+    (sum, gg) => sum + (monthlyConfirmedQtyCapacityConfig[gg]?.monthlyCapacity ?? 0),
+    0
+  )
+
+  if (numericGgs.length > 0) {
+    slotWiseRows.push({
+      gg: "G.T",
+      firstSlotCapacity: formatConfirmedQtyMin(
+        slotWiseRows.reduce(
+          (sum, row) => sum + parseConfirmedQtyValue(row.firstSlotCapacity, "MIN"),
+          0
+        )
+      ),
+      firstSlotConfirmedMinute: formatConfirmedQtyMin(
+        slotWiseRows.reduce(
+          (sum, row) => sum + parseConfirmedQtyValue(row.firstSlotConfirmedMinute, "MIN"),
+          0
+        )
+      ),
+      firstLotReceived: formatConfirmedQtyPcs(
+        slotWiseRows.reduce(
+          (sum, row) => sum + parseConfirmedQtyValue(row.firstLotReceived, "PCS"),
+          0
+        )
+      ),
+      secondSlotCapacity: formatConfirmedQtyMin(
+        slotWiseRows.reduce(
+          (sum, row) => sum + parseConfirmedQtyValue(row.secondSlotCapacity, "MIN"),
+          0
+        )
+      ),
+      secondSlotConfirmedMinute: formatConfirmedQtyMin(
+        slotWiseRows.reduce(
+          (sum, row) => sum + parseConfirmedQtyValue(row.secondSlotConfirmedMinute, "MIN"),
+          0
+        )
+      ),
+      secondLotReceived: formatConfirmedQtyPcs(
+        slotWiseRows.reduce(
+          (sum, row) => sum + parseConfirmedQtyValue(row.secondLotReceived, "PCS"),
+          0
+        )
+      ),
+      thirdSlotCapacity: formatConfirmedQtyMin(
+        slotWiseRows.reduce(
+          (sum, row) => sum + parseConfirmedQtyValue(row.thirdSlotCapacity, "MIN"),
+          0
+        )
+      ),
+      thirdSlotConfirmedMinute: formatConfirmedQtyMin(
+        slotWiseRows.reduce(
+          (sum, row) => sum + parseConfirmedQtyValue(row.thirdSlotConfirmedMinute, "MIN"),
+          0
+        )
+      ),
+      thirdLotReceived: formatConfirmedQtyPcs(
+        slotWiseRows.reduce(
+          (sum, row) => sum + parseConfirmedQtyValue(row.thirdLotReceived, "PCS"),
+          0
+        )
+      ),
+    })
+  }
+
+  const capacityRows: MonthlyConfirmedQtyCapacityRow[] = numericGgs.map((gg) => {
+    const config = monthlyConfirmedQtyCapacityConfig[gg]
+    const totalGgQty = qtyByGg.get(gg) ?? 0
+    const totalGgMin = minByGg.get(gg) ?? 0
+
+    return {
+      gg,
+      qtyCapacity: config ? `${config.qtyCapacity.toLocaleString("en-US")} Pcs` : "-",
+      orderReceivedQty: formatConfirmedQtyPcs(totalGgQty),
+      totalOrdersMinute: formatConfirmedQtyMin(totalGgMin),
+      monthlyCapacity: config ? formatConfirmedQtyMin(config.monthlyCapacity) : "-",
+      balanceCapacity: config ? formatConfirmedQtyMin(totalGgMin - config.monthlyCapacity) : "-",
+    }
+  })
+
+  if (numericGgs.length > 0) {
+    capacityRows.push({
+      gg: "G.T",
+      qtyCapacity: configuredQtyCapacity > 0 ? `${configuredQtyCapacity.toLocaleString("en-US")} Pcs` : "-",
+      orderReceivedQty: formatConfirmedQtyPcs(totalQty),
+      totalOrdersMinute: formatConfirmedQtyMin(totalMin),
+      monthlyCapacity: configuredMonthlyCapacity > 0 ? formatConfirmedQtyMin(configuredMonthlyCapacity) : "-",
+      balanceCapacity: configuredMonthlyCapacity > 0 ? formatConfirmedQtyMin(totalMin - configuredMonthlyCapacity) : "-",
+    })
+  }
+
+  const preBookingLeftRows: MonthlyConfirmedQtyPreBookingLeftRow[] = [
+    {
+      label: "3/5/7 GG",
+      qty: formatConfirmedQtyPcs(
+        (qtyByGg.get("3") ?? 0) + (qtyByGg.get("5") ?? 0) + (qtyByGg.get("7") ?? 0)
+      ),
+    },
+    {
+      label: "9/12 GG",
+      qty: formatConfirmedQtyPcs((qtyByGg.get("9") ?? 0) + (qtyByGg.get("12") ?? 0)),
+    },
+    {
+      label: "TTL CFMD QTY",
+      qty: formatConfirmedQtyPcs(totalQty),
+    },
+  ]
+
+  return {
+    slotWiseTitle: "SLOT WISE CFMD ORDER QTY + TOTAL MINUTES (PER SMPL)",
+    slotWiseRows,
+    slotWiseTotals: {
+      totalQty: formatConfirmedQtyPcs(totalQty),
+      totalMin: formatConfirmedQtyMin(totalMin),
+    },
+    capacityRows,
+    preBookingLeftRows,
+  }
+}
+
+function applyMultiGroupToCapacityRows(
+  rows: MonthlyConfirmedQtyRow[],
+  capacityRows: MonthlyConfirmedQtyCapacityRow[]
+) {
+  const nextRows = capacityRows.map((row) => ({ ...row }))
+  const rowFive = nextRows.find((row) => row.gg === "5")
+  const rowSeven = nextRows.find((row) => row.gg === "7")
+
+  if (!rowFive || !rowSeven) {
+    return nextRows
+  }
+
+  const fiveQty = rows
+    .filter((row) => row.gg.trim() === "5")
+    .reduce((sum, row) => sum + parseConfirmedQtyValue(row.orderQty, "Pcs"), 0)
+  const sevenQty = rows
+    .filter((row) => row.gg.trim() === "7")
+    .reduce((sum, row) => sum + parseConfirmedQtyValue(row.orderQty, "Pcs"), 0)
+  const fiveMin = rows
+    .filter((row) => row.gg.trim() === "5")
+    .reduce((sum, row) => sum + parseConfirmedQtyValue(row.totalMinPerOrdStyle, "MIN"), 0)
+  const sevenMin = rows
+    .filter((row) => row.gg.trim() === "7")
+    .reduce((sum, row) => sum + parseConfirmedQtyValue(row.totalMinPerOrdStyle, "MIN"), 0)
+
+  const combinedQty = fiveQty + sevenQty
+  const combinedMin = fiveMin + sevenMin
+  const multiCapacity = monthlyConfirmedQtyCapacityConfig["5"]?.monthlyCapacity ?? 0
+
+  rowFive.combinedOrderReceivedQty = formatConfirmedQtyPcs(combinedQty)
+  rowFive.totalOrdersMinute = formatConfirmedQtyMin(combinedMin)
+  rowFive.monthlyCapacity =
+    multiCapacity > 0 ? formatConfirmedQtyMin(multiCapacity) : rowFive.monthlyCapacity
+  rowFive.balanceCapacity =
+    multiCapacity > 0 ? formatConfirmedQtyMin(combinedMin - multiCapacity) : rowFive.balanceCapacity
+  rowFive.groupLabel = "MULTI"
+  rowFive.rowSpan = 2
+
+  rowSeven.hideCombinedOrderQty = true
+  rowSeven.hideGroupedSummaryCells = true
+
+  return nextRows
+}
+
+export const monthlyConfirmedQtyReports: MonthlyConfirmedQtyReport[] = baseMonthlyConfirmedQtyReports.map(
+  (report) => {
+    const footer = report.footer ?? buildComputedMonthlyFooter(report.rows)
+
+    return {
+      ...report,
+      footer: {
+        ...footer,
+        capacityRows: applyMultiGroupToCapacityRows(report.rows, footer.capacityRows),
+      },
+    }
+  }
+)
