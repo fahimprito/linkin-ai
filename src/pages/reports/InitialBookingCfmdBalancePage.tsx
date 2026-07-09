@@ -141,6 +141,7 @@ function getSummarySectionTitleClassName(title: string) {
   }
 }
 
+
 function SummarySectionTable({ section }: { section: BookingComparisonSummarySection }) {
   return (
     <section className="space-y-3">
