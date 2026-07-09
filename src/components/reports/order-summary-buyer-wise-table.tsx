@@ -1,12 +1,11 @@
 import { Fragment } from "react"
 
 import {
-  orderSummaryBuyerWiseFooterRows,
   reportMonths,
   type BuyerWiseOrderSummaryFooterRow,
   type BuyerWiseOrderSummaryRow,
   type ReportMonth,
-} from "@/mock/order-summary"
+} from "@/types/order-summary"
 
 function isHighlightMonth(month: ReportMonth) {
   return month === "Jun" || month === "July"
@@ -14,6 +13,7 @@ function isHighlightMonth(month: ReportMonth) {
 
 type OrderSummaryBuyerWiseTableProps = {
   rows: BuyerWiseOrderSummaryRow[]
+  footerRows: BuyerWiseOrderSummaryFooterRow[]
 }
 
 function getFooterBorderClassName(label: string) {
@@ -55,16 +55,13 @@ function renderFooterRow(row: BuyerWiseOrderSummaryFooterRow) {
   )
 }
 
-export function OrderSummaryBuyerWiseTable({ rows }: OrderSummaryBuyerWiseTableProps) {
+export function OrderSummaryBuyerWiseTable({ rows, footerRows }: OrderSummaryBuyerWiseTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
       <div className="border-b border-border/80 bg-slate-50 px-4 py-4 text-center dark:bg-slate-900/80">
         <h2 className="text-lg font-bold tracking-wide text-slate-900 dark:text-slate-100">
-          Buyer wise (confirmed+pre-booked) qty/min per month
+         Buyer wise (confirmed+pre-booked) qty/min per month
         </h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Demo data for now. This table will later calculate automatically from confirmed and pre-booked tables.
-        </p>
       </div>
 
       <div className="overflow-x-auto">
@@ -100,7 +97,7 @@ export function OrderSummaryBuyerWiseTable({ rows }: OrderSummaryBuyerWiseTableP
           <tbody>
             {rows.map((row, index) => (
               <Fragment key={row.serial}>
-                <tr className={index % 2 === 0 ? "bg-background/80" : "bg-card"}>
+                <tr key={`${row.serial}-qty`} className={index % 2 === 0 ? "bg-background/80" : "bg-card"}>
                   <td rowSpan={2} className="border-r border-b-[3px] border-b-slate-400/90 border-border/70 px-1.5 py-2 align-top text-center font-semibold text-violet-700 dark:border-b-slate-200/80 dark:text-violet-300">
                     {row.serial}
                   </td>
@@ -122,7 +119,7 @@ export function OrderSummaryBuyerWiseTable({ rows }: OrderSummaryBuyerWiseTableP
                     {row.yearlyAverage}
                   </td>
                 </tr>
-                <tr className={index % 2 === 0 ? "bg-background/80" : "bg-card"}>
+                <tr key={`${row.serial}-min`} className={index % 2 === 0 ? "bg-background/80" : "bg-card"}>
                   {reportMonths.map((month) => (
                     <td
                       key={`${row.serial}-${month}-min`}
@@ -137,10 +134,12 @@ export function OrderSummaryBuyerWiseTable({ rows }: OrderSummaryBuyerWiseTableP
                 </tr>
               </Fragment>
             ))}
-            {orderSummaryBuyerWiseFooterRows.map(renderFooterRow)}
+            {footerRows.map(renderFooterRow)}
           </tbody>
         </table>
       </div>
     </div>
   )
 }
+
+

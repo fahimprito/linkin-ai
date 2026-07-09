@@ -7,7 +7,10 @@ import type {
 } from "@/types/reports"
 
 
-const baseMonthlyConfirmedQtyReports: MonthlyConfirmedQtyReport[] = [
+const MONTHLY_CONFIRMED_QTY_PREVIEW_LIMIT = 12
+
+export const baseMonthlyConfirmedQtyReports: MonthlyConfirmedQtyReport[] = [
+
   {
     value: "january-2026",
     label: "January 2026",
@@ -7094,7 +7097,7 @@ const baseMonthlyConfirmedQtyReports: MonthlyConfirmedQtyReport[] = [
   },
 ]
 
-const monthlyConfirmedQtyCapacityConfig: Record<string, { qtyCapacity: number; monthlyCapacity: number }> = {
+export const monthlyConfirmedQtyCapacityConfig: Record<string, { qtyCapacity: number; monthlyCapacity: number }> = {
   "3": { qtyCapacity: 25740, monthlyCapacity: 1029600 },
   "5": { qtyCapacity: 589914, monthlyCapacity: 25568400 },
   "9": { qtyCapacity: 55770, monthlyCapacity: 2676960 },
@@ -7387,14 +7390,18 @@ function applyMultiGroupToCapacityRows(
 
 export const monthlyConfirmedQtyReports: MonthlyConfirmedQtyReport[] = baseMonthlyConfirmedQtyReports.map(
   (report) => {
-    const footer = report.footer ?? buildComputedMonthlyFooter(report.rows)
+    const previewRows = report.rows.slice(0, MONTHLY_CONFIRMED_QTY_PREVIEW_LIMIT)
+    const footer = report.footer ?? buildComputedMonthlyFooter(previewRows)
 
     return {
       ...report,
+      rows: previewRows,
       footer: {
         ...footer,
-        capacityRows: applyMultiGroupToCapacityRows(report.rows, footer.capacityRows),
+        capacityRows: applyMultiGroupToCapacityRows(previewRows, footer.capacityRows),
       },
     }
   }
 )
+
+

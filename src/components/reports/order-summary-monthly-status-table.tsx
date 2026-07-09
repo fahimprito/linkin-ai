@@ -1,8 +1,7 @@
-import {
-  orderSummaryMonthlyStatusCapacities,
-  orderSummaryMonthlyStatusRows,
-  orderSummaryMonthlyStatusTotals,
-} from "@/mock/order-summary"
+import type {
+  OrderSummaryMonthlyStatusCapacityRow,
+  OrderSummaryMonthlyStatusRow,
+} from "@/types/order-summary"
 
 function getRowTextClassName(highlight?: boolean) {
   return highlight
@@ -17,9 +16,15 @@ type CapacityDisplay = {
   isGrandTotal?: boolean
 }
 
-function getCapacityDisplay(index: number): CapacityDisplay {
+type OrderSummaryMonthlyStatusTableProps = {
+  capacities: OrderSummaryMonthlyStatusCapacityRow[]
+  rows: OrderSummaryMonthlyStatusRow[]
+  totals: { totalQty: string; totalMin: string }
+}
+
+function getCapacityDisplay(capacities: OrderSummaryMonthlyStatusCapacityRow[], index: number): CapacityDisplay {
   if (index < 5) {
-    const capacity = orderSummaryMonthlyStatusCapacities[index]
+    const capacity = capacities[index]
 
     return {
       label: capacity?.label ?? "",
@@ -36,7 +41,7 @@ function getCapacityDisplay(index: number): CapacityDisplay {
     }
   }
 
-  const qtyCapacity = orderSummaryMonthlyStatusCapacities[index - 6]
+  const qtyCapacity = capacities[index - 6]
 
   return {
     label: qtyCapacity?.label ?? "",
@@ -45,7 +50,8 @@ function getCapacityDisplay(index: number): CapacityDisplay {
   }
 }
 
-export function OrderSummaryMonthlyStatusTable() {
+export function OrderSummaryMonthlyStatusTable({ capacities, rows, totals }: OrderSummaryMonthlyStatusTableProps) {
+  const totalQtyCapacity = capacities.find((capacity) => capacity.label === "G.T")?.qtyCapacity ?? ""
   return (
     <section className="w-full overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
       <div className="w-full border-b border-border/80 bg-slate-50 px-4 py-4 text-center dark:bg-slate-900/80">
@@ -91,8 +97,8 @@ export function OrderSummaryMonthlyStatusTable() {
             </tr>
           </thead>
           <tbody>
-            {orderSummaryMonthlyStatusRows.map((row, index) => {
-              const capacityDisplay = getCapacityDisplay(index)
+            {rows.map((row, index) => {
+              const capacityDisplay = getCapacityDisplay(capacities, index)
               const textClassName = getRowTextClassName(row.highlight)
 
               return (
@@ -138,7 +144,7 @@ export function OrderSummaryMonthlyStatusTable() {
                 G.T
               </td>
               <td className="border-r border-b-[3px] border-border/80 px-2 py-2 text-center font-bold italic text-slate-900 dark:text-slate-100">
-                1443728 Pcs
+                {totalQtyCapacity}
               </td>
               <td
                 colSpan={2}
@@ -147,10 +153,10 @@ export function OrderSummaryMonthlyStatusTable() {
                 TOTAL
               </td>
               <td className="border-r border-b-[3px] border-border/80 px-2 py-2 text-center font-bold italic text-slate-900 dark:text-slate-100">
-                {orderSummaryMonthlyStatusTotals.totalQty}
+                {totals.totalQty}
               </td>
               <td className="border-r border-b-[3px] border-border/80 px-2 py-2 text-center font-bold italic text-slate-900 dark:text-slate-100">
-                {orderSummaryMonthlyStatusTotals.totalMin}
+                {totals.totalMin}
               </td>
               <td className="border-b-[3px] border-border/80 px-2 py-2 text-center font-bold text-slate-900 dark:text-slate-100" />
             </tr>
@@ -160,3 +166,6 @@ export function OrderSummaryMonthlyStatusTable() {
     </section>
   )
 }
+
+
+

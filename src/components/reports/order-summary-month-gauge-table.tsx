@@ -2,7 +2,7 @@ import {
   reportMonths,
   type OrderSummaryMetricRow,
   type ReportMonth,
-} from "@/mock/order-summary"
+} from "@/types/order-summary"
 
 function isHighlightedMonth(row: OrderSummaryMetricRow, month: ReportMonth) {
   return row.highlightMonths?.includes(month)
@@ -55,9 +55,6 @@ export function OrderSummaryMonthGaugeTable({ rows }: OrderSummaryMonthGaugeTabl
             <h2 className="mt-1 text-xl font-black tracking-wide text-slate-950 dark:text-slate-100">
               Month/gauge wise qty + minutes (confirmed+pre-booked)
             </h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Demo data for now. This table will later calculate automatically from the confirmed and pre-booked reports.
-            </p>
           </div>
           <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
             <span className="rounded-full bg-sky-100 px-2.5 py-1 text-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
@@ -142,3 +139,4 @@ export function OrderSummaryMonthGaugeTable({ rows }: OrderSummaryMonthGaugeTabl
     </section>
   )
 }
+

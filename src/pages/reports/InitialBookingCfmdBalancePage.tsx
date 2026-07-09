@@ -3,7 +3,7 @@ import { Fragment, useMemo, useState } from "react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
-import { initialBookingCfmdBalanceReport } from "@/mock/booking-comparison"
+import { computedBookingComparisonReport } from "@/lib/unified-order-data"
 import type {
   BookingComparisonCategory,
   BookingComparisonMonthKey,
@@ -205,7 +205,7 @@ export function InitialBookingCfmdBalancePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeFilter, setActiveFilter] = useState("All Buyers")
 
-  const groupedRows = useMemo(() => buildGroups(initialBookingCfmdBalanceReport.rows), [])
+  const groupedRows = useMemo(() => buildGroups(computedBookingComparisonReport.rows), [])
 
   const filterOptions = useMemo(
     () => [
@@ -258,13 +258,13 @@ export function InitialBookingCfmdBalancePage() {
           Management Comparison Report
         </p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-          {initialBookingCfmdBalanceReport.title}
+          {computedBookingComparisonReport.title}
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          {initialBookingCfmdBalanceReport.dateRange}
+          {computedBookingComparisonReport.dateRange}
         </p>
         <p className="mt-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Updated: {initialBookingCfmdBalanceReport.updatedAt}
+          Updated: {computedBookingComparisonReport.updatedAt}
         </p>
       </div>
 
@@ -352,7 +352,7 @@ export function InitialBookingCfmdBalancePage() {
         />
       )}
 
-      {initialBookingCfmdBalanceReport.summarySections.map((section) => (
+      {computedBookingComparisonReport.summarySections.map((section) => (
         <Fragment key={section.title}>
           <SummarySectionTable section={section} />
         </Fragment>
@@ -360,6 +360,7 @@ export function InitialBookingCfmdBalancePage() {
     </div>
   )
 }
+
 
 
 
