@@ -17,11 +17,10 @@ import type { MerchandisePreBookingRecord } from "@/types/merchandise-pre-bookin
 
 const STORAGE_KEY = "linkin-ai-admin:merchandise-pre-booking"
 const ggOptions = ["3", "7", "9", "12"]
-const tableColumnCount = 9
+const tableColumnCount = 8
 
 type PreBookingFormValues = {
   buyerName: string
-  styleName: string
   gg: string
   orderQty: number
   inspectionDate: string
@@ -52,12 +51,6 @@ const formFields: ModalFormField[] = [
     name: "buyerName",
     label: "Buyer Name",
     placeholder: "BESTSELLER",
-  },
-  {
-    name: "styleName",
-    label: "Style Name",
-    placeholder: "Optional style name",
-    required: false,
   },
   {
     name: "gg",
@@ -197,7 +190,6 @@ function getStoredPreBookings() {
 function getDefaultFormValues(): PreBookingFormValues {
   return {
     buyerName: "",
-    styleName: "",
     gg: "3",
     orderQty: 0,
     inspectionDate: "",
@@ -208,7 +200,6 @@ function getDefaultFormValues(): PreBookingFormValues {
 function getFormValues(record: MerchandisePreBookingRecord): PreBookingFormValues {
   return {
     buyerName: record.buyerName,
-    styleName: record.styleName,
     gg: record.gg,
     orderQty: record.orderQty,
     inspectionDate: toInputDate(record.inspectionDate),
@@ -220,7 +211,6 @@ function buildRecord(values: PreBookingFormValues, existingId?: string): Merchan
   return {
     id: existingId ?? createPreBookingId(),
     buyerName: values.buyerName.trim(),
-    styleName: values.styleName.trim(),
     gg: values.gg.trim(),
     orderQty: Number(values.orderQty) || 0,
     inspectionDate: formatInspectionDate(values.inspectionDate),
@@ -329,7 +319,6 @@ export function MerchandisePreBookingPage() {
 
       return [
         record.buyerName,
-        record.styleName,
         record.gg,
         record.inspectionDate,
         record.remarks,
@@ -444,7 +433,7 @@ export function MerchandisePreBookingPage() {
         filters={["All GG", "3 GG", "7 GG", "9 GG", "12 GG"]}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
-        searchPlaceholder="Search buyer, style, GG, remarks, or inspection date"
+        searchPlaceholder="Search buyer, GG, remarks, or inspection date"
         searchValue={searchValue}
         onSearchChange={setSearchValue}
         compact
@@ -567,9 +556,6 @@ export function MerchandisePreBookingPage() {
                     <th className="border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
                       Buyer Name
                     </th>
-                    <th className="border-b border-r border-border/80 bg-sky-50 px-2 py-2 text-center font-semibold text-sky-700 dark:bg-sky-950/30 dark:text-sky-200">
-                      Style Name
-                    </th>
                     <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
                       GG
                     </th>
@@ -611,9 +597,6 @@ export function MerchandisePreBookingPage() {
                           </td>
                           <td className="border-r border-b border-border/70 px-2 py-2 font-medium text-slate-900 dark:text-slate-100">
                             {row.buyerName}
-                          </td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 font-medium text-slate-900 dark:text-slate-100">
-                            {row.styleName || "-"}
                           </td>
                           <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">
                             {row.gg}
@@ -659,7 +642,7 @@ export function MerchandisePreBookingPage() {
                         </tr>
                       ))}
                       <tr className="bg-slate-100 dark:bg-slate-900/80">
-                        <td className="border-r border-b-[3px] border-border/80 px-3 py-2 font-bold text-slate-900 dark:text-slate-100" colSpan={4}>
+                        <td className="border-r border-b-[3px] border-border/80 px-3 py-2 font-bold text-slate-900 dark:text-slate-100" colSpan={3}>
                           {section.gg} GG Summary
                         </td>
                         <td className="border-r border-b-[3px] border-border/80 px-2 py-2 text-center font-black text-slate-900 dark:text-slate-100">
@@ -736,5 +719,7 @@ export function MerchandisePreBookingPage() {
     </div>
   )
 }
+
+
 
 

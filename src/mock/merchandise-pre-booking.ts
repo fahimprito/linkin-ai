@@ -4,7 +4,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-1",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "3",
     orderQty: 8000,
     inspectionDate: "27-Jul-24",
@@ -14,7 +13,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-2",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "7",
     orderQty: 5000,
     inspectionDate: "6-Apr-24",
@@ -24,7 +22,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-3",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "7",
     orderQty: 140000,
     inspectionDate: "25-May-24",
@@ -34,7 +31,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-4",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "7",
     orderQty: 75000,
     inspectionDate: "1-Jun-24",
@@ -44,7 +40,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-5",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "7",
     orderQty: 30000,
     inspectionDate: "15-Jun-24",
@@ -54,7 +49,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-6",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "7",
     orderQty: 45000,
     inspectionDate: "29-Jun-24",
@@ -64,7 +58,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-7",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "7",
     orderQty: 30000,
     inspectionDate: "6-Jul-24",
@@ -74,7 +67,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-8",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "7",
     orderQty: 190000,
     inspectionDate: "27-Jul-24",
@@ -84,7 +76,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-9",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "7",
     orderQty: 50000,
     inspectionDate: "10-Aug-24",
@@ -94,7 +85,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-10",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "7",
     orderQty: 5000,
     inspectionDate: "17-Aug-24",
@@ -104,7 +94,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-11",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "9",
     orderQty: 5000,
     inspectionDate: "27-Apr-24",
@@ -114,7 +103,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-12",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "9",
     orderQty: 5000,
     inspectionDate: "25-May-24",
@@ -124,7 +112,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-13",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 20000,
     inspectionDate: "4-May-24",
@@ -134,7 +121,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-14",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 160000,
     inspectionDate: "25-May-24",
@@ -144,7 +130,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-15",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 50000,
     inspectionDate: "1-Jun-24",
@@ -154,7 +139,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-16",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 30000,
     inspectionDate: "8-Jun-24",
@@ -164,7 +148,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-17",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 10000,
     inspectionDate: "15-Jun-24",
@@ -174,7 +157,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-18",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 30000,
     inspectionDate: "29-Jun-24",
@@ -184,7 +166,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-19",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 65000,
     inspectionDate: "6-Jul-24",
@@ -194,7 +175,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-20",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 20000,
     inspectionDate: "20-Jul-24",
@@ -204,7 +184,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-21",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 245000,
     inspectionDate: "27-Jul-24",
@@ -214,7 +193,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-22",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 50000,
     inspectionDate: "10-Aug-24",
@@ -224,7 +202,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-23",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 75000,
     inspectionDate: "31-Aug-24",
@@ -234,7 +211,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-24",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 75000,
     inspectionDate: "14-Sep-24",
@@ -244,7 +220,6 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
   {
     id: "merch-pre-booking-25",
     buyerName: "BESTSELLER",
-    styleName: "",
     gg: "12",
     orderQty: 60000,
     inspectionDate: "28-Sep-24",
@@ -252,3 +227,4 @@ export const merchandisePreBookingMockData: MerchandisePreBookingRecord[] = [
     createdAt: "2024-09-28T00:00:00.000Z",
   },
 ]
+

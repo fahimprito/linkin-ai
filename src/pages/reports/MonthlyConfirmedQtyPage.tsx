@@ -6,6 +6,20 @@ import { monthlyConfirmedQtyReports } from "@/mock/monthly-confirmed-qty"
 import type { MonthlyConfirmedQtyRow } from "@/types/reports"
 
 const tableColumnCount = 26
+const monthOptions = [
+  { value: "january", label: "January" },
+  { value: "february", label: "February" },
+  { value: "march", label: "March" },
+  { value: "april", label: "April" },
+  { value: "may", label: "May" },
+  { value: "june", label: "June" },
+  { value: "july", label: "July" },
+  { value: "august", label: "August" },
+  { value: "september", label: "September" },
+  { value: "october", label: "October" },
+  { value: "november", label: "November" },
+  { value: "december", label: "December" },
+] as const
 
 type MonthlyConfirmedQtyGroup = {
   gg: string
@@ -29,6 +43,11 @@ function formatMin(value: number) {
 
 function isNumericGg(value: string) {
   return /^\d+$/.test(value.trim())
+}
+
+function getReportParts(value: string) {
+  const [month = "", year = ""] = value.split("-")
+  return { month, year }
 }
 
 function pushRowToGroup(group: MonthlyConfirmedQtyGroup, row: MonthlyConfirmedQtyRow) {
@@ -111,13 +130,24 @@ function getGroupedRows(rows: MonthlyConfirmedQtyRow[]) {
 }
 
 export function MonthlyConfirmedQtyPage() {
-  const [selectedMonth, setSelectedMonth] = useState(monthlyConfirmedQtyReports[0]?.value ?? "")
+  const initialReport = monthlyConfirmedQtyReports[0]
+  const initialParts = getReportParts(initialReport?.value ?? "")
+  const currentYear = new Date().getFullYear()
+
+  const [selectedMonth, setSelectedMonth] = useState(initialParts.month || monthOptions[0].value)
+  const [selectedYear, setSelectedYear] = useState(initialParts.year || String(currentYear))
+
+  const yearOptions = useMemo(
+    () => Array.from({ length: currentYear - 2000 + 1 }, (_, index) => String(2000 + index)),
+    [currentYear]
+  )
 
   const activeReport = useMemo(
     () =>
-      monthlyConfirmedQtyReports.find((report) => report.value === selectedMonth) ??
-      monthlyConfirmedQtyReports[0],
-    [selectedMonth]
+      monthlyConfirmedQtyReports.find(
+        (report) => report.value === `${selectedMonth}-${selectedYear}`
+      ) ?? null,
+    [selectedMonth, selectedYear]
   )
 
   const groupedRows = useMemo(
@@ -130,22 +160,47 @@ export function MonthlyConfirmedQtyPage() {
       <PageHeader
         title="Month Wise Confirmed Qty"
         actions={
-          <div className="flex items-center gap-2">
-            <label htmlFor="month-wise-confirmed-select" className="text-sm font-medium text-muted-foreground">
-              Select Month
-            </label>
-            <select
-              id="month-wise-confirmed-select"
-              value={selectedMonth}
-              onChange={(event) => setSelectedMonth(event.target.value)}
-              className="h-11 min-w-[11rem] cursor-pointer rounded-2xl border border-border/80 bg-card px-3 text-sm shadow-sm outline-none transition focus:border-primary"
-            >
-              {monthlyConfirmedQtyReports.map((report) => (
-                <option key={report.value} value={report.value}>
-                  {report.label}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="month-wise-confirmed-month"
+                className="text-sm font-medium text-muted-foreground"
+              >
+                Month
+              </label>
+              <select
+                id="month-wise-confirmed-month"
+                value={selectedMonth}
+                onChange={(event) => setSelectedMonth(event.target.value)}
+                className="h-11 min-w-[10rem] cursor-pointer rounded-2xl border border-border/80 bg-card px-3 text-sm shadow-sm outline-none transition focus:border-primary"
+              >
+                {monthOptions.map((month) => (
+                  <option key={month.value} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="month-wise-confirmed-year"
+                className="text-sm font-medium text-muted-foreground"
+              >
+                Year
+              </label>
+              <select
+                id="month-wise-confirmed-year"
+                value={selectedYear}
+                onChange={(event) => setSelectedYear(event.target.value)}
+                className="h-11 min-w-[8rem] cursor-pointer rounded-2xl border border-border/80 bg-card px-3 text-sm shadow-sm outline-none transition focus:border-primary"
+              >
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         }
       />
@@ -274,7 +329,7 @@ export function MonthlyConfirmedQtyPage() {
       ) : (
         <EmptyState
           title="No month report found"
-          description="Add a month dataset to start showing month-wise confirmed quantity tracking."
+          description={`No confirmed quantity report is available for ${selectedMonth.charAt(0).toUpperCase()}${selectedMonth.slice(1)} ${selectedYear}.`}
         />
       )}
     </div>
