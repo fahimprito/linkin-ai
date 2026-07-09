@@ -37,6 +37,7 @@ import {
   MerchandiseManagementReportPage,
 } from "@/pages/reports/ManagementPoDetailTrackerPage"
 import { MonthlyConfirmedQtyPage } from "@/pages/reports/MonthlyConfirmedQtyPage"
+import { InitialBookingCfmdBalancePage } from "@/pages/reports/InitialBookingCfmdBalancePage"
 import { OrderSummaryPage } from "@/pages/reports/OrderSummaryPage"
 import { ReportsPage } from "@/pages/reports/ReportsPage"
 import { DefaultRedirect } from "@/routes/default-redirect"
@@ -364,6 +365,10 @@ export const router = createBrowserRouter([
                 element: <MonthlyConfirmedQtyPage />,
               },
               {
+                path: "/management/booking-cfmd-balance",
+                element: <InitialBookingCfmdBalancePage />,
+              },
+              {
                 path: "/reports",
                 element: <Navigate to="/management" replace />,
               },
@@ -391,6 +396,10 @@ export const router = createBrowserRouter([
                 path: "/reports/month-wise-confirmed-qty",
                 element: <Navigate to="/management/month-wise-confirmed-qty" replace />,
               },
+              {
+                path: "/reports/booking-cfmd-balance",
+                element: <Navigate to="/management/booking-cfmd-balance" replace />,
+              },
             ],
           },
           {
@@ -406,6 +415,7 @@ export const router = createBrowserRouter([
     element: <NotFoundPage />,
   },
 ])
+
 
 
 

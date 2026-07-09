@@ -173,6 +173,11 @@ export const dashboardNavigation: NavigationItem[] = [
         to: "/management/month-wise-confirmed-qty",
         icon: CalendarDays,
       },
+      {
+        label: "Booking + CFMD + Balance",
+        to: "/management/booking-cfmd-balance",
+        icon: Boxes,
+      },
     ],
   },
 ]
@@ -246,5 +251,6 @@ export function getDefaultRoute(
 ) {
   return getNavigationForUser(userRole, permissions)[0]?.to ?? "/login"
 }
+
 
 
