@@ -7395,6 +7395,7 @@ export const monthlyConfirmedQtyReports: MonthlyConfirmedQtyReport[] = baseMonth
 
     return {
       ...report,
+      sourceSections: ["qty_intl", "order_summary"],
       rows: previewRows,
       footer: {
         ...footer,
@@ -7403,5 +7404,6 @@ export const monthlyConfirmedQtyReports: MonthlyConfirmedQtyReport[] = baseMonth
     }
   }
 )
+
 
 

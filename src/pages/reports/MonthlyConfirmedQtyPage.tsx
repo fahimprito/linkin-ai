@@ -2,24 +2,19 @@ import { Fragment, useMemo, useState } from "react"
 
 import { EmptyState } from "@/components/shared/empty-state"
 import { PageHeader } from "@/components/shared/page-header"
+import {
+  getMonthlyConfirmedQtyCapacityValue,
+  getMonthlyConfirmedQtyCellValue,
+  getMonthlyConfirmedQtySlotValue,
+  monthlyConfirmedQtyCapacityColumns,
+  monthlyConfirmedQtyMainTableColumns,
+  monthlyConfirmedQtyMonthOptions,
+  monthlyConfirmedQtySlotWiseColumns,
+} from "@/lib/monthly-confirmed-report-schema"
 import { monthlyConfirmedQtyReports } from "@/mock/monthly-confirmed-qty"
 import type { MonthlyConfirmedQtyRow } from "@/types/reports"
 
-const tableColumnCount = 26
-const monthOptions = [
-  { value: "january", label: "January" },
-  { value: "february", label: "February" },
-  { value: "march", label: "March" },
-  { value: "april", label: "April" },
-  { value: "may", label: "May" },
-  { value: "june", label: "June" },
-  { value: "july", label: "July" },
-  { value: "august", label: "August" },
-  { value: "september", label: "September" },
-  { value: "october", label: "October" },
-  { value: "november", label: "November" },
-  { value: "december", label: "December" },
-] as const
+const tableColumnCount = monthlyConfirmedQtyMainTableColumns.length
 
 type MonthlyConfirmedQtyGroup = {
   gg: string
@@ -129,12 +124,54 @@ function getGroupedRows(rows: MonthlyConfirmedQtyRow[]) {
   return groups
 }
 
+function getSlotHeaderClassName(index: number) {
+  if (index === 0) {
+    return "border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-bold"
+  }
+
+  if (index >= 1 && index <= 3) {
+    return "border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-bold text-cyan-700"
+  }
+
+  if (index >= 4 && index <= 6) {
+    return "border-b border-r border-border/80 bg-violet-50 px-2 py-2 text-center font-bold text-violet-700"
+  }
+
+  return index === monthlyConfirmedQtySlotWiseColumns.length - 1
+    ? "border-b border-border/80 bg-amber-50 px-2 py-2 text-center font-bold text-amber-700"
+    : "border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-bold text-amber-700"
+}
+
+function getCapacityHeaderClassName(index: number) {
+  const lastIndex = monthlyConfirmedQtyCapacityColumns.length - 1
+
+  if (index === 0 || index === lastIndex) {
+    return index === 0
+      ? "border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-bold"
+      : "border-b border-border/80 bg-slate-100 px-2 py-2 text-center font-bold"
+  }
+
+  if (index >= 1 && index <= 4) {
+    return "border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-bold text-cyan-700"
+  }
+
+  if (index === 5) {
+    return "border-b border-r border-border/80 bg-violet-50 px-2 py-2 text-center font-bold text-violet-700"
+  }
+
+  if (index === 6) {
+    return "border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-bold text-amber-700"
+  }
+
+  return "border-b border-r border-border/80 bg-rose-50 px-2 py-2 text-center font-bold text-rose-700"
+}
+
 export function MonthlyConfirmedQtyPage() {
   const initialReport = monthlyConfirmedQtyReports[0]
   const initialParts = getReportParts(initialReport?.value ?? "")
   const currentYear = new Date().getFullYear()
 
-  const [selectedMonth, setSelectedMonth] = useState(initialParts.month || monthOptions[0].value)
+  const [selectedMonth, setSelectedMonth] = useState(initialParts.month || monthlyConfirmedQtyMonthOptions[0].value)
   const [selectedYear, setSelectedYear] = useState(initialParts.year || String(currentYear))
 
   const yearOptions = useMemo(
@@ -153,6 +190,10 @@ export function MonthlyConfirmedQtyPage() {
   const groupedRows = useMemo(
     () => (activeReport ? getGroupedRows(activeReport.rows) : []),
     [activeReport]
+  )
+
+  const hasOrderSummarySection = Boolean(
+    activeReport?.footer && (activeReport.sourceSections?.includes("order_summary") ?? true)
   )
 
   return (
@@ -174,7 +215,7 @@ export function MonthlyConfirmedQtyPage() {
                 onChange={(event) => setSelectedMonth(event.target.value)}
                 className="h-11 min-w-[10rem] cursor-pointer rounded-2xl border border-border/80 bg-card px-3 text-sm shadow-sm outline-none transition focus:border-primary"
               >
-                {monthOptions.map((month) => (
+                {monthlyConfirmedQtyMonthOptions.map((month) => (
                   <option key={month.value} value={month.value}>
                     {month.label}
                   </option>
@@ -233,32 +274,11 @@ export function MonthlyConfirmedQtyPage() {
               <table className="min-w-[2200px] border-separate border-spacing-0 text-xs">
                 <thead>
                   <tr className="bg-white dark:bg-slate-950">
-                    <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">SL</th>
-                    <th className="border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-200">BYR NAME</th>
-                    <th className="border-b border-r border-border/80 bg-sky-50 px-2 py-2 text-center font-semibold text-sky-700 dark:bg-sky-950/30 dark:text-sky-200">STY/ART/ORD#</th>
-                    <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">GG</th>
-                    <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">ORDER QTY</th>
-                    <th className="border-b border-r border-border/80 bg-indigo-50 px-2 py-2 text-center font-semibold text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-200">PRPSED INSP DT</th>
-                    <th className="border-b border-r border-border/80 bg-emerald-50 px-2 py-2 text-center font-semibold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200">TEN.YRN IN-HOUSE QTY LOC</th>
-                    <th className="border-b border-r border-border/80 bg-emerald-50 px-2 py-2 text-center font-semibold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200">TEN YRN IN-HOUSE DT/MF</th>
-                    <th className="border-b border-r border-border/80 bg-emerald-50 px-2 py-2 text-center font-semibold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200">TEN. TRMS/SWN G+PCKING ETA</th>
-                    <th className="border-b border-r border-border/80 bg-violet-50 px-2 py-2 text-center font-semibold text-violet-700 dark:bg-violet-950/30 dark:text-violet-200">ATTACHMENT</th>
-                    <th className="border-b border-r border-border/80 bg-violet-50 px-2 py-2 text-center font-semibold text-violet-700 dark:bg-violet-950/30 dark:text-violet-200">NYL-SPAN/LUREX/NYL/ELASTIC</th>
-                    <th className="border-b border-r border-border/80 bg-lime-50 px-2 py-2 text-center font-semibold text-lime-700 dark:bg-lime-950/30 dark:text-lime-200">PROD APPROVAL STATUS</th>
-                    <th className="border-b border-r border-border/80 bg-lime-50 px-2 py-2 text-center font-semibold text-lime-700 dark:bg-lime-950/30 dark:text-lime-200">PROD STATUS</th>
-                    <th className="border-b border-r border-border/80 bg-orange-50 px-2 py-2 text-center font-semibold text-orange-700 dark:bg-orange-950/30 dark:text-orange-200">PROJECTED LOC YRN PROD. STT APPX</th>
-                    <th className="border-b border-r border-border/80 bg-orange-50 px-2 py-2 text-center font-semibold text-orange-700 dark:bg-orange-950/30 dark:text-orange-200">PROJECTED IMP YRN PROD. STT APPX</th>
-                    <th className="border-b border-r border-border/80 bg-rose-50 px-2 py-2 text-center font-semibold text-rose-700 dark:bg-rose-950/30 dark:text-rose-200">LT FOR LOC YRN</th>
-                    <th className="border-b border-r border-border/80 bg-rose-50 px-2 py-2 text-center font-semibold text-rose-700 dark:bg-rose-950/30 dark:text-rose-200">LT FOR IMP YRN</th>
-                    <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">YARN COMPOSITION</th>
-                    <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">STYLE DETAILS</th>
-                    <th className="border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-200">REMARKS</th>
-                    <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">CRTFCTE</th>
-                    <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">TIMING</th>
-                    <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">LOC</th>
-                    <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">IMP</th>
-                    <th className="border-b border-r border-border/80 bg-fuchsia-50 px-2 py-2 text-center font-semibold text-fuchsia-700 dark:bg-fuchsia-950/30 dark:text-fuchsia-200">TOTAL MIN PER ORD/STY</th>
-                    <th className="border-b border-border/80 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">UNIT</th>
+                    {monthlyConfirmedQtyMainTableColumns.map((column) => (
+                      <th key={column.key} className={column.headerClassName}>
+                        {column.label}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -277,32 +297,11 @@ export function MonthlyConfirmedQtyPage() {
                           key={`${activeReport.value}-${group.gg}-${row.sl}-${index}`}
                           className={index % 2 === 0 ? "bg-background/80" : "bg-card"}
                         >
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-violet-700 dark:text-violet-300">{row.sl}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 font-medium text-slate-900 dark:text-slate-100">{row.buyerName}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 font-medium text-slate-900 dark:text-slate-100">{row.styleArtOrder || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">{row.gg}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">{row.orderQty}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.proposedInspectionDate}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.tenYarnInHouseQtyLoc || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.tenYarnInHouseDtMf || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.trimsSwingPackingEta || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.attachment || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.nylonSpanLurexElastic || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">{row.prodApprovalStatus || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">{row.prodStatus || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.projectedLocYarnProdStart || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.projectedImpYarnProdStart || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.ltForLocYarn || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.ltForImpYarn || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.yarnComposition || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.styleDetails || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.remarks || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">{row.certificate || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">{row.timingMin}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.locMonth || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center text-slate-700 dark:text-slate-300">{row.impMonth || "-"}</td>
-                          <td className="border-r border-b border-border/70 px-2 py-2 text-center font-bold text-slate-900 dark:text-slate-100">{row.totalMinPerOrdStyle}</td>
-                          <td className="border-b border-border/70 px-2 py-2 text-center font-semibold text-slate-900 dark:text-slate-100">{row.unit || "-"}</td>
+                          {monthlyConfirmedQtyMainTableColumns.map((column) => (
+                            <td key={`${activeReport.value}-${group.gg}-${row.sl}-${column.key}`} className={column.cellClassName}>
+                              {getMonthlyConfirmedQtyCellValue(row, column.key)}
+                            </td>
+                          ))}
                         </tr>
                       ))}
                       <tr className="bg-slate-100 dark:bg-slate-900/80">
@@ -331,48 +330,43 @@ export function MonthlyConfirmedQtyPage() {
             </div>
           </section>
 
-          {activeReport.footer ? (
+          {hasOrderSummarySection ? (
             <>
               <div className="overflow-x-auto rounded-2xl border border-border/80 bg-background">
                 <table className="min-w-[1200px] w-full border-separate border-spacing-0 text-xs">
                   <thead>
                     <tr>
                       <th
-                        colSpan={10}
+                        colSpan={monthlyConfirmedQtySlotWiseColumns.length}
                         className="border-b border-border/80 bg-slate-100 px-4 py-3 text-center text-sm font-black tracking-wide text-slate-900 dark:bg-slate-900 dark:text-slate-100"
                       >
-                        {activeReport.footer.slotWiseTitle || "SLOT WISE CFMD ORDER QTY + TOTAL MINUTES"}
+                        {activeReport.footer?.slotWiseTitle || "SLOT WISE CFMD ORDER QTY + TOTAL MINUTES"}
                       </th>
                     </tr>
                     <tr className="bg-white dark:bg-slate-950">
-                      <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-bold">GG</th>
-                      <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-bold text-cyan-700">FIRST SLOT CAPACITY 30%</th>
-                      <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-bold text-cyan-700">1ST SLOT CONFIRMED MINUTE</th>
-                      <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-bold text-cyan-700">FIRST LOT RECEIVED</th>
-                      <th className="border-b border-r border-border/80 bg-violet-50 px-2 py-2 text-center font-bold text-violet-700">SECOND SLOT CAPACITY 35%</th>
-                      <th className="border-b border-r border-border/80 bg-violet-50 px-2 py-2 text-center font-bold text-violet-700">2ND SLOT CONFIRMED MINUTE</th>
-                      <th className="border-b border-r border-border/80 bg-violet-50 px-2 py-2 text-center font-bold text-violet-700">SECOND LOT RECEIVED</th>
-                      <th className="border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-bold text-amber-700">THIRD SLOT CAPACITY 35%</th>
-                      <th className="border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-bold text-amber-700">3RD SLOT CONFIRMED MINUTE</th>
-                      <th className="border-b border-border/80 bg-amber-50 px-2 py-2 text-center font-bold text-amber-700">THIRD LOT RECEIVED</th>
+                      {monthlyConfirmedQtySlotWiseColumns.map((column, index) => (
+                        <th key={`${column.key}-${index}`} className={getSlotHeaderClassName(index)}>
+                          {column.label}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {activeReport.footer.slotWiseRows.map((row, index) => (
+                    {activeReport.footer?.slotWiseRows.map((row, index) => (
                       <tr key={`${activeReport.value}-slot-${row.gg}-${index}`} className={index % 2 === 0 ? "bg-background" : "bg-slate-50/70 dark:bg-slate-900/30"}>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-black text-slate-900 dark:text-slate-100">{row.gg}</td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold">{row.firstSlotCapacity}</td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold">{row.firstSlotConfirmedMinute}</td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold">{row.firstLotReceived}</td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold">{row.secondSlotCapacity}</td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold">{row.secondSlotConfirmedMinute}</td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold">{row.secondLotReceived}</td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold">{row.thirdSlotCapacity}</td>
-                        <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold">{row.thirdSlotConfirmedMinute}</td>
-                        <td className="border-b border-border/70 px-2 py-2 text-center font-semibold">{row.thirdLotReceived}</td>
+                        {monthlyConfirmedQtySlotWiseColumns.map((column, columnIndex) => (
+                          <td
+                            key={`${activeReport.value}-slot-${row.gg}-${column.key}-${columnIndex}`}
+                            className={columnIndex === monthlyConfirmedQtySlotWiseColumns.length - 1
+                              ? "border-b border-border/70 px-2 py-2 text-center font-semibold"
+                              : "border-r border-b border-border/70 px-2 py-2 text-center font-semibold"}
+                          >
+                            {getMonthlyConfirmedQtySlotValue(row, column.key)}
+                          </td>
+                        ))}
                       </tr>
                     ))}
-                    {activeReport.footer.slotWiseTotals ? (
+                    {activeReport.footer?.slotWiseTotals ? (
                       <tr className="bg-slate-100 dark:bg-slate-900/80">
                         <td className="border-r border-border/80 px-2 py-2 text-center font-black" colSpan={4}>
                           Total Qty: {activeReport.footer.slotWiseTotals.totalQty || "-"}
@@ -391,24 +385,20 @@ export function MonthlyConfirmedQtyPage() {
                   <table className="min-w-[1200px] w-full border-separate border-spacing-0 text-xs">
                     <thead>
                       <tr>
-                        <th colSpan={9} className="border-b border-border/80 bg-slate-100 px-4 py-3 text-center text-sm font-black tracking-wide text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+                        <th colSpan={monthlyConfirmedQtyCapacityColumns.length} className="border-b border-border/80 bg-slate-100 px-4 py-3 text-center text-sm font-black tracking-wide text-slate-900 dark:bg-slate-900 dark:text-slate-100">
                           GG / Qty Wise Capacity Per Month
                         </th>
                       </tr>
                       <tr className="bg-white dark:bg-slate-950">
-                        <th className="border-b border-r border-border/80 bg-slate-100 px-2 py-2 text-center font-bold">GG</th>
-                        <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-bold text-cyan-700">Qty Capacity</th>
-                        <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-bold text-cyan-700">GG</th>
-                        <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-bold text-cyan-700">Order Rcvd In Qty</th>
-                        <th className="border-b border-r border-border/80 bg-cyan-50 px-2 py-2 text-center font-bold text-cyan-700">Combined Qty</th>
-                        <th className="border-b border-r border-border/80 bg-violet-50 px-2 py-2 text-center font-bold text-violet-700">Total Orders Min/GG</th>
-                        <th className="border-b border-r border-border/80 bg-amber-50 px-2 py-2 text-center font-bold text-amber-700">Capacity In Min</th>
-                        <th className="border-b border-r border-border/80 bg-rose-50 px-2 py-2 text-center font-bold text-rose-700">Bal Capacity In Min</th>
-                        <th className="border-b border-border/80 bg-slate-100 px-2 py-2 text-center font-bold">Group</th>
+                        {monthlyConfirmedQtyCapacityColumns.map((column, index) => (
+                          <th key={`${column.key}-${index}`} className={getCapacityHeaderClassName(index)}>
+                            {column.label}
+                          </th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {activeReport.footer.capacityRows.map((row, index) => (
+                      {activeReport.footer?.capacityRows.map((row, index) => (
                         <tr key={`${activeReport.value}-capacity-${row.gg}-${index}`} className={index % 2 === 0 ? "bg-background" : "bg-slate-50/70 dark:bg-slate-900/30"}>
                           {!row.hideGroupedSummaryCells ? (
                             <>
@@ -430,16 +420,16 @@ export function MonthlyConfirmedQtyPage() {
                           {!row.hideGroupedSummaryCells ? (
                             <>
                               <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold" rowSpan={row.rowSpan ?? 1}>
-                                {row.totalOrdersMinute}
+                                {getMonthlyConfirmedQtyCapacityValue(row, "totalOrdersMinute")}
                               </td>
                               <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold" rowSpan={row.rowSpan ?? 1}>
-                                {row.monthlyCapacity}
+                                {getMonthlyConfirmedQtyCapacityValue(row, "monthlyCapacity")}
                               </td>
                               <td className="border-r border-b border-border/70 px-2 py-2 text-center font-semibold" rowSpan={row.rowSpan ?? 1}>
-                                {row.balanceCapacity}
+                                {getMonthlyConfirmedQtyCapacityValue(row, "balanceCapacity")}
                               </td>
                               <td className="border-b border-border/70 px-2 py-2 text-center font-semibold" rowSpan={row.rowSpan ?? 1}>
-                                {row.groupLabel || "-"}
+                                {getMonthlyConfirmedQtyCapacityValue(row, "groupLabel")}
                               </td>
                             </>
                           ) : null}
@@ -449,7 +439,7 @@ export function MonthlyConfirmedQtyPage() {
                   </table>
                 </div>
 
-                {activeReport.footer.preBookingLeftRows?.length ? (
+                {activeReport.footer?.preBookingLeftRows?.length ? (
                   <div className="rounded-2xl border border-border/80 bg-background p-4">
                     <h3 className="border-b border-border/80 pb-3 text-center text-sm font-black tracking-wide text-slate-900 dark:text-slate-100">
                       Pre-Booked Qty Left To Utilize
@@ -481,12 +471,3 @@ export function MonthlyConfirmedQtyPage() {
     </div>
   )
 }
-
-
-
-
-
-
-
-
-

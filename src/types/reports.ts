@@ -65,6 +65,14 @@ export type BwslDislGaugeSectionSummaryTotal = {
   rowClassName?: string
 }
 
+export type MonthlyConfirmedQtySectionKey = "qty_intl" | "order_summary"
+
+export type MonthlyConfirmedQtySectionDefinition = {
+  key: MonthlyConfirmedQtySectionKey
+  label: string
+  description: string
+}
+
 export type MonthlyConfirmedQtyRow = {
   sl: string
   buyerName: string
@@ -94,23 +102,13 @@ export type MonthlyConfirmedQtyRow = {
   unit: string
 }
 
-export type MonthlyConfirmedQtyReport = {
-  value: string
+export type MonthlyConfirmedQtyMainColumn = {
+  key: keyof MonthlyConfirmedQtyRow
   label: string
-  title: string
-  updatedOn: string
-  highlightNote: string
-  rows: MonthlyConfirmedQtyRow[]
-  footer?: {
-    slotWiseTitle?: string
-    slotWiseRows: MonthlyConfirmedQtySlotWiseRow[]
-    slotWiseTotals?: {
-      totalQty?: string
-      totalMin?: string
-    }
-    capacityRows: MonthlyConfirmedQtyCapacityRow[]
-    preBookingLeftRows?: MonthlyConfirmedQtyPreBookingLeftRow[]
-  }
+  section: MonthlyConfirmedQtySectionKey
+  csvHeaders: string[]
+  headerClassName: string
+  cellClassName: string
 }
 
 export type MonthlyConfirmedQtySlotWiseRow = {
@@ -124,6 +122,12 @@ export type MonthlyConfirmedQtySlotWiseRow = {
   thirdSlotCapacity: string
   thirdSlotConfirmedMinute: string
   thirdLotReceived: string
+}
+
+export type MonthlyConfirmedQtySlotWiseColumn = {
+  key: keyof MonthlyConfirmedQtySlotWiseRow
+  label: string
+  section: MonthlyConfirmedQtySectionKey
 }
 
 export type MonthlyConfirmedQtyCapacityRow = {
@@ -140,7 +144,35 @@ export type MonthlyConfirmedQtyCapacityRow = {
   hideGroupedSummaryCells?: boolean
 }
 
+export type MonthlyConfirmedQtyCapacityColumn = {
+  key: keyof MonthlyConfirmedQtyCapacityRow
+  label: string
+  section: MonthlyConfirmedQtySectionKey
+}
+
 export type MonthlyConfirmedQtyPreBookingLeftRow = {
   label: string
   qty: string
+}
+
+export type MonthlyConfirmedQtyFooter = {
+  slotWiseTitle?: string
+  slotWiseRows: MonthlyConfirmedQtySlotWiseRow[]
+  slotWiseTotals?: {
+    totalQty?: string
+    totalMin?: string
+  }
+  capacityRows: MonthlyConfirmedQtyCapacityRow[]
+  preBookingLeftRows?: MonthlyConfirmedQtyPreBookingLeftRow[]
+}
+
+export type MonthlyConfirmedQtyReport = {
+  value: string
+  label: string
+  title: string
+  updatedOn: string
+  highlightNote: string
+  rows: MonthlyConfirmedQtyRow[]
+  sourceSections?: MonthlyConfirmedQtySectionKey[]
+  footer?: MonthlyConfirmedQtyFooter
 }
