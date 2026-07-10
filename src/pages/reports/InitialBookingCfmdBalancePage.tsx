@@ -3,7 +3,8 @@ import { Fragment, useMemo, useState } from "react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PageHeader } from "@/components/shared/page-header"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
-import { computedBookingComparisonReport } from "@/lib/unified-order-data"
+import { selectComputedBookingComparisonReport } from "@/lib/unified-order-data"
+import { useAppSelector } from "@/store/hooks"
 import type {
   BookingComparisonCategory,
   BookingComparisonMonthKey,
@@ -141,12 +142,13 @@ function getSummarySectionTitleClassName(title: string) {
   }
 }
 
-
 function SummarySectionTable({ section }: { section: BookingComparisonSummarySection }) {
   return (
     <section className="space-y-3">
       <div className="rounded-[1.5rem] border border-border/70 bg-card p-4 shadow-sm">
-        <h2 className={`text-lg text-center font-semibold tracking-tight ${getSummarySectionTitleClassName(section.title)}`}>{section.title}</h2>
+        <h2 className={`text-lg text-center font-semibold tracking-tight ${getSummarySectionTitleClassName(section.title)}`}>
+          {section.title}
+        </h2>
       </div>
       <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
         <div className="overflow-x-auto">
@@ -159,10 +161,11 @@ function SummarySectionTable({ section }: { section: BookingComparisonSummarySec
                 {monthColumns.map((month, index) => (
                   <th
                     key={month.key}
-                    className={`border-b border-r border-border/80 px-2 py-2.5 text-center font-semibold ${index % 2 === 0
-                      ? "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-200"
-                      : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
-                      }`}
+                    className={`border-b border-r border-border/80 px-2 py-2.5 text-center font-semibold ${
+                      index % 2 === 0
+                        ? "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-200"
+                        : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
+                    }`}
                   >
                     {month.label}
                   </th>
@@ -202,15 +205,21 @@ function SummarySectionTable({ section }: { section: BookingComparisonSummarySec
 }
 
 export function InitialBookingCfmdBalancePage() {
+  const computedBookingComparisonReport = useAppSelector(selectComputedBookingComparisonReport)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeFilter, setActiveFilter] = useState("All Buyers")
 
-  const groupedRows = useMemo(() => buildGroups(computedBookingComparisonReport.rows), [])
+  const groupedRows = useMemo(
+    () => buildGroups(computedBookingComparisonReport.rows),
+    [computedBookingComparisonReport.rows]
+  )
 
   const filterOptions = useMemo(
     () => [
       "All Buyers",
-      ...groupedRows.map((group) => group.buyerName).filter((value, index, array) => array.indexOf(value) === index),
+      ...groupedRows
+        .map((group) => group.buyerName)
+        .filter((value, index, array) => array.indexOf(value) === index),
     ],
     [groupedRows]
   )
@@ -291,10 +300,11 @@ export function InitialBookingCfmdBalancePage() {
                   {monthColumns.map((month, index) => (
                     <th
                       key={month.key}
-                      className={`border-b border-r border-border/80 px-2 py-2.5 text-center font-semibold ${index % 2 === 0
-                        ? "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-200"
-                        : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
-                        }`}
+                      className={`border-b border-r border-border/80 px-2 py-2.5 text-center font-semibold ${
+                        index % 2 === 0
+                          ? "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-200"
+                          : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
+                      }`}
                     >
                       {month.label}
                     </th>
@@ -337,7 +347,7 @@ export function InitialBookingCfmdBalancePage() {
                       </span>
                     </td>
                     <td className="min-w-28 border-b border-border/70 px-2 py-2 align-top text-[11px] leading-5 text-muted-foreground">
-                      {row.remarks || "-"} 
+                      {row.remarks || "-"}
                     </td>
                   </tr>
                 ))}
@@ -360,7 +370,3 @@ export function InitialBookingCfmdBalancePage() {
     </div>
   )
 }
-
-
-
-

@@ -8,4 +8,11 @@ export type MerchandisePreBookingRecord = {
   createdAt: string
 }
 
-
+export type UpsertMerchandisePreBookingPayload = {
+  id?: string
+  buyerName: string
+  gg: string
+  orderQty: number
+  inspectionDate: string
+  remarks: string
+}

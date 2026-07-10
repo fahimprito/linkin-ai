@@ -1,5 +1,5 @@
 import { Pencil, Plus, Trash2 } from "lucide-react"
-import { Fragment, useEffect, useMemo, useState } from "react"
+import { Fragment, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -11,12 +11,20 @@ import {
 } from "@/components/shared/record-form-modal"
 import { SearchFilterBar } from "@/components/shared/search-filter-bar"
 import { Button } from "@/components/ui/button"
+import { resolvePreBookingBuyer } from "@/lib/buyer-mapping"
+import { preBookingTargets } from "@/lib/pre-booking-config"
 import { cn } from "@/lib/utils"
-import { merchandisePreBookingMockData } from "@/mock/merchandise-pre-booking"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import {
+  addOrUpdatePreBooking,
+  deletePreBooking,
+} from "@/store/slices/merchandise-slice"
 import type { MerchandisePreBookingRecord } from "@/types/merchandise-pre-booking"
 
-const STORAGE_KEY = "linkin-ai-admin:merchandise-pre-booking"
 const ggOptions = ["3", "7", "9", "12"]
+const managementBuyerOptions = Array.from(
+  new Set(preBookingTargets.map((target) => target.buyerName))
+).map((buyerName) => ({ label: buyerName, value: buyerName }))
 const tableColumnCount = 8
 
 type PreBookingFormValues = {
@@ -50,7 +58,9 @@ const formFields: ModalFormField[] = [
   {
     name: "buyerName",
     label: "Buyer Name",
-    placeholder: "BESTSELLER",
+    type: "select",
+    options: managementBuyerOptions,
+    placeholder: "Select buyer",
   },
   {
     name: "gg",
@@ -83,10 +93,6 @@ const formFields: ModalFormField[] = [
     required: false,
   },
 ]
-
-function createPreBookingId() {
-  return `merch-pre-booking-${Date.now()}`
-}
 
 function formatInspectionDate(value: string) {
   if (!value) {
@@ -169,24 +175,6 @@ function formatPcs(value: number) {
   return `${new Intl.NumberFormat("en-US").format(value)} PCS`
 }
 
-function getStoredPreBookings() {
-  if (typeof window === "undefined") {
-    return merchandisePreBookingMockData
-  }
-
-  const stored = window.localStorage.getItem(STORAGE_KEY)
-  if (!stored) {
-    return merchandisePreBookingMockData
-  }
-
-  try {
-    const parsed = JSON.parse(stored) as MerchandisePreBookingRecord[]
-    return Array.isArray(parsed) ? parsed : merchandisePreBookingMockData
-  } catch {
-    return merchandisePreBookingMockData
-  }
-}
-
 function getDefaultFormValues(): PreBookingFormValues {
   return {
     buyerName: "",
@@ -207,16 +195,24 @@ function getFormValues(record: MerchandisePreBookingRecord): PreBookingFormValue
   }
 }
 
-function buildRecord(values: PreBookingFormValues, existingId?: string): MerchandisePreBookingRecord {
-  return {
-    id: existingId ?? createPreBookingId(),
-    buyerName: values.buyerName.trim(),
-    gg: values.gg.trim(),
-    orderQty: Number(values.orderQty) || 0,
-    inspectionDate: formatInspectionDate(values.inspectionDate),
-    remarks: values.remarks.trim(),
-    createdAt: new Date().toISOString(),
-  }
+function normalizeRecordText(value: string) {
+  return value.trim().replace(/\s+/g, " ").toLowerCase()
+}
+
+function normalizePreBookingBuyerName(value: string) {
+  return resolvePreBookingBuyer(value.trim())
+}
+
+function buildPreBookingMatchKey(record: {
+  buyerName: string
+  gg: string
+  inspectionDate: string
+}) {
+  return [
+    normalizeRecordText(normalizePreBookingBuyerName(record.buyerName)),
+    normalizeRecordText(record.gg),
+    normalizeRecordText(record.inspectionDate),
+  ].join("::")
 }
 
 function getSlotIndex(inspectionDate: string) {
@@ -287,7 +283,8 @@ function buildSummaryRows(records: MerchandisePreBookingRecord[]): SummaryRow[] 
 }
 
 export function MerchandisePreBookingPage() {
-  const [records, setRecords] = useState<MerchandisePreBookingRecord[]>(() => getStoredPreBookings())
+  const dispatch = useAppDispatch()
+  const records = useAppSelector((state) => state.merchandise.preBookings)
   const [searchValue, setSearchValue] = useState("")
   const [activeFilter, setActiveFilter] = useState("All GG")
   const [editingRecord, setEditingRecord] = useState<MerchandisePreBookingRecord | null>(null)
@@ -297,10 +294,6 @@ export function MerchandisePreBookingPage() {
   const { register, handleSubmit, reset } = useForm<PreBookingFormValues>({
     defaultValues: getDefaultFormValues(),
   })
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records))
-  }, [records])
 
   const filteredRecords = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
@@ -374,45 +367,61 @@ export function MerchandisePreBookingPage() {
   }
 
   const onSubmit = (values: PreBookingFormValues) => {
-    const nextRecord = buildRecord(values, editingRecord?.id)
+    const normalizedBuyerName = normalizePreBookingBuyerName(values.buyerName)
+    const normalizedGg = values.gg.trim()
+    const formattedInspectionDate = formatInspectionDate(values.inspectionDate)
+    const nextOrderQty = Number(values.orderQty) || 0
+    const nextRemarks = values.remarks.trim()
 
-    if (!nextRecord.buyerName) {
+    if (!normalizedBuyerName) {
       toast.error("Buyer name is required.")
       return
     }
 
-    if (!nextRecord.gg) {
+    if (!normalizedGg) {
       toast.error("GG is required.")
       return
     }
 
-    if (nextRecord.orderQty <= 0) {
+    if (nextOrderQty <= 0) {
       toast.error("Order quantity must be greater than zero.")
       return
     }
 
-    if (!nextRecord.inspectionDate) {
+    if (!formattedInspectionDate) {
       toast.error("Inspection date is required.")
       return
     }
 
-    setRecords((current) => {
-      if (editingRecord) {
-        return current.map((record) =>
-          record.id === editingRecord.id
-            ? {
-              ...record,
-              ...nextRecord,
-              createdAt: record.createdAt,
-            }
-            : record
-        )
+    const duplicateRecord = records.find((record) => {
+      if (record.id === editingRecord?.id) {
+        return false
       }
 
-      return [...current, nextRecord]
+      return (
+        buildPreBookingMatchKey(record) ===
+        buildPreBookingMatchKey({
+          buyerName: normalizedBuyerName,
+          gg: normalizedGg,
+          inspectionDate: formattedInspectionDate,
+        })
+      )
     })
 
-    toast.success(editingRecord ? "Pre-booking updated." : "Pre-booking added.")
+    dispatch(
+      addOrUpdatePreBooking({
+        id: editingRecord?.id ?? duplicateRecord?.id,
+        buyerName: normalizedBuyerName,
+        gg: normalizedGg,
+        orderQty: nextOrderQty,
+        inspectionDate: formattedInspectionDate,
+        remarks: nextRemarks,
+      })
+    )
+
+    toast.success(
+      editingRecord || duplicateRecord ? "Pre-booking updated." : "Pre-booking added."
+    )
     handleCloseModal()
   }
 
@@ -703,9 +712,7 @@ export function MerchandisePreBookingPage() {
                 type="button"
                 className="rounded-2xl"
                 onClick={() => {
-                  setRecords((current) =>
-                    current.filter((record) => record.id !== recordPendingDelete.id)
-                  )
+                  dispatch(deletePreBooking(recordPendingDelete.id))
                   toast.success("Pre-booking deleted.")
                   setRecordPendingDelete(null)
                 }}
@@ -719,7 +726,6 @@ export function MerchandisePreBookingPage() {
     </div>
   )
 }
-
 
 
 

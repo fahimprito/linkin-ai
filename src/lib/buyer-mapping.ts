@@ -11,117 +11,118 @@
  *   3. Booking Comparison (broad): "J&J"
  */
 
+function normalizeBuyerMapKey(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+}
+
+function buildNormalizedLookup(map: Record<string, string>) {
+  return Object.entries(map).reduce<Record<string, string>>((accumulator, [key, value]) => {
+    accumulator[normalizeBuyerMapKey(key)] = value
+    return accumulator
+  }, {})
+}
+
 // ---------------------------------------------------------------------------
-// Confirmed‑Qty buyer name → Order Summary buyer group
+// Confirmed-Qty buyer name -> Order Summary buyer group
 // ---------------------------------------------------------------------------
 
 export const confirmedToOrderSummaryBuyerMap: Record<string, string> = {
-  // J&J (ORIGINALS+CORE)
   "J&J(ORIGINALS)-IMTIAJ": "J&J (ORIGINALS+CORE) (IMTIAJ)",
-
-  // J&J (PREMIUM)
   "J&J(PREMIUM)-SHUPNIL": "J&J (PREMIUM) (SHUPNIL/RIYADH)",
-
-  // J&J INITIAL PRE-BOOKING
   "J&J INITIAL PRE-BOOKING": "J&J INITIAL PRE-BOOKING (KAMRUL)",
   "J &J INITIAL PRE-BOOKING": "J&J INITIAL PRE-BOOKING (KAMRUL)",
   "J.&J INITIAL PRE-BOOKING": "J&J INITIAL PRE-BOOKING (KAMRUL)",
-
-  // JJXX
   "JJXX-ATIQ": "JJXX (ATIQ)",
   "JJXX- ATIQ": "JJXX (ATIQ)",
-
-  // J&J (ESS & ESS INDIA) — mapped from JO-Y-JO
   "JO-Y-JO(NEXT)- RUMON": "J&J (ESS & ESS INDIA) (MUSHFIQ)",
   "JO-Y-JO(NEXT)-RUMON": "J&J (ESS & ESS INDIA) (MUSHFIQ)",
   "JO-Y-JO(TOPSHOP AW26)-RUMON": "J&J (ESS & ESS INDIA) (MUSHFIQ)",
-
-  // J&J (PRE-COLL+COLL+O/LET+INDIA)
-  // — no direct mapping from monthly data; these orders are typically part of J&J umbrella
-
-  // J&J (REBEL+PRODUKT)
   "J&J(REBEL-WOMEN'S)-SHAZAL": "J&J (REBEL+PRODUKT) (SHAZAL/MAHFUZ)",
   "J&J-REBEL-SHAZAL": "J&J (REBEL+PRODUKT) (SHAZAL/MAHFUZ)",
-
-  // VEROMODA
   "VEROMODA-SHAZAL": "VEROMODA (SHAZAL/MAHFUZ)",
-
-  // SELECTED
   "SELECTED HOMME-FAROUK": "SELECTED (INDIA+O/LET) (FAROUK/PARVEJ)",
-
-  // TERRANOVA
   "TERRANOVA-FAROUK": "TERRANOVA (FAROUK/PARVEJ)",
-
-  // ELCORTE
   "ELCORTE-NAG LITON": "ELCORTE (LITON NAG/EMDAD)",
   "ELCORTE INITIAL PRE-BOOKING": "ELCORTE (LITON NAG/EMDAD)",
-
-  // ONLY + ONLY & SONS
   "ONLY-UZZAL": "ONLY+ONLY & SONS (UZZAL/RAIHANUR)",
   "ONLY- UZZAL": "ONLY+ONLY & SONS (UZZAL/RAIHANUR)",
-
-  // ONLY INITIAL PRE-BOOKING
   "ONLY INITIAL PRE-BOOKING-UZZAL": "ONLY INITIAL PRE-BOOKING (UZZAL)",
   "ONLY PRE-BOOKING-UZZAL": "ONLY INITIAL PRE-BOOKING (UZZAL)",
   "ONLY PRE-BOOKING- UZZAL": "ONLY INITIAL PRE-BOOKING (UZZAL)",
-
-  // CONTEMPO
   "CONTEMPO (BOOT BARN)- ARNOB": "CONTEMPO (ARNOB)",
   "CONTEMPO (BOOT BARN)-ARNOB": "CONTEMPO (ARNOB)",
   "CONTEMPO (QVC)- ARNOB": "CONTEMPO (ARNOB)",
-
-  // MGF (LANE BRYANT)
   "MGF(LANE BRYANT)- ARNOB": "MGF (LANE BRYANT) (ARNOB)",
   "MGF(LANE BRYANT)-ARNOB": "MGF (LANE BRYANT) (ARNOB)",
-
-  // MGF (PREMIUM BRANDS) → maps to MGF (LANE BRYANT) or standalone
   "MGF(PREMIUM BRANDS)- MAHBUB": "MGF (LANE BRYANT) (ARNOB)",
   "MGF(PREMIUM BRANDS)-MAHBUB": "MGF (LANE BRYANT) (ARNOB)",
-
-  // MGF (VS / PINK / STF) — these go under ARETEX or MGF umbrella
   "MGF(VS - Swim-SU26)- SHAFIQ": "ARETEX (FAISAL/SAAD)",
   "MGF(VS - PINK-HOL26)-SHAFIQ": "ARETEX (FAISAL/SAAD)",
   "MGF(VS - PINK-SP27)- SHAFIQ/MIZAN": "ARETEX (FAISAL/SAAD)",
   "MGF (PINK-FA26)- SHAFIQ": "ARETEX (FAISAL/SAAD)",
   "MGF (STF HOL26)- MIZAN": "ARETEX (FAISAL/SAAD)",
   "PRE-BOOKING MGF(PINK-HO26)-SHAFIQ": "ARETEX (FAISAL/SAAD)",
-
-  // MGF ALL BRAND PRE-BOOKING
   "MGF- ALL BRAND APPROX PRE-BOOKING": "ARETEX (FAISAL/SAAD)",
   "MGF- ALL BRAND APPROX PRE-BOOKING-RUMON": "ARETEX (FAISAL/SAAD)",
-
-  // ARETEX
   "ARETEX(FH OUTLET LADIES)-FAISAL": "ARETEX (FAISAL/SAAD)",
   "ARETEX(FH)-S1 FAISAL": "ARETEX (FAISAL/SAAD)",
   "ARETEX(WALB USCH)-FAISAL": "ARETEX (FAISAL/SAAD)",
   "ARETEX(WALBU SCH)- FAISAL": "ARETEX (FAISAL/SAAD)",
   "ARETEX INITIAL PRE-BOOKING": "ARETEX (FAISAL/SAAD)",
-
-  // BUGATTI → COLOMBUS (MAHMUD) bucket
   "COLUMBUS(Mar velis)-MAHMUD": "COLOMBUS (MAHMUD)",
   "KATAG-MAHBUB": "COLOMBUS (MAHMUD)",
-
-  // CELIO
   "CELIO-FAKRUL": "CELIO (FAKRUL/TOMAL)",
-
-  // GMS
   "GMS-FAKRUL": "GMS (FAKRUL/TOMAL)",
   "GMS- FAKRUL": "GMS (FAKRUL/TOMAL)",
-
-  // BONONO
   "BONONO-FAKRUL": "CELIO (FAKRUL/TOMAL)",
-
-  // KAPPAHL → JO-Y-JO / R BRAND bucket
   "Kappahl-RUMON": "R BRAND (FAISAL/SAAD)",
   "KAPPAHL INITIAL PRE-BOOKING-RUMON": "R BRAND (FAISAL/SAAD)",
-
-  // JO-Y-JO PRE-BOOKING
   "JOYJO- PRE-BOOKING": "J&J INITIAL PRE-BOOKING (KAMRUL)",
   "JOYJO-PRE-BOOKING": "J&J INITIAL PRE-BOOKING (KAMRUL)",
 }
 
 // ---------------------------------------------------------------------------
-// Order Summary buyer name → Booking Comparison buyer name (broad group)
+// Merchandise pre-booking buyer -> Booking Comparison buyer group
+// ---------------------------------------------------------------------------
+
+export const merchandisePreBookingBuyerMap: Record<string, string> = {
+  "J&J": "J&J",
+  "JJXX": "J&J",
+  "VEROMODA": "VEROMODA",
+  "VERO MODA": "VEROMODA",
+  "OBJECT": "OBJECT",
+  "SELECTED": "SELECTED",
+  "TERRANOVA": "TERRANOVA",
+  "SCROLL": "SCROLL",
+  "ELCORTE": "ELCORTE",
+  "ONLY": "ONLY",
+  "ONLY & SONS": "ONLY",
+  "ONLY+ONLY & SONS": "ONLY",
+  "ARETEX": "ARETEX",
+  "BNB": "BNB/CELIO/GMS",
+  "CELIO": "BNB/CELIO/GMS",
+  "GMS": "GMS",
+  "COLOMBUS": "COLOMBUS",
+  "COLUMBUS": "COLOMBUS",
+  "BUGATTI": "BUGATTI",
+  "CONTEMPO": "CONTEMPO",
+  "KARIBAN": "CONTEMPO",
+  "JO-Y-JO": "JO-Y-JO",
+  "JOYJO": "JO-Y-JO",
+  "KAPPAHL": "KAPPAHL",
+  "MGF": "MGF(LANE BRYANT)",
+  "MGF LANE BRYANT": "MGF(LANE BRYANT)",
+  "MGF PREMIUM BRANDS": "MGF(PREMIUM BRNDS)",
+  "BESTSELLER": "BESTSELLER",
+}
+
+// ---------------------------------------------------------------------------
+// Order Summary buyer -> Booking Comparison buyer name (broad group)
 // ---------------------------------------------------------------------------
 
 export const orderSummaryToBookingBuyerMap: Record<string, string> = {
@@ -151,10 +152,6 @@ export const orderSummaryToBookingBuyerMap: Record<string, string> = {
   "GMS (FAKRUL/TOMAL)": "GMS",
 }
 
-// ---------------------------------------------------------------------------
-// Order Summary buyer → display color class (preserves existing styling)
-// ---------------------------------------------------------------------------
-
 export const orderSummaryBuyerColorMap: Record<string, string> = {
   "J&J (ORIGINALS+CORE) (IMTIAJ)": "bg-cyan-100/80 dark:bg-cyan-950/40",
   "J&J (PREMIUM) (SHUPNIL/RIYADH)": "bg-cyan-100/80 dark:bg-cyan-950/40",
@@ -182,19 +179,39 @@ export const orderSummaryBuyerColorMap: Record<string, string> = {
   "GMS (FAKRUL/TOMAL)": "bg-yellow-200/90 dark:bg-yellow-950/50",
 }
 
-/**
- * Resolves a granular confirmed‑qty buyer name to its Order Summary group.
- * Returns the input unchanged when no mapping exists.
- */
+const normalizedConfirmedToOrderSummaryBuyerMap = buildNormalizedLookup(
+  confirmedToOrderSummaryBuyerMap
+)
+const normalizedOrderSummaryToBookingBuyerMap = buildNormalizedLookup(
+  orderSummaryToBookingBuyerMap
+)
+const normalizedMerchandisePreBookingBuyerMap = buildNormalizedLookup(
+  merchandisePreBookingBuyerMap
+)
+
 export function resolveOrderSummaryBuyer(confirmedBuyerName: string): string {
-  return confirmedToOrderSummaryBuyerMap[confirmedBuyerName] ?? confirmedBuyerName
+  return (
+    confirmedToOrderSummaryBuyerMap[confirmedBuyerName] ??
+    normalizedConfirmedToOrderSummaryBuyerMap[normalizeBuyerMapKey(confirmedBuyerName)] ??
+    confirmedBuyerName.trim()
+  )
 }
 
-/**
- * Resolves an Order Summary buyer name to its broad Booking Comparison group.
- * Returns the input unchanged when no mapping exists.
- */
 export function resolveBookingBuyer(orderSummaryBuyerName: string): string {
-  return orderSummaryToBookingBuyerMap[orderSummaryBuyerName] ?? orderSummaryBuyerName
+  return (
+    orderSummaryToBookingBuyerMap[orderSummaryBuyerName] ??
+    normalizedOrderSummaryToBookingBuyerMap[normalizeBuyerMapKey(orderSummaryBuyerName)] ??
+    orderSummaryBuyerName.trim()
+  )
 }
 
+export function resolvePreBookingBuyer(preBookingBuyerName: string): string {
+  const normalizedKey = normalizeBuyerMapKey(preBookingBuyerName)
+
+  return (
+    merchandisePreBookingBuyerMap[preBookingBuyerName] ??
+    normalizedMerchandisePreBookingBuyerMap[normalizedKey] ??
+    normalizedOrderSummaryToBookingBuyerMap[normalizedKey] ??
+    resolveBookingBuyer(resolveOrderSummaryBuyer(preBookingBuyerName))
+  )
+}
