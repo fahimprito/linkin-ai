@@ -6,19 +6,21 @@ import {
   computedOrderSummaryMonthGaugeRows,
   computedOrderSummaryBuyerWiseRows,
   computedOrderSummaryBuyerWiseFooterRows,
-  computedOrderSummaryMonthlyStatusCapacities,
-  computedOrderSummaryMonthlyStatusRows,
-  computedOrderSummaryMonthlyStatusTotals,
 } from "@/lib/unified-order-data"
+import {
+  orderSummaryMonthlyStatusCapacities,
+  orderSummaryMonthlyStatusRows,
+  orderSummaryMonthlyStatusTotals,
+} from "@/mock/order-summary"
 
 export function OrderSummaryPage() {
   return (
     <div className="space-y-16">
       <PageHeader title="Order Summary" />
       <OrderSummaryMonthlyStatusTable
-        capacities={computedOrderSummaryMonthlyStatusCapacities}
-        rows={computedOrderSummaryMonthlyStatusRows}
-        totals={computedOrderSummaryMonthlyStatusTotals}
+        capacities={orderSummaryMonthlyStatusCapacities}
+        rows={orderSummaryMonthlyStatusRows}
+        totals={orderSummaryMonthlyStatusTotals}
       />
       <OrderSummaryMonthGaugeTable rows={computedOrderSummaryMonthGaugeRows} />
       <OrderSummaryBuyerWiseTable

@@ -59,5 +59,18 @@ export type OrderSummaryMonthlyStatusRow = {
   totalQty: string
   totalMin: string
   leftOverMin: string
+  orderQtyInv: string
+  shippedQtyInv: string
+  excessQtyInv: string
+  shippedValueInv: string
   highlight?: boolean
+}
+
+export type OrderSummaryMonthlyStatusTotals = {
+  totalQty: string
+  totalMin: string
+  orderQtyInv: string
+  shippedQtyInv: string
+  excessQtyInv: string
+  shippedValueInv: string
 }

@@ -438,6 +438,10 @@ function buildMonthlyStatusRows(): OrderSummaryMonthlyStatusRow[] {
       totalQty: formatPcs(data.qty),
       totalMin: formatMin(data.min),
       leftOverMin: `${leftOver >= 0 ? "" : "-"}${Math.abs(leftOver).toLocaleString("en-US")} Min`,
+      orderQtyInv: "0 Pcs",
+      shippedQtyInv: "0 Pcs",
+      excessQtyInv: "0 Pcs",
+      shippedValueInv: "$0.00",
       highlight: monthKey === "jun" || monthKey === "jul",
     }
   })
@@ -456,6 +460,10 @@ function buildMonthlyStatusTotals() {
   return {
     totalQty: formatPcs(grandQty),
     totalMin: formatMin(grandMin),
+    orderQtyInv: "0 Pcs",
+    shippedQtyInv: "0 Pcs",
+    excessQtyInv: "0 Pcs",
+    shippedValueInv: "$0.00",
   }
 }
 
@@ -849,5 +857,6 @@ export const selectComputedBookingComparisonReport = createSelector(
   [(state: RootState) => state.merchandise.preBookings],
   (preBookings) => buildBookingComparisonReport(preBookings)
 )
+
 
 
