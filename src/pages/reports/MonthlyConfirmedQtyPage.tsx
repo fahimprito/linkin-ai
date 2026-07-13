@@ -11,7 +11,7 @@ import {
   monthlyConfirmedQtyMonthOptions,
   monthlyConfirmedQtySlotWiseColumns,
 } from "@/lib/monthly-confirmed-report-schema"
-import { monthlyConfirmedQtyReports } from "@/mock/monthly-confirmed-qty"
+import { useAppSelector } from "@/store/hooks"
 import type { MonthlyConfirmedQtyRow } from "@/types/reports"
 
 const tableColumnCount = monthlyConfirmedQtyMainTableColumns.length
@@ -167,6 +167,9 @@ function getCapacityHeaderClassName(index: number) {
 }
 
 export function MonthlyConfirmedQtyPage() {
+  const monthlyConfirmedQtyReports = useAppSelector(
+    (state) => state.monthlyConfirmed.reports
+  )
   const initialReport = monthlyConfirmedQtyReports[0]
   const initialParts = getReportParts(initialReport?.value ?? "")
   const currentYear = new Date().getFullYear()

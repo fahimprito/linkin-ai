@@ -7152,7 +7152,7 @@ function buildEmptySlotWiseRow(gg: string): MonthlyConfirmedQtySlotWiseRow {
   }
 }
 
-function buildComputedMonthlyFooter(rows: MonthlyConfirmedQtyRow[]): NonNullable<MonthlyConfirmedQtyReport["footer"]> {
+export function buildComputedMonthlyFooter(rows: MonthlyConfirmedQtyRow[]): NonNullable<MonthlyConfirmedQtyReport["footer"]> {
   const numericGgs = Array.from(
     new Set(
       rows
@@ -7344,7 +7344,7 @@ function buildComputedMonthlyFooter(rows: MonthlyConfirmedQtyRow[]): NonNullable
   }
 }
 
-function applyMultiGroupToCapacityRows(
+export function applyMultiGroupToCapacityRows(
   rows: MonthlyConfirmedQtyRow[],
   capacityRows: MonthlyConfirmedQtyCapacityRow[]
 ) {

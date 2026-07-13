@@ -41,6 +41,7 @@ import {
   requestConsumption,
   updatePurchaseOrder,
 } from "@/store/slices/merchandise-slice"
+import { addPoToMonthlyReport } from "@/store/slices/monthly-confirmed-slice"
 import type { CreatePurchaseOrderPayload, PurchaseOrder } from "@/types/modules"
 
 const purchaseOrderFields: ModalFormField[] = [
@@ -477,6 +478,7 @@ export function MerchandiseListPage() {
       )
     } else {
       dispatch(addPurchaseOrder(normalizedValues))
+      dispatch(addPoToMonthlyReport(normalizedValues))
       dispatch(
         addNotification({
           id: createNotificationId(),
@@ -512,6 +514,7 @@ export function MerchandiseListPage() {
     }
 
     dispatch(addPurchaseOrder(normalizedValues))
+    dispatch(addPoToMonthlyReport(normalizedValues))
     dispatch(
       addNotification({
         id: createNotificationId(),

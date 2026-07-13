@@ -5,6 +5,7 @@ import { baseApi } from "@/services/base-api"
 import formSubmissionsReducer from "@/store/slices/form-submissions-slice"
 import knittingReducer from "@/store/slices/knitting-slice"
 import merchandiseReducer from "@/store/slices/merchandise-slice"
+import monthlyConfirmedReducer from "@/store/slices/monthly-confirmed-slice"
 import notificationReducer from "@/store/slices/notification-slice"
 import storeServiceReducer from "@/store/slices/store-service-slice"
 import uiReducer from "@/store/slices/ui-slice"
@@ -16,6 +17,7 @@ export const store = configureStore({
     formSubmissions: formSubmissionsReducer,
     knitting: knittingReducer,
     merchandise: merchandiseReducer,
+    monthlyConfirmed: monthlyConfirmedReducer,
     notifications: notificationReducer,
     storeService: storeServiceReducer,
     ui: uiReducer,
