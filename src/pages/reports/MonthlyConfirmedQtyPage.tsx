@@ -302,7 +302,9 @@ export function MonthlyConfirmedQtyPage() {
                         >
                           {monthlyConfirmedQtyMainTableColumns.map((column) => (
                             <td key={`${activeReport.value}-${group.gg}-${row.sl}-${column.key}`} className={column.cellClassName}>
-                              {getMonthlyConfirmedQtyCellValue(row, column.key)}
+                              {column.key === "sl"
+                                ? String(index + 1)
+                                : getMonthlyConfirmedQtyCellValue(row, column.key)}
                             </td>
                           ))}
                         </tr>
@@ -474,3 +476,4 @@ export function MonthlyConfirmedQtyPage() {
     </div>
   )
 }
+
